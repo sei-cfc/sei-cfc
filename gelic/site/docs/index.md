@@ -1,5 +1,8 @@
 # SEI CFC
 
+!!! tip "Primeira vez?"
+    Comece pelo [passo a passo de uma dispensa eletrônica](tutorial.md): do item no PCA ao contrato assinado.
+
 Extensões do Conselho Federal de Contabilidade para o SEI. Funcionam só no SEI do CFC.
 
 <div class="grid cards" markdown>

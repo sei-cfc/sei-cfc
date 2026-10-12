@@ -6,7 +6,7 @@
  */
 import type { PacoteDvi } from './preparar/index';
 
-export type PedidoAnalise = 'dvi' | 'devolucao' | 'gecont' | 'analise';
+export type PedidoAnalise = 'dvi' | 'devolucao' | 'gecont' | 'analise' | 'previa';
 
 /** Estimativa grosseira de tokens para texto em português com JSON: caracteres / 2,4. */
 export const estimarTokens = (caracteres: number) => Math.ceil(caracteres / 2.4);
@@ -34,6 +34,7 @@ const ALVO: Record<PedidoAnalise, string> = {
   devolucao: 'despacho de devolução (reexame: só o não sanado)',
   gecont: 'despacho à Gecont (preencha gecont)',
   analise: 'análise no chat (o formato sai da regra)',
+  previa: 'verificação prévia da unidade, antes do envio à Gelic: dê status só aos itens do checklist listados (os outros já foram resolvidos)',
 };
 
 const linha = (s: string) => s.replace(/\s+/g, ' ').trim();

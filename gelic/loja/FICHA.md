@@ -1,6 +1,6 @@
 # Ficha das extensões na Chrome Web Store (textos para colar)
 
-Versão 2.9.0.19. Zips em `build/sei-pro-cfc-2.9.0.19.zip` (SEI CFC) e `build/sei-pro-gelic-2.9.0.19.zip` (SEI CFC
+Versão 2.9.0.20. Zips em `build/sei-pro-cfc-2.9.0.20.zip` (SEI CFC) e `build/sei-pro-gelic-2.9.0.20.zip` (SEI CFC
 Gelic). As imagens ficam em `gelic/loja/imagens/`. O passo a passo da publicação está em `PUBLICAR.md`.
 
 O nome e a descrição curta vêm do manifest do zip, e a loja os mostra sozinha.
@@ -55,6 +55,7 @@ Extensão do Conselho Federal de Contabilidade (CFC) para as unidades que pedem 
 
 O que ela faz:
 • Mostra, no alto da árvore de cada processo, a etapa da contratação e o roteiro das peças da instrução, com o que já está pronto e o que falta.
+• Verificar antes de enviar: confere a instrução pelos critérios da Gelic, aponta o que corrigir e grava o Checklist de Conformidade no processo, só com a sua aprovação; a extensão nunca assina.
 • "Iniciar processo": cria no SEI o processo e a árvore inicial da instrução, a partir do item do PCA.
 • Formulários das peças (DFD, termos de cientificação, mapa comparativo de preços, despacho de envio à Gelic), que aproveitam o que já está nos autos e no PCA. A gravação no processo só acontece depois da prévia e da sua confirmação; a extensão nunca assina.
 • Os dados da contratação ficam guardados no PCA, para os colegas da unidade não digitarem de novo.

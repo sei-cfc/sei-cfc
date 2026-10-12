@@ -28,6 +28,19 @@ export function escolherAba(ponte: PonteMinima, protocolo: string): number | nul
   return aba.id;
 }
 
+/** Espera a aba do SEI do processo conectar à ponte (padrão: até 10 s); null se não conectar. */
+export function esperarAba(ponte: PonteMinima & { aoMudar(f: () => void): void }, protocolo: string, ms = 10_000): Promise<number | null> {
+  return new Promise(ok => {
+    const achou = escolherAba(ponte, protocolo);
+    if (achou !== null) return ok(achou);
+    const fim = setTimeout(() => ok(null), ms);
+    ponte.aoMudar(() => {
+      const id = escolherAba(ponte, protocolo);
+      if (id !== null) { clearTimeout(fim); ok(id); }
+    });
+  });
+}
+
 export interface OpcoesContexto {
   protocolo: string;
   ponte: PonteMinima;

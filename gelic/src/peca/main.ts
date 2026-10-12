@@ -6,7 +6,7 @@
 import { PontePainel } from '../../../agente-ia/src/ponte/cliente';
 import { analisarCfc, GANCHOS_CFC, gravarCfc, previaCfc } from '../agente/cfc';
 import { DOCUMENTOS_CFC } from '../documentos/catalogo';
-import { completarDaConfig, contextoDaJanela, escolherAba, lerConfigAgente } from './contexto';
+import { completarDaConfig, contextoDaJanela, esperarAba, lerConfigAgente } from './contexto';
 import { areaPadrao } from './guardados';
 import { criarClientePca } from '../pca/cliente';
 import { lerConfigPca } from '../pca/config';
@@ -21,19 +21,6 @@ function parar(titulo: string, texto: string): void {
   p.className = 'gelic-status gelic-status-erro';
   p.textContent = texto;
   raiz().replaceChildren(h, p);
-}
-
-/** Espera a aba do SEI do processo conectar à ponte (até 10 s). */
-function esperarAba(ponte: PontePainel, protocolo: string): Promise<number | null> {
-  return new Promise(ok => {
-    const achou = escolherAba(ponte, protocolo);
-    if (achou !== null) return ok(achou);
-    const fim = setTimeout(() => ok(null), 10_000);
-    ponte.aoMudar(() => {
-      const id = escolherAba(ponte, protocolo);
-      if (id !== null) { clearTimeout(fim); ok(id); }
-    });
-  });
 }
 
 async function iniciar(): Promise<void> {

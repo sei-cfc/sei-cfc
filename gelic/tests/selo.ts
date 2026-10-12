@@ -145,6 +145,38 @@ export async function verificarSelo(): Promise<void> {
     assert.equal(r.passos.find(p => p.chave === 'etp')!.estado, 'em_elaboracao', 'externo sem arquivo: em elaboração');
     assert.equal(r.proxima?.chave, 'termos_cientificacao', 'o despacho vazio no fim não dispensa os termos');
   });
+  await teste('selo cfc: "Verificar antes de enviar" abre a janela da verificação do processo (não o agente)', () => {
+    const doc = docDe(fixture('arvore.html'));
+    const abertas: string[] = [];
+    const pedidos: string[] = [];
+    desenharSelo(doc, { tipo: 'resumo', resumo: resumir(PREP), protocolo: 'P1', docs: PREP }, p => pedidos.push(p), 'cfc', { abrirJanela: () => {}, abrirVerificacao: p => abertas.push(p) });
+    const b = doc.querySelector<HTMLButtonElement>('#gelic-selo [data-acao=verificar]')!;
+    assert.equal(b.textContent, 'Verificar antes de enviar');
+    b.click();
+    assert.deepEqual(abertas, ['P1']);
+    assert.deepEqual(pedidos, []);
+  });
+  await teste('selo gelic: sem "Verificar antes de enviar"', () => {
+    const doc = docDe(fixture('arvore.html'));
+    desenharSelo(doc, { tipo: 'resumo', resumo: resumir(PREP), protocolo: 'P1', docs: PREP }, () => {}, 'gelic');
+    assert.equal(doc.querySelector('#gelic-selo [data-acao=verificar]'), null);
+  });
+  await teste('selo cfc: com a instrução feita até o mapa de riscos, a próxima é o checklist, com o botão Verificar', () => {
+    const doc = docDe(fixture('arvore.html'));
+    const abertas: string[] = [];
+    const pronto = (titulo: string, numero: string) => ({ titulo, numero, assinado: true });
+    const anexo = (titulo: string, numero: string) => ({ titulo, numero, externo: true, comArquivo: true });
+    const docs = [pronto('DFD', '1'), pronto('Termo de Ciência', '2'), anexo('Portaria nº 1 - Equipe de Planejamento', '3'), anexo('Portaria nº 2 - Gestores de Contrato', '4'),
+      anexo('Estudo Técnico Preliminar', '5'), anexo('Pesquisa de preços - Banco de Preços', '6'), ...[7, 8, 9].map(n => anexo('Cotação de fornecedor', String(n))),
+      pronto('Mapa de preços', '10'), anexo('Termo de Referência', '11'), anexo('Mapa de Riscos', '12')];
+    assert.equal(roteiro(docs).proxima?.chave, 'checklist_conformidade');
+    desenharSelo(doc, { tipo: 'resumo', resumo: resumir(docs), protocolo: 'P1', docs }, () => {}, 'cfc', { abrirJanela: () => {}, abrirVerificacao: p => abertas.push(p) });
+    const linha = doc.querySelector('#gelic-selo .gelic-roteiro')!;
+    assert.match(linha.textContent!, /Próxima peça: Checklist de Conformidade/);
+    linha.querySelector<HTMLButtonElement>('[data-gelic-verificar]')!.click();
+    assert.deepEqual(abertas, ['P1']);
+    assert.equal(linha.querySelector('[data-gelic-preencher]'), null);
+  });
   await teste('selo cfc: Gerar documento → peça abre a janela (não o agente) e mostra o roteiro', () => {
     const doc = docDe(fixture('arvore.html'));
     const abertas: string[] = [];

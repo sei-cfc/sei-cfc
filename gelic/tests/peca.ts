@@ -8,9 +8,9 @@ import assert from 'node:assert/strict';
 import { parseHTML } from 'linkedom';
 import { entradasCfc } from '../src/modelos/analise-cfc';
 import { camposDoFormulario, dadosDoFormulario, origemDe } from '../src/peca/formulario';
-import { completarDaConfig, contextoDaJanela, escolherAba } from '../src/peca/contexto';
+import { completarDaConfig, contextoDaJanela, escolherAba, esperarAba } from '../src/peca/contexto';
 import { montarJanela, type DepsJanela } from '../src/peca/pagina';
-import { abrirPeca, urlDaPeca } from '../src/peca/abrir';
+import { abrirPeca, abrirVerificacao, urlDaPeca, urlDaVerificacao } from '../src/peca/abrir';
 import { apagarRascunho, guardarRascunho, guardarUo, lerRascunho, lerUo, type Area } from '../src/peca/guardados';
 import { teste } from './util';
 
@@ -281,6 +281,23 @@ export async function verificarPeca(): Promise<void> {
     abrirPeca((...a: unknown[]) => { aberturas.push(a); return null; }, 'dfd', 'P 1');
     assert.deepEqual(aberturas, [[urlDaPeca('dfd', 'P 1'), 'gelic-peca-dfd-1']], 'aba com nome: o segundo clique volta a ela');
     assert.equal(urlDaPeca('dfd', 'P 1'), 'js/gelic/peca.html?modelo=dfd&processo=P%201');
+  });
+  await teste('verificação: a janela abre como aba, com alvo por processo (o segundo clique volta a ela)', () => {
+    const abertas: unknown[][] = [];
+    abrirVerificacao((...a: unknown[]) => { abertas.push(a); return null; }, '12345670000048.000007/2026-13');
+    assert.deepEqual(abertas, [['js/gelic/verificar.html?processo=12345670000048.000007%2F2026-13', 'gelic-verificar-12345670000048000007202613']]);
+    assert.equal(urlDaVerificacao('P 1'), 'js/gelic/verificar.html?processo=P%201');
+  });
+  await teste('esperarAba: acha a aba já conectada, espera a que conecta depois e desiste no prazo', async () => {
+    const abas: { id: number; titulo: string; papel: string }[] = [];
+    let avisar = () => {};
+    const ponte = { lista: () => abas, fixar: () => {}, executar: async () => null, aoMudar: (f: () => void) => { avisar = f; } };
+    assert.equal(await esperarAba(ponte, 'P1', 20), null);
+    const depois = esperarAba(ponte, 'P1', 1000);
+    abas.push({ id: 7, titulo: 'SEI - P1', papel: 'sei' });
+    avisar();
+    assert.equal(await depois, 7);
+    assert.equal(await esperarAba(ponte, 'P1', 20), 7);
   });
   await teste('final #2: campo apagado (ou escondido) vai vazio ao motor, não volta da análise', async () => {
     const doc = janela();

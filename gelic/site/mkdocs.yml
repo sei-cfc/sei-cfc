@@ -51,6 +51,7 @@ markdown_extensions:
 
 nav:
   - Início: index.md
+  - Passo a passo: tutorial.md
   - SEI CFC: sei-cfc.md
   - SEI CFC Gelic: sei-cfc-gelic.md
   - Instalar e atualizar: instalar.md

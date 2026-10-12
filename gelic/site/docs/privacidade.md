@@ -7,7 +7,8 @@ As telas do SEI que você abre (árvore, documentos, Controle de Processos), par
 
 ## O que fica no seu navegador
 
-As etapas calculadas, os rascunhos das peças e as configurações (o token do PCA e as preferências). Não saem dele.
+As etapas calculadas, os rascunhos das peças, o resultado da verificação prévia de cada processo e as configurações
+(o token do PCA e as preferências). Não saem dele.
 
 ## O que vai para o PCA do CFC
 
@@ -20,8 +21,8 @@ Só se você ligar a extensão ao PCA, com o seu token:
 
 ## O que vai para o provedor de IA
 
-Só quando você pede ao agente de IA uma análise ou um documento, com a chave configurada no agente: o recorte dos autos
-necessário para o pedido. Por padrão, os nomes de pessoas vão trocados por pseudônimos; dá para desligar isso nos ajustes
+Só quando você pede ao agente de IA uma análise ou um documento, ou clica em **Verificar** na verificação prévia, com
+a chave configurada no agente: o recorte dos autos necessário para o pedido. Por padrão, os nomes de pessoas vão trocados por pseudônimos; dá para desligar isso nos ajustes
 do agente.
 
 ## O que nunca acontece

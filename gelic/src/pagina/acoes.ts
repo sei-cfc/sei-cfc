@@ -5,7 +5,7 @@
  * do selo na seção "Próximo passo". O `pedido` dele fica para quem quiser a explicação longa (skill gelic-proxima-etapa).
  * "Gerar documento" não está aqui: abre o seletor de documentos (selo.ts, documentos/catalogo.ts).
  * Cada perfil mostra só os seus botões (BOTOES_DO_PERFIL): o SEI CFC não tem Analisar nem Pendências,
- * que são a análise da Gelic.
+ * que são a análise da Gelic; tem "Verificar antes de enviar", que abre a janela da verificação prévia (selo.ts).
  * Nenhuma ação escreve no SEI por si: o agente só lê, e o que ele propuser gravar passa pelo
  * cartão de aprovação.
  */
@@ -48,10 +48,10 @@ export const ACOES: readonly AcaoGelic[] = [
   },
 ];
 
-/** Botões do selo de cada perfil, na ordem ('documento' é o "Gerar documento"). */
+/** Botões do selo de cada perfil, na ordem ('documento' é o "Gerar documento"; 'verificar', a verificação prévia do CFC). */
 export const BOTOES_DO_PERFIL: Readonly<Record<Perfil, readonly string[]>> = {
   gelic: ['analisar', 'pendencias', 'documento', 'proximo'],
-  cfc: ['documento', 'proximo'],
+  cfc: ['documento', 'verificar', 'proximo'],
 };
 
 /** Manda o pedido ao background, que abre o painel do agente (precisa ser chamado no clique). */

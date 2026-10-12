@@ -70,3 +70,15 @@ iframe.gelic-previa { width: 100%; height: 70vh; border: 1px solid var(--g-borda
 .gelic-dados p { margin: 0; }
 .gelic-dados[data-gelic-dados="leitura"], .gelic-dados[data-gelic-dados="navegador"] { border-left-color: var(--g-falta); background: color-mix(in srgb, var(--g-falta) 10%, var(--g-fundo)); }
 .gelic-trazido { background: color-mix(in srgb, var(--g-tom) 10%, var(--g-fundo)); }
+/* verificação prévia (src/verificacao/pagina.ts, js/gelic/verificar.html) */
+.gelic-item { border: 1px solid var(--g-borda); border-left-width: 4px; border-radius: 6px; padding: 8px 12px; margin: 8px 0; }
+.gelic-item[data-situacao="nao_atende"] { border-left-color: var(--g-erro); }
+.gelic-item[data-situacao="nao_verificado"] { border-left-color: var(--g-falta); }
+.gelic-item[data-situacao="justificado"] { border-left-color: var(--g-ok); }
+.gelic-item-cab { margin: 0 0 4px; }
+.gelic-item textarea { width: 100%; margin: 4px 0; }
+.gelic-situacao { font-weight: 600; }
+.gelic-achado { margin: 4px 0 4px 12px; }
+.gelic-achado p { margin: 2px 0; }
+.gelic-resolvidos, .gelic-mecanicas { margin: 10px 0; }
+.gelic-mecanicas pre { white-space: pre-wrap; font: inherit; }

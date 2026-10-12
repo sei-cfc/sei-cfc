@@ -1,5 +1,8 @@
 # SEI CFC Gelic
 
+!!! tip "Primeira vez?"
+    Comece pelo [passo a passo de uma dispensa eletrônica](tutorial.md): do item no PCA ao contrato assinado.
+
 Para a Gerência de Licitações e Contratos (Gelic).
 
 ## O selo da etapa

@@ -1,5 +1,12 @@
 # Novidades
 
+## 2.9.0.20 — 12/10/2026 {#v2-9-0-20}
+
+- **SEI CFC: Verificar antes de enviar.** Antes de mandar o processo à Gelic, a unidade confere a instrução pelos mesmos
+  critérios do DVI. A janela mostra cada item pendente com o que corrigir. Corrija nos autos e verifique de novo, ou
+  justifique o item. Com tudo atendido ou justificado, grave no processo o **Checklist de Conformidade** (não
+  assinado). Sem chave de IA, a verificação é parcial: só as checagens que não dependem de IA.
+
 ## 2.9.0.19 — 12/10/2026 {#v2-9-0-19}
 
 - Primeira versão preparada para a Chrome Web Store. O código-fonte passa a ser público:

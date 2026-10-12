@@ -95,7 +95,7 @@ export async function verificarPerfil(): Promise<void> {
     const pedidos: string[] = [];
     const raiz = desenharSelo(doc, { tipo: 'resumo', resumo: r, protocolo: 'P1' }, p => pedidos.push(p), 'cfc');
     assert.equal(raiz.getAttribute('data-perfil'), 'cfc');
-    assert.deepEqual([...doc.querySelectorAll('.gelic-acao')].map(b => b.getAttribute('data-acao')), ['documento', 'proximo']);
+    assert.deepEqual([...doc.querySelectorAll('.gelic-acao')].map(b => b.getAttribute('data-acao')), ['documento', 'verificar', 'proximo']);
     assert.doesNotMatch(raiz.querySelector('.gelic-acoes')!.textContent!, /Pendências|Analisar/);
     assert.doesNotMatch(raiz.textContent!, /Pendências|skill gelic/);
     const gerar = doc.querySelector<HTMLButtonElement>('[data-acao=documento]')!;

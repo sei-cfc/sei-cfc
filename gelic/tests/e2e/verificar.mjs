@@ -9,7 +9,9 @@ const alvos = async () => { try { return await (await fetch(`http://127.0.0.1:${
 
 let lista = [];
 for (let i = 0; i < 40 && !lista.some(a => a.type === 'page'); i++) { await espera(500); lista = await alvos(); }
-const ws = new WebSocket(lista.find(a => a.type === 'page').webSocketDebuggerUrl);
+// a aba inicial (about:blank), nunca a que a instalação abre (G4): navegar nela tiraria a página do site da lista
+const inicial = lista.find(a => a.type === 'page' && a.url === 'about:blank') ?? lista.find(a => a.type === 'page');
+const ws = new WebSocket(inicial.webSocketDebuggerUrl);
 await new Promise(r => ws.addEventListener('open', r));
 let id = 0;
 const chamar = (method, params) => new Promise(res => {
@@ -125,6 +127,7 @@ let pedido = null;
 let motorNoPainel = null;
 // cfc: só "Gerar documento" e "Próximo passo"; o seletor sem nenhuma peça da Gelic (DVI, contratos...).
 let seloCfc = null;
+let seloGelicBotoes = null;
 if (PERFIL === 'cfc') {
   const botoes = JSON.parse(await avaliar("JSON.stringify([...document.querySelectorAll('#gelic-selo .gelic-acao')].map(b => b.dataset.acao))"));
   await clicar('#gelic-selo [data-acao=documento]');
@@ -147,8 +150,30 @@ if (PERFIL === 'cfc') {
       if (v) { Object.assign(seloCfc.janela, JSON.parse(v)); if (seloCfc.janela.campo || /Abra o processo/.test(seloCfc.janela.texto)) break; }
     }
     ws4.close();
+    // fecha a aba da peça: a ponte atende uma página da extensão por vez
+    await fetch(`http://127.0.0.1:${portaCdp}/json/close/${alvoPeca.id}`);
+  }
+  // "Verificar antes de enviar" abre a verificação prévia numa aba da extensão
+  await clicar('#gelic-selo [data-acao=verificar]');
+  const urlVer = `chrome-extension://${idExt}/js/gelic/verificar.html?processo=`;
+  let alvoVer = null;
+  for (let i = 0; i < 30 && !alvoVer; i++) { await espera(400); alvoVer = (await alvos()).find(a => a.type === 'page' && a.url.startsWith(urlVer)) ?? null; }
+  seloCfc.verificacao = alvoVer ? { url: alvoVer.url } : null;
+  if (alvoVer) {
+    const ws5 = new WebSocket(alvoVer.webSocketDebuggerUrl);
+    await new Promise(r => ws5.addEventListener('open', r));
+    for (let i = 0; i < 30; i++) {
+      await espera(500);
+      ws5.send(JSON.stringify({ id: 1, method: 'Runtime.evaluate', params: { returnByValue: true, expression: 'document.body.innerText.slice(0, 2000)' } }));
+      const t = await new Promise(r => ws5.addEventListener('message', function f(ev) { const m = JSON.parse(ev.data); if (m.id === 1) { ws5.removeEventListener('message', f); r(m.result?.result?.value ?? ''); } }));
+      seloCfc.verificacao.texto = t;
+      if (/Processo \S+|Abra o processo/.test(t)) break;
+    }
+    ws5.close();
+    await fetch(`http://127.0.0.1:${portaCdp}/json/close/${alvoVer.id}`);
   }
 } else {
+  seloGelicBotoes = JSON.parse(await avaliar("JSON.stringify([...document.querySelectorAll('#gelic-selo .gelic-acao')].map(b => b.dataset.acao))"));
   await clicar('#gelic-selo [data-acao=documento]');
   await clicar('#gelic-selo .gelic-docs details:first-of-type > summary');
   await clicar('#gelic-selo .gelic-docs [data-documento=dvi]');
@@ -448,6 +473,9 @@ ok('selo abre com o próximo passo e os documentos reconhecidos (nº SEI)', () =
 ok('SEI Pro 2.9: Demandas e Projetos desligadas por padrão (sem painéis); religada nas Configurações, a escolha vale', () => {
   assert.deepEqual(padroes, { config: { demandas: false, projetos: false }, paineis: { demandas: false, projetos: false }, religada: true, continuaLigada: true });
 });
+if (PERFIL === 'gelic') ok('gelic: sem "Verificar antes de enviar" no selo (a verificação prévia é do SEI CFC)', () => {
+  assert.deepEqual(seloGelicBotoes, ['analisar', 'pendencias', 'documento', 'proximo']);
+});
 ok('gancho G4: a instalação abre a página do perfil no site, e não o seipro.app', () => {
   assert.ok(abasDaInstalacao.includes(paginaDoPerfil), JSON.stringify(abasDaInstalacao));
   assert.ok(!abasDaInstalacao.some(u => u.includes('seipro.app')), JSON.stringify(abasDaInstalacao));
@@ -458,7 +486,7 @@ ok('Novidades no selo: aviso da versão; o clique abre a entrada dela no site, e
 });
 if (PERFIL === 'cfc') {
   ok('cfc: selo só com Gerar documento e Próximo passo; nada de Analisar ou Pendências', () => {
-    assert.deepEqual(seloCfc.botoes, ['documento', 'proximo']);
+    assert.deepEqual(seloCfc.botoes, ['documento', 'verificar', 'proximo']);
     assert.doesNotMatch(seloCfc.acoes, /Pendências|Analisar/);
   });
   ok('cfc: Gerar documento abre o seletor com as peças do demandante (DFD, termos, mapa, memorando ao Delic), ETP e TR no Compras.gov.br, sem DVI, Gecont nem contratos', () => {
@@ -479,6 +507,11 @@ if (PERFIL === 'cfc') {
     assert.ok(seloCfc.janela, 'a aba do formulário (peca.html?modelo=dfd) não abriu');
     assert.match(seloCfc.janela.texto ?? '', /DFD — Documento de Formalização da Demanda/);
     assert.ok(seloCfc.janela.campo || /Abra o processo \S+ no SEI/.test(seloCfc.janela.texto), seloCfc.janela.texto);
+  });
+  ok('cfc: "Verificar antes de enviar" abre a verificação prévia numa aba da extensão (a tela ou a mensagem de aba do processo)', () => {
+    assert.ok(seloCfc.verificacao, 'a aba verificar.html não abriu');
+    assert.match(seloCfc.verificacao.texto ?? '', /Verificação prévia/);
+    assert.ok(/Processo \S+/.test(seloCfc.verificacao.texto) || /Abra o processo \S+ no SEI/.test(seloCfc.verificacao.texto), seloCfc.verificacao.texto);
   });
   ok('cfc: agente sem as ferramentas de escrita da Gelic (gelic_dvi_gravar, gelic_documento_gravar), com a do demandante', () => {
     assert.ok(agente.escritas.includes('documento_criar'), 'as do SEI Pro continuam');

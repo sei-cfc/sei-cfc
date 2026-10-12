@@ -11,7 +11,7 @@ import { PERFIS_MANIFESTO } from '../empacotamento/manifesto';
 import { perfilAtual, type Perfil } from '../perfil';
 import { ACOES, BOTOES_DO_PERFIL, pedirAoAgente } from './acoes';
 import { NOTA_ONDE, roteiro, type DocRoteiro, type PassoRoteiro } from '../peca/roteiro';
-import { abrirPeca } from '../peca/abrir';
+import { abrirPeca, abrirVerificacao } from '../peca/abrir';
 
 export const ID = 'gelic-selo';
 const CHAVE_ABERTO = 'gelic_selo_aberto';
@@ -34,17 +34,21 @@ export interface OpcoesSelo {
    * popup: a ponte do agente só enxerga as abas do SEI da mesma janela (src/peca/abrir.ts).
    */
   abrirJanela?: (modelo: string, protocolo: string, documento?: string) => void;
+  /** Abre a janela da verificação prévia do processo (perfil cfc), também como aba. */
+  abrirVerificacao?: (protocolo: string) => void;
 }
 /** Extensão recarregada com o SEI aberto: o runtime some, e o clique avisa em vez de não fazer nada. */
-function abrirComoAba(modelo: string, protocolo: string, documento?: string): void {
+function comoAba(abrir: (aba: (url: string, alvo: string) => unknown) => void): void {
   try {
     const rt = globalThis.chrome?.runtime;
     if (!rt?.id) throw new Error('sem runtime');
-    abrirPeca((url, alvo) => window.open(rt.getURL(url), alvo), modelo, protocolo, documento);
+    abrir((url, alvo) => window.open(rt.getURL(url), alvo));
   } catch {
     window.alert('O SEI CFC foi atualizado: recarregue esta página do SEI (F5) e clique de novo.');
   }
 }
+const abrirComoAba = (modelo: string, protocolo: string, documento?: string) => comoAba(aba => abrirPeca(aba, modelo, protocolo, documento));
+const verificacaoComoAba = (protocolo: string) => comoAba(aba => abrirVerificacao(aba, protocolo));
 
 type Filho = Node | string | null | undefined | false;
 function el(doc: Document, tag: string, attrs: Record<string, string> = {}, ...filhos: Filho[]): HTMLElement {
@@ -132,7 +136,7 @@ function seletor(doc: Document, r: Resumo, catalogo: Catalogo, escolher: (d: Doc
  * Botões que abrem o agente com o pedido, o "Próximo passo" (local, sem IA) e o "Gerar documento", que abre o
  * seletor. Só os do perfil (BOTOES_DO_PERFIL), na ordem dele.
  */
-function acoes(doc: Document, r: Resumo, protocolo: string, aoPedir: (pedido: string) => void, mostrarProximo: () => void, perfil: Perfil, abrirJanela: (modelo: string, protocolo: string, documento?: string) => void): HTMLElement[] {
+function acoes(doc: Document, r: Resumo, protocolo: string, aoPedir: (pedido: string) => void, mostrarProximo: () => void, perfil: Perfil, abrirJanela: (modelo: string, protocolo: string, documento?: string) => void, abrirVer: (protocolo: string) => void): HTMLElement[] {
   const catalogo = CATALOGOS[perfil];
   const barra = el(doc, 'div', { class: 'gelic-acoes', role: 'group', 'aria-label': perfil === 'gelic' ? 'Ações Gelic com o Agente de IA' : 'Ações do SEI CFC' });
   const botao = (id: string, rotulo: string, dica: string, destaque = false) =>
@@ -165,6 +169,11 @@ function acoes(doc: Document, r: Resumo, protocolo: string, aoPedir: (pedido: st
   });
   const botoes = BOTOES_DO_PERFIL[perfil].map(id => {
     if (id === 'documento') return gerar;
+    if (id === 'verificar') {
+      const b = botao('verificar', 'Verificar antes de enviar', 'Confere o processo pelos critérios do DVI da Gelic antes de mandar; abre numa aba. Nada é gravado sem a sua aprovação');
+      b.addEventListener('click', () => abrirVer(protocolo));
+      return b;
+    }
     const a = ACOES.find(x => x.id === id)!;
     const b = botao(a.id, a.rotulo, a.dica);
     b.addEventListener('click', () => (a.local ? mostrarProximo() : aoPedir(a.pedido(protocolo, r.nome))));
@@ -178,7 +187,7 @@ function acoes(doc: Document, r: Resumo, protocolo: string, aoPedir: (pedido: st
  * Roteiro da instrução (só no cfc): uma linha sempre visível com o andamento e a próxima peça (botão "Preencher"
  * quando ela tem formulário), e a lista das peças no detalhe.
  */
-function linhaDoRoteiro(doc: Document, passos: readonly PassoRoteiro[], proxima: PassoRoteiro | null, completa: boolean, protocolo: string, abrirJanela: (modelo: string, protocolo: string, documento?: string) => void, vazio?: string): HTMLElement {
+function linhaDoRoteiro(doc: Document, passos: readonly PassoRoteiro[], proxima: PassoRoteiro | null, completa: boolean, protocolo: string, abrirJanela: (modelo: string, protocolo: string, documento?: string) => void, abrirVer: (protocolo: string) => void, vazio?: string): HTMLElement {
   const obrig = passos.filter(p => p.obrigatoria);
   const feitas = obrig.filter(p => p.feito).length;
   const linha = el(doc, 'div', { class: 'gelic-roteiro', role: 'status' },
@@ -193,6 +202,10 @@ function linhaDoRoteiro(doc: Document, passos: readonly PassoRoteiro[], proxima:
       const b = el(doc, 'button', { type: 'button', class: 'gelic-preencher', 'data-gelic-preencher': proxima.chave, title: 'Abre o formulário da peça numa aba' }, 'Preencher');
       // peça vazia já na árvore (Iniciar processo): o formulário grava nela
       b.addEventListener('click', () => abrirJanela(proxima.chave, protocolo, vazio));
+      linha.append(' ', b);
+    } else if (proxima.onde === 'verificacao') {
+      const b = el(doc, 'button', { type: 'button', class: 'gelic-preencher', 'data-gelic-verificar': '', title: 'Abre a verificação prévia numa aba' }, 'Verificar');
+      b.addEventListener('click', () => abrirVer(protocolo));
       linha.append(' ', b);
     } else {
       linha.append(el(doc, 'span', { class: 'gelic-nota-curta' }, ` (${NOTA_ONDE[proxima.onde]})`));
@@ -219,6 +232,7 @@ function passosDoRoteiro(doc: Document, passos: readonly PassoRoteiro[]): HTMLEl
 /** Desenha (ou redesenha) o selo no documento da árvore. Devolve o elemento. */
 export function desenharSelo(doc: Document, estado: EstadoSelo, aoPedir: (pedido: string) => void = pedirAoAgente, perfil: Perfil = perfilAtual(), o: OpcoesSelo = {}): HTMLElement {
   const abrirJanela = o.abrirJanela ?? abrirComoAba;
+  const abrirVer = o.abrirVerificacao ?? verificacaoComoAba;
   let raiz = doc.getElementById(ID);
   if (!raiz) {
     raiz = el(doc, 'section', { id: ID, 'aria-label': TEXTOS[perfil].rotulo });
@@ -272,9 +286,9 @@ export function desenharSelo(doc: Document, estado: EstadoSelo, aoPedir: (pedido
     // o formulário só grava numa peça que a extensão criou em branco e que continua na árvore, sem assinatura
     const naArvore = new Map((estado.docs ?? []).map(d => [d.numero, d]));
     const vazio = rot.proxima ? estado.vazios?.find(v => v.chave === rot.proxima!.chave && naArvore.has(v.numero) && naArvore.get(v.numero)!.assinado === false)?.numero : undefined;
-    extras.push(linhaDoRoteiro(doc, rot.passos, rot.proxima, rot.completa, estado.protocolo, abrirJanela, vazio));
+    extras.push(linhaDoRoteiro(doc, rot.passos, rot.proxima, rot.completa, estado.protocolo, abrirJanela, abrirVer, vazio));
     det.insertBefore(passosDoRoteiro(doc, rot.passos), det.querySelector(`#${ID}-proximo`)?.nextSibling ?? null);
   }
-  raiz.append(cab, ...acoes(doc, r, estado.protocolo, aoPedir, mostrarProximo, perfil, abrirJanela), ...extras, det);
+  raiz.append(cab, ...acoes(doc, r, estado.protocolo, aoPedir, mostrarProximo, perfil, abrirJanela, abrirVer), ...extras, det);
   return raiz;
 }

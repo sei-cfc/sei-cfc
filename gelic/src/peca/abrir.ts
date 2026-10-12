@@ -12,3 +12,10 @@ export const alvoDaPeca = (modelo: string, protocolo: string) => `gelic-peca-${m
 export function abrirPeca(abrir: (url: string, alvo: string) => unknown, modelo: string, protocolo: string, documento?: string): void {
   abrir(urlDaPeca(modelo, protocolo, documento), alvoDaPeca(modelo, protocolo));
 }
+
+/** A verificação prévia do processo (src/verificacao/): também como aba, uma por processo. */
+export const urlDaVerificacao = (protocolo: string) => `js/gelic/verificar.html?processo=${encodeURIComponent(protocolo)}`;
+export const alvoDaVerificacao = (protocolo: string) => `gelic-verificar-${protocolo.replace(/\D/g, '')}`;
+export function abrirVerificacao(abrir: (url: string, alvo: string) => unknown, protocolo: string): void {
+  abrir(urlDaVerificacao(protocolo), alvoDaVerificacao(protocolo));
+}
