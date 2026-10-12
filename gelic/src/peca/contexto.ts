@@ -48,6 +48,11 @@ export interface OpcoesContexto {
   privacidade?: Pseudonimos;
   /** Pergunta ao usuário (documento restrito vai ao modelo?). */
   confirmar: (texto: string) => Promise<boolean>;
+  /**
+   * Leitura só neste navegador (verificação sem IA): sem `completar`, e o restrito é lido sem perguntar, porque nada
+   * vai a serviço nenhum (a pessoa já o lê no SEI).
+   */
+  leituraLocal?: boolean;
   sinal: AbortSignal;
 }
 
@@ -56,14 +61,14 @@ export function contextoDaJanela(o: OpcoesContexto): ContextoTool {
     sinal: o.sinal,
     sei: <T>(op: string, a?: Record<string, unknown>) => o.ponte.executar(op, a ?? {}, o.sinal) as Promise<T>,
     estado: { consentimentoRestrito: null, anexos: [] },
-    consentirRestrito: (detalhe: string) => o.confirmar(`Enviar ao serviço de IA o conteúdo restrito? ${detalhe}`),
+    consentirRestrito: (detalhe: string) => (o.leituraLocal ? Promise.resolve(true) : o.confirmar(`Enviar ao serviço de IA o conteúdo restrito? ${detalhe}`)),
     consentirConector: async () => false,
     anonimizar: (t: string) => (o.privacidade ? o.privacidade.anonimizar(t) : t),
     nonce: crypto.randomUUID(),
     registrarAchados: () => undefined,
     pessoasVistas: (nomes: string[]) => o.privacidade?.registrarPessoas(nomes),
     ui: {},
-    ...(o.completar ? { completar: o.completar } : {}),
+    ...(o.completar && !o.leituraLocal ? { completar: o.completar } : {}),
   };
   return ctx as unknown as ContextoTool;
 }

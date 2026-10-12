@@ -288,6 +288,17 @@ export async function verificarPeca(): Promise<void> {
     assert.deepEqual(abertas, [['js/gelic/verificar.html?processo=12345670000048.000007%2F2026-13', 'gelic-verificar-12345670000048000007202613']]);
     assert.equal(urlDaVerificacao('P 1'), 'js/gelic/verificar.html?processo=P%201');
   });
+  await teste('contexto da janela, leitura local (verificação sem IA): sem completar e restrito lido sem perguntar, porque nada sai do navegador', async () => {
+    let perguntou = 0;
+    const ponte = { lista: () => [], fixar: () => {}, executar: async () => null };
+    const ctx = contextoDaJanela({ protocolo: 'P', ponte, confirmar: async () => { perguntou++; return false; }, sinal: new AbortController().signal, completar: async () => 'x', leituraLocal: true });
+    assert.equal(ctx.completar, undefined);
+    assert.equal(await ctx.consentirRestrito('Documento 1'), true);
+    assert.equal(perguntou, 0);
+    const comIa = contextoDaJanela({ protocolo: 'P', ponte, confirmar: async () => { perguntou++; return false; }, sinal: new AbortController().signal });
+    assert.equal(await comIa.consentirRestrito('Documento 1'), false);
+    assert.equal(perguntou, 1);
+  });
   await teste('esperarAba: acha a aba já conectada, espera a que conecta depois e desiste no prazo', async () => {
     const abas: { id: number; titulo: string; papel: string }[] = [];
     let avisar = () => {};

@@ -16,7 +16,8 @@ const ANTES: readonly [string, RegExp][] = [
   // fornecedor 1"): o e-mail, a planilha ou o ofício de cotação não são a cotação
   ['cotacao', /^((anexo|documento|pdf)\s+)?cota[\u00e7c](\u00e3o|ao|\u00f5es|oes)\b/i],
   // só o da unidade: a "Lista de Verificação" da AGU, usada pela Gelic, não é o checklist de conformidade
-  ['checklist_conformidade', /check[\s-]?list de conformidade/i],
+  // e o "Despacho de Conformidade", até o tipo do checklist existir no SEI (decisão de 2026-10-12)
+  ['checklist_conformidade', /check[\s-]?list de conformidade|despacho de conformidade/i],
   // O envio à Gelic: o despacho "Envio à Gelic" (2026-10-10) ou o memorando que as unidades usavam ("Memorando nº 32 -
   // encaminha GELIC"). Um despacho DA Gelic ("Despacho Gelic - devolução") não é envio: fica com o tipoDe.
   ['memorando_delic', /^memorando.*\b(gelic|delic)\b|envio (ao delic|[\u00e0a] gelic)/i],

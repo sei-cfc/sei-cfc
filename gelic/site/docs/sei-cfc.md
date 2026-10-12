@@ -18,7 +18,7 @@ O selo mostra as peças da instrução, na ordem, e o que já está pronto. Peç
 externo, quando tem arquivo. A próxima peça aparece com **Preencher**, que abre o formulário dela.
 
 - **Gerar documento** lista as peças com formulário.
-- **Verificar antes de enviar** confere a instrução pelos critérios da Gelic (veja abaixo).
+- **Verificar antes de enviar** confere a instrução pelos critérios da Gelic, com ou sem IA (veja abaixo).
 - **Próximo passo** mostra o que fazer agora, sem IA.
 
 ## Iniciar processo
@@ -47,28 +47,33 @@ processo com **Confirmar e gravar**. O documento não é assinado: quem assina �
 
 ## Verificar antes de enviar
 
-Antes de mandar o processo à Gelic, confira a instrução pelos **mesmos critérios do DVI da Gelic**. Assim o processo
-chega pronto e não volta.
+Antes de mandar o processo à Gelic, confira a instrução pelos **critérios do DVI da Gelic**. Assim o processo chega
+pronto e não volta. A verificação é **opcional**, e a IA também: há dois modos, à sua escolha.
+
+| Modo | O que faz | Custo |
+|---|---|---|
+| **Verificar sem IA** | Confere só a **presença** dos requisitos: peças da etapa, assinaturas, ordem das datas, número do processo, documentos citados, valores e validades. Não faz juízo sobre o conteúdo. | Nenhum |
+| **Verificar com IA** | O modelo de IA **julga o conteúdo** de cada item do checklist da Gelic e diz o que corrigir. | O da sua chave de IA |
 
 1. No selo, clique em **Verificar antes de enviar**. Quando a próxima peça do roteiro é o Checklist de Conformidade, o
    botão **Verificar** também aparece na linha do roteiro. A verificação abre numa aba própria.
-2. Clique em **Verificar**. A extensão lê os autos, faz as checagens que não dependem de IA e manda à IA só o que pede
-   análise. Cada item pendente aparece com o documento (nº SEI), o que foi encontrado e **o que corrigir**.
+2. Clique em **Verificar sem IA** ou em **Verificar com IA**. Cada item pendente aparece com o documento (nº SEI) e, com
+   IA, o que foi encontrado e **o que corrigir**.
 3. Para cada pendência, faça uma de duas coisas:
-   - **corrija** nos autos e clique em **Verificar de novo**. A nova rodada só reexamina os itens pendentes e os que
-     dependem de documento que mudou; o que já atendia não muda;
+   - **corrija** nos autos e verifique de novo. Com IA, a nova rodada só reexamina os itens pendentes e os que dependem
+     de documento que mudou; o que já atendia não muda;
    - ou **justifique** o item, por exemplo "ETP dispensado, art. …", e clique em **Justificar**. A justificativa vai no
      checklist, e a Gelic a avalia.
 4. Com todos os itens atendidos ou justificados, confira a **Prévia do checklist** e use **Gravar Checklist de
-   Conformidade**. O tipo de documento "Checklist de Conformidade" vem escolhido quando existe no SEI. Se não existir,
-   escolha outro tipo, e o nome na árvore sai "Checklist de Conformidade". O documento não é assinado: quem assina é
-   você, no SEI.
+   Conformidade**. O documento diz se a verificação usou IA ou não. Ele não é assinado: quem assina é você, no SEI.
+
+**Tipo no SEI:** até o tipo "Checklist de Conformidade" ser criado pelo administrador do SEI, o checklist vai como
+**Despacho**, e a árvore mostra "Despacho de Conformidade". Quando o tipo existir, ele já vem escolhido.
 
 Se entrar documento no processo depois da verificação, a gravação pede uma nova rodada antes.
 
-A IA é a do **painel do agente**, com a chave de IA de cada pessoa. O gasto de cada rodada aparece na janela. Sem chave
-configurada, a verificação é **parcial**: mostra só as checagens que não dependem de IA, e o checklist não é gravado. O
-botão **Configurar a IA** abre o painel do agente.
+A IA é a do **painel do agente**, com a chave de IA de cada pessoa; o gasto aparece na janela. Sem chave, só o botão
+**Verificar sem IA** fica disponível, e **Configurar a IA (opcional)** abre o painel do agente.
 
 !!! example "Espaço para print"
     Verificação prévia com um item pendente.

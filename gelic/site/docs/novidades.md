@@ -1,5 +1,16 @@
 # Novidades
 
+## 2.9.0.21 — 12/10/2026 {#v2-9-0-21}
+
+- **Verificar antes de enviar, com ou sem IA.** A IA passa a ser opcional:
+  - **Verificar sem IA** confere só a presença dos requisitos (peças, assinaturas, datas, números, valores e
+    validades), sem juízo sobre o conteúdo, e não custa nada;
+  - **Verificar com IA** julga o conteúdo de cada item.
+
+  Os dois modos gravam o checklist, e o documento diz se a verificação usou IA.
+- Enquanto o tipo "Checklist de Conformidade" não existe no SEI do CFC, o checklist vai como **Despacho**, e a árvore
+  mostra "Despacho de Conformidade". O roteiro reconhece esse título.
+
 ## 2.9.0.20 — 12/10/2026 {#v2-9-0-20}
 
 - **SEI CFC: Verificar antes de enviar.** Antes de mandar o processo à Gelic, a unidade confere a instrução pelos mesmos

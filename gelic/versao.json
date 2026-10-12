@@ -1,4 +1,4 @@
 {
   "_leia": "Revisao da camada Gelic sobre a versao do SEI Pro do upstream. A versao final e <upstream>.<revisao> (ex.: 2.7 + revisao 1 = 2.7.0.1). Suba a revisao a cada entrega; ao incorporar versao nova do upstream, pode voltar a 1.",
-  "revisao": 20
+  "revisao": 21
 }

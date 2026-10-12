@@ -1,8 +1,9 @@
 /**
- * Uma rodada da verificação prévia: o pipeline do DVI barato (desenho, U-3). Sem IA (ctx sem completar), só as
- * pendências mecânicas: "verificação parcial, o mérito não foi analisado". Com IA, uma chamada com o pedido
- * `previa` e só os itens a reexaminar (no máximo uma correção, como no DVI). O validador do DVI confere o resultado
- * inteiro: o que a IA devolveu junto com o que ficou da rodada anterior.
+ * Uma rodada da verificação prévia, no modo que a unidade escolheu (a IA é sempre opcional):
+ *  - `presenca` (sem IA): as checagens mecânicas do DVI viram os itens; nenhuma chamada ao modelo, mesmo com chave;
+ *  - `ia`: o pipeline do DVI barato (desenho, U-3), uma chamada com o pedido `previa` e só os itens a reexaminar (no
+ *    máximo uma correção, como no DVI). O validador do DVI confere o resultado inteiro: o que a IA devolveu junto com
+ *    o que ficou da rodada anterior.
  */
 import type { ContextoTool } from '../../../agente-ia/src/motor/tools';
 import { MAX_CHAMADAS } from '../agente/dvi';
@@ -15,12 +16,11 @@ import type { Dia } from '../dvi/preparar/texto';
 import { extrairJson, pedidoDeCorrecao, requisicaoDvi } from '../dvi/prompt';
 import { paraHtmlSei } from '../modelos/motor';
 import type { Area } from '../peca/guardados';
-import { blocosDoChecklist, NOME_CHECKLIST, tipoEhChecklist } from './documento';
-import { aReexaminar, fechado, guardarVerificacao, juntarRodada, lerVerificacao, pendentes, type Verificacao } from './estado';
+import { blocosDoChecklist, NOME_NA_ARVORE, tipoEhChecklist } from './documento';
+import { aReexaminar, fechado, guardarVerificacao, juntarRodada, lerVerificacao, pendentes, rodadaDePresenca, type Modo, type Verificacao } from './estado';
 
 export interface DepsRodada { area: Area | null; agora: () => Date; pca?: OpcoesPreparar['pca']; hoje?: Dia }
 export type ResultadoRodada =
-  | { tipo: 'parcial'; pendencias: string; etapa: string }
   | { tipo: 'completa'; verificacao: Verificacao; pendencias: string; reexaminados: number; chamadas: number }
   | { tipo: 'erro'; erro: string; erros: string[]; pendencias: string };
 
@@ -46,11 +46,19 @@ export function paraValidar(achados: unknown, ant: Verificacao | null, mantidos:
   return a;
 }
 
-export async function rodarVerificacao(processo: string, ctx: ContextoTool, deps: DepsRodada): Promise<ResultadoRodada> {
+export async function rodarVerificacao(processo: string, ctx: ContextoTool, deps: DepsRodada, modo: Modo): Promise<ResultadoRodada> {
+  const semIa: ResultadoRodada = { tipo: 'erro', erro: 'Configure a IA no painel do agente para a verificação com IA, ou use "Verificar sem IA".', erros: [], pendencias: '' };
+  // sem chave, nem lê os autos
+  if (modo === 'ia' && !ctx.completar) return semIa;
   const pacote = await prepararDvi(processo, ctx, { pca: deps.pca, ...(deps.hoje ? { hoje: deps.hoje } : {}) });
   const pendencias = textoDePendencias(pacote);
-  if (!ctx.completar) return { tipo: 'parcial', pendencias, etapa: pacote.etapa.nome };
-  const anterior = await lerVerificacao(deps.area, processo);
+  if (modo === 'presenca') {
+    const v = rodadaDePresenca(await lerVerificacao(deps.area, processo, 'presenca'), pacote, deps.agora());
+    await guardarVerificacao(deps.area, v);
+    return { tipo: 'completa', verificacao: v, pendencias, reexaminados: v.itens.length, chamadas: 0 };
+  }
+  if (!ctx.completar) return semIa;
+  const anterior = await lerVerificacao(deps.area, processo, 'ia');
   const ids = aReexaminar(anterior, pacote);
   if (!ids.length) {
     const v = juntarRodada(anterior, pacote, null, [], deps.agora());
@@ -91,8 +99,8 @@ export const previaChecklist = (v: Verificacao, o: { unidade?: string; agora: Da
 interface ArvoreMinima { documentos?: { numero: string; titulo?: string; nivel?: string; cancelado?: boolean }[] }
 
 /** Grava o checklist: só fechado e sem documento novo desde a rodada. Cria, grava o corpo e não assina. */
-export async function gravarChecklist(o: { processo: string; tipo: string; unidade?: string; ctx: ContextoTool; area: Area | null; agora: () => Date }): Promise<{ ok: boolean; numero?: string; erro?: string }> {
-  const v = await lerVerificacao(o.area, o.processo);
+export async function gravarChecklist(o: { processo: string; tipo: string; modo: Modo; unidade?: string; ctx: ContextoTool; area: Area | null; agora: () => Date }): Promise<{ ok: boolean; numero?: string; erro?: string }> {
+  const v = await lerVerificacao(o.area, o.processo, o.modo);
   if (!v) return { ok: false, erro: 'Rode a verificação antes de gravar o checklist.' };
   if (!fechado(v)) {
     const n = pendentes(v).length;
@@ -102,7 +110,7 @@ export async function gravarChecklist(o: { processo: string; tipo: string; unida
   const conhecidos = new Set(v.documentos.map(d => d.numero));
   const novos = (arv?.documentos ?? []).filter(d => d.titulo && !d.cancelado && d.nivel !== 'sigiloso' && !conhecidos.has(d.numero));
   if (novos.length) return { ok: false, erro: `Entrou documento depois da verificação (${novos.map(d => `SEI ${d.numero}`).join(', ')}): verifique de novo antes de gravar.` };
-  const novo = { tipo: o.tipo, ...(tipoEhChecklist(o.tipo) ? {} : { nomeArvore: NOME_CHECKLIST }) };
+  const novo = { tipo: o.tipo, ...(tipoEhChecklist(o.tipo) ? {} : { nomeArvore: NOME_NA_ARVORE }) };
   const criado = await o.ctx.sei<{ dados?: { numero?: string } }>('documento.criar', { processo: o.processo, novo, aplicar: true });
   const numero = criado?.dados?.numero ?? '';
   if (!numero) return { ok: false, erro: 'O SEI não devolveu o número do documento criado; confira a árvore antes de tentar de novo.' };

@@ -46,38 +46,56 @@ function situacaoDe(c: Checagem, padrao: Situacao): Situacao {
   return padrao;
 }
 
-export function textoDePendencias(p: PacoteDvi): string {
-  const L: string[] = [];
-  const item = (sit: Situacao, texto: string) => L.push(`- [${sit}] ${texto}`);
-  const docs = contextoDoPacote(p).documentos;
-  L.push(`Pendências de ${p.processo} — etapa: ${p.etapa.nome}; família: ${p.familia}; próximo passo: ${(p.etapa.proximo || '—').replace(/\.+$/, '')}.`);
+export interface Pendencia { situacao: Situacao; texto: string }
+export interface GrupoPendencias { titulo: string; itens: Pendencia[] }
+export interface Pendencias { cabecalho: string; grupos: GrupoPendencias[]; rodape: string }
 
-  L.push('', 'Peças da etapa (presença nos autos):');
+/** As pendências por grupo (o checklist da presença): a mesma regra do texto, em dados. */
+export function pendenciasDoPacote(p: PacoteDvi): Pendencias {
+  const grupos: GrupoPendencias[] = [];
+  const grupo = (titulo: string) => { const g: GrupoPendencias = { titulo, itens: [] }; grupos.push(g); return g; };
+  const docs = contextoDoPacote(p).documentos;
+
+  const pecas = grupo('Peças da etapa (presença nos autos)');
   for (const pc of PECAS[p.familia]) {
     const achou = docs.filter(d => pc.casa(tipoDe(d.titulo), d.classe ?? ''));
-    if (achou.length) item('atende', `${pc.nome}: ${achou.map(d => `SEI ${d.numero}`).join(', ')}`);
-    else item(pc.opcional ? 'a conferir' : 'não atende', `${pc.nome}: não localizado${pc.opcional ? ` (${pc.opcional})` : ''}`);
+    if (achou.length) pecas.itens.push({ situacao: 'atende', texto: `${pc.nome}: ${achou.map(d => `SEI ${d.numero}`).join(', ')}` });
+    else pecas.itens.push({ situacao: pc.opcional ? 'a conferir' : 'não atende', texto: `${pc.nome}: não localizado${pc.opcional ? ` (${pc.opcional})` : ''}` });
   }
-  if (p.dviAnterior) item('a conferir', `DVI anterior desta etapa: SEI ${p.dviAnterior.numero} — reexame: confira o que foi sanado`);
+  if (p.dviAnterior) pecas.itens.push({ situacao: 'a conferir', texto: `DVI anterior desta etapa: SEI ${p.dviAnterior.numero} — reexame: confira o que foi sanado` });
 
   const de = (t: Checagem['tipo']) => p.checagens.filter(c => c.tipo === t);
-  L.push('', 'Assinaturas:');
+  const ass = grupo('Assinaturas');
   const sem = de('sem_assinatura');
-  if (!sem.length) item('atende', 'todos os documentos dos autos têm assinatura eletrônica');
+  if (!sem.length) ass.itens.push({ situacao: 'atende', texto: 'todos os documentos dos autos têm assinatura eletrônica' });
   // peça interna sem assinatura não atende; documento externo (proposta, certidão, estatuto) se confere
   const classe = new Map(docs.map(d => [d.numero, d.classe ?? '']));
-  for (const c of sem) item(!/digitalizado/.test(c.texto) && INTERNAS.has(classe.get(c.sei[0]) ?? '') ? 'não atende' : 'a conferir', c.texto);
+  for (const c of sem) ass.itens.push({ situacao: !/digitalizado/.test(c.texto) && INTERNAS.has(classe.get(c.sei[0]) ?? '') ? 'não atende' : 'a conferir', texto: c.texto });
   for (const [titulo, tipos, padrao] of GRUPOS) {
     const cs = tipos.flatMap(de);
-    L.push('', `${titulo}:`);
-    if (!cs.length) item('atende', 'nada apontado');
-    for (const c of cs) item(situacaoDe(c, padrao), c.texto);
+    const g = grupo(titulo);
+    if (!cs.length) g.itens.push({ situacao: 'atende', texto: 'nada apontado' });
+    for (const c of cs) g.itens.push({ situacao: situacaoDe(c, padrao), texto: c.texto });
   }
   if (p.limites.documentosNaoLidos.length) {
-    L.push('', 'Não examinados pelo código:');
-    for (const n of p.limites.documentosNaoLidos) item('a conferir', `SEI ${n.numero}${n.titulo ? ` ${n.titulo}` : ''}: ${n.motivo}`);
+    const nl = grupo('Não examinados pelo código');
+    for (const n of p.limites.documentosNaoLidos) nl.itens.push({ situacao: 'a conferir', texto: `SEI ${n.numero}${n.titulo ? ` ${n.titulo}` : ''}: ${n.motivo}` });
   }
   const imp = p.checklist.filter(i => i.grau === 'I').length;
-  L.push('', `Checklist da família: ${p.checklist.length} itens (séries ${p.series.join(' ')}; ${imp} impeditivos). O conteúdo dos itens se confere na análise (botão Analisar), não aqui.`);
+  return {
+    cabecalho: `Pendências de ${p.processo} — etapa: ${p.etapa.nome}; família: ${p.familia}; próximo passo: ${(p.etapa.proximo || '—').replace(/\.+$/, '')}.`,
+    grupos,
+    rodape: `Checklist da família: ${p.checklist.length} itens (séries ${p.series.join(' ')}; ${imp} impeditivos). O conteúdo dos itens se confere na análise (botão Analisar), não aqui.`,
+  };
+}
+
+export function textoDePendencias(p: PacoteDvi): string {
+  const x = pendenciasDoPacote(p);
+  const L: string[] = [x.cabecalho];
+  for (const g of x.grupos) {
+    L.push('', `${g.titulo}:`);
+    for (const i of g.itens) L.push(`- [${i.situacao}] ${i.texto}`);
+  }
+  L.push('', x.rodape);
   return L.join('\n');
 }

@@ -3,10 +3,13 @@
  * DepsVerificacao (main.ts monta as reais; os testes, as falsas). Texto de fora entra como nó de texto; a prévia vai
  * num iframe com sandbox vazio. Mostra os pendentes com o que corrigir e a caixa de justificativa; os resolvidos
  * ficam numa linha de resumo. "Gravar" só com o checklist fechado.
+ *
+ * Dois modos, a IA sempre opcional: "Verificar sem IA" (presença dos requisitos, sempre disponível) e "Verificar com
+ * IA" (só com chave). A tela mostra a última verificação feita, e o "Gravar" grava essa.
  */
 import type { ResultadoRodada } from './rodada';
-import { tipoSugerido } from './documento';
-import { fechado, pendentes, situacaoDe, type ItemVerificado, type Situacao, type Verificacao } from './estado';
+import { tipoEhChecklist, tipoSugerido } from './documento';
+import { fechado, pendentes, situacaoDe, type ItemVerificado, type Modo, type Situacao, type Verificacao } from './estado';
 
 export interface DepsVerificacao {
   protocolo: string;
@@ -14,14 +17,14 @@ export interface DepsVerificacao {
   /** Avisa quando a chave de IA passa a existir ou deixa de existir (configurada em outra aba). */
   aoMudarIa?(f: (temIa: boolean) => void): void;
   configurarIa(): void;
-  /** A verificação guardada deste processo, se houver. */
+  /** A verificação guardada deste processo (a mais recente dos dois modos), se houver. */
   anterior(): Promise<Verificacao | null>;
-  rodar(): Promise<ResultadoRodada>;
-  justificar(id: string, texto: string): Promise<Verificacao>;
+  rodar(modo: Modo): Promise<ResultadoRodada>;
+  justificar(id: string, texto: string, modo: Modo): Promise<Verificacao>;
   /** O HTML do checklist como vai ao SEI. */
-  previa(): Promise<string>;
+  previa(modo: Modo): Promise<string>;
   tipos(): Promise<string[]>;
-  gravar(tipo: string): Promise<{ ok: boolean; numero?: string; erro?: string }>;
+  gravar(tipo: string, modo: Modo): Promise<{ ok: boolean; numero?: string; erro?: string }>;
   /** Gasto da IA nesta janela (dólares), quando houver. */
   gasto?(): number;
 }
@@ -37,6 +40,10 @@ const mensagem = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const ROTULO: Readonly<Record<Situacao, string>> = {
   atende: 'atende', nao_se_aplica: 'não se aplica', justificado: 'justificado', nao_atende: 'não atende', nao_verificado: 'não verificado',
 };
+/** Sem IA, o "não verificado" é o "a conferir" das checagens. */
+const rotulo = (modo: Modo, s: Situacao) => (modo === 'presenca' && s === 'nao_verificado' ? 'a conferir' : ROTULO[s]);
+const NOME_MODO: Readonly<Record<Modo, string>> = { presenca: 'Sem IA: presença dos requisitos', ia: 'Com IA: julgamento do conteúdo' };
+const FORMA_CURTA: Readonly<Record<Modo, string>> = { presenca: 'verificação sem IA', ia: 'verificação com IA' };
 /** O valor de um select: o `value` do navegador ou, sem ele, a opção selecionada. */
 function valorDoSelect(s: HTMLSelectElement): string {
   if (typeof s.value === 'string') return s.value;
@@ -47,7 +54,6 @@ function valorDoSelect(s: HTMLSelectElement): string {
 export async function montarVerificacao(doc: Document, deps: DepsVerificacao): Promise<void> {
   const raiz = doc.getElementById('gelic-peca')!;
   let v: Verificacao | null = await deps.anterior().catch(() => null);
-  let parcial = false;
   let mecanicas = '';
   let temIa = deps.temIa;
 
@@ -62,90 +68,98 @@ export async function montarVerificacao(doc: Document, deps: DepsVerificacao): P
     status.className = `gelic-status${tom ? ` gelic-status-${tom}` : ''}`;
   };
 
-  const bVerificar = botao('verificar', '', true);
-  const bIa = botao('ia', 'Configurar a IA');
+  const bSemIa = botao('verificar-sem-ia', 'Verificar sem IA');
+  bSemIa.title = 'Confere a presença dos requisitos (peças, assinaturas, datas, números, valores), sem juízo sobre o conteúdo. Não usa IA nem custa nada.';
+  const bVerificar = botao('verificar', 'Verificar com IA', true);
+  bVerificar.title = 'O modelo de IA julga o conteúdo de cada item pelos critérios do DVI da Gelic, com a sua chave.';
+  const bIa = botao('ia', 'Configurar a IA (opcional)');
   const bPrevia = botao('previa', 'Prévia do checklist');
   const bGravar = botao('gravar', 'Gravar Checklist de Conformidade');
   const rotulos = () => {
-    bVerificar.textContent = temIa ? (v ? 'Verificar de novo' : 'Verificar') : 'Verificação parcial (sem IA)';
+    bVerificar.hidden = !temIa;
     bIa.hidden = temIa;
   };
   deps.aoMudarIa?.(t => { temIa = t; rotulos(); });
 
   function item(i: ItemVerificado): HTMLElement {
     const s = situacaoDe(i);
-    const caixa = el(doc, 'textarea', { rows: '2', 'data-gelic-justificativa': i.id, 'aria-label': `Justificativa do item ${i.id}` }) as HTMLTextAreaElement;
+    const caixa = el(doc, 'textarea', { rows: '2', 'data-gelic-justificativa': i.id, 'aria-label': `Justificativa: ${i.grupo ? `${i.grupo}, ${i.texto}` : `item ${i.id}`}` }) as HTMLTextAreaElement;
     caixa.value = i.justificativa ?? i.justificativaAnterior ?? '';
     const b = el(doc, 'button', { type: 'button', class: 'gelic-mini', 'data-gelic-justificar': i.id }, s === 'justificado' ? 'Trocar justificativa' : 'Justificar');
     b.addEventListener('click', () => void (async () => {
       try {
-        v = await deps.justificar(i.id, caixa.value);
+        v = await deps.justificar(i.id, caixa.value, v!.modo);
         desenhar();
-        avisar(`Item ${i.id} justificado.`, 'ok');
+        avisar(`Item justificado: ${i.grupo ?? i.id}.`, 'ok');
       } catch (e) {
         avisar(mensagem(e), 'erro');
       }
     })());
     return el(doc, 'div', { class: 'gelic-item', 'data-gelic-item': i.id, 'data-situacao': s },
-      el(doc, 'p', { class: 'gelic-item-cab' }, el(doc, 'strong', {}, i.id), ` ${i.texto} — `, el(doc, 'span', { class: 'gelic-situacao' }, ROTULO[s]), i.sei ? ` · SEI ${i.sei}` : ''),
+      el(doc, 'p', { class: 'gelic-item-cab' }, el(doc, 'strong', {}, i.grupo ? `${i.grupo}:` : i.id), ` ${i.texto} — `, el(doc, 'span', { class: 'gelic-situacao' }, rotulo(v!.modo, s)), i.sei ? ` · SEI ${i.sei}` : ''),
       ...i.achados.map(a => el(doc, 'div', { class: 'gelic-achado' },
         el(doc, 'p', {}, a.sei ? `SEI ${a.sei} (${a.documento}), ${a.achado.item}: ` : `${a.documento}: `, a.achado.constatacao),
         el(doc, 'p', {}, el(doc, 'strong', {}, 'O que corrigir: '), a.achado.recomendacao))),
       i.nota ? el(doc, 'p', { class: 'gelic-nota' }, i.nota) : null,
-      i.justificativaAnterior && !i.justificativa ? el(doc, 'p', { class: 'gelic-nota' }, 'O documento mudou depois da justificativa: confira e justifique de novo.') : null,
+      i.justificativaAnterior && !i.justificativa ? el(doc, 'p', { class: 'gelic-nota' }, 'O que foi verificado mudou depois da justificativa: confira e justifique de novo.') : null,
       el(doc, 'label', {}, 'Ou justifique (vai no checklist):'), caixa, b);
   }
 
   function desenhar(): void {
     rotulos();
     const filhos: HTMLElement[] = [];
-    if (v && !parcial) {
+    if (v) {
+      const modo = v.modo;
       const abertos = v.itens.filter(i => !['atende', 'nao_se_aplica'].includes(situacaoDe(i)));
       const resolvidos = v.itens.filter(i => !abertos.includes(i));
       filhos.push(...abertos.map(item));
-      filhos.push(el(doc, 'details', { class: 'gelic-resolvidos' }, el(doc, 'summary', {}, `${resolvidos.length} itens atendem ou não se aplicam`),
-        el(doc, 'ul', {}, ...resolvidos.map(i => el(doc, 'li', {}, `${i.id} ${i.texto} — ${ROTULO[situacaoDe(i)]}${i.sei ? ` · SEI ${i.sei}` : ''}`)))));
+      const n = resolvidos.length;
+      filhos.push(el(doc, 'details', { class: 'gelic-resolvidos' }, el(doc, 'summary', {}, `${n} ${n === 1 ? 'item atende' : 'itens atendem'}${modo === 'ia' ? ' ou não se aplicam' : ''}`),
+        el(doc, 'ul', {}, ...resolvidos.map(i => el(doc, 'li', {}, `${i.grupo ? `${i.grupo}: ` : `${i.id} `}${i.texto} — ${rotulo(modo, situacaoDe(i))}${i.sei ? ` · SEI ${i.sei}` : ''}`)))));
       if (v.outros.length) {
         filhos.push(el(doc, 'section', { class: 'gelic-outros' }, el(doc, 'h2', {}, 'Outros apontamentos'),
           ...v.outros.map(a => el(doc, 'p', {}, `${a.sei ? `SEI ${a.sei}: ` : ''}${a.achado.constatacao} O que corrigir: ${a.achado.recomendacao}`))));
       }
       if (v.ausencias.length) filhos.push(el(doc, 'section', { class: 'gelic-ausencias' }, el(doc, 'h2', {}, 'Peças que faltam'), el(doc, 'ul', {}, ...v.ausencias.map(a => el(doc, 'li', {}, a)))));
+      // com IA, as checagens sem IA da mesma leitura ficam à mão; sem IA, elas já são os itens
+      if (modo === 'ia' && mecanicas) filhos.push(el(doc, 'details', { class: 'gelic-mecanicas' }, el(doc, 'summary', {}, 'Checagens sem IA'), el(doc, 'pre', {}, mecanicas)));
     }
-    if (mecanicas) filhos.push(el(doc, 'details', { class: 'gelic-mecanicas', ...(parcial ? { open: '' } : {}) }, el(doc, 'summary', {}, 'Checagens sem IA'), el(doc, 'pre', {}, mecanicas)));
     itens.replaceChildren(...filhos);
     const n = v ? pendentes(v).length : 0;
-    faixa.textContent = parcial ? 'Verificação parcial: o mérito não foi analisado (configure a IA para a verificação completa).'
-      : !v ? 'Sem verificação ainda.'
-        : n ? `${n} ${n > 1 ? 'itens pendentes' : 'item pendente'}: corrija nos autos e verifique de novo, ou justifique.`
-          : 'Checklist fechado: pode gravar.';
-    faixa.className = `gelic-faixa${parcial || n ? ' gelic-faixa-falta' : ''}`;
-    bGravar.disabled = !v || parcial || !fechado(v);
-    bPrevia.disabled = !v || parcial;
+    faixa.textContent = !v ? 'Sem verificação ainda. Escolha: sem IA (presença dos requisitos) ou com IA (julgamento do conteúdo).'
+      : `${NOME_MODO[v.modo]}. ${n ? `${n} ${n > 1 ? 'itens pendentes' : 'item pendente'}: corrija nos autos e verifique de novo, ou justifique.` : 'Checklist fechado: pode gravar.'}`;
+    faixa.className = `gelic-faixa${n ? ' gelic-faixa-falta' : ''}`;
+    bGravar.disabled = !v || !fechado(v);
+    bPrevia.disabled = !v;
   }
 
   bIa.addEventListener('click', () => deps.configurarIa());
-  bVerificar.addEventListener('click', () => void (async () => {
-    bVerificar.disabled = true;
-    avisar(temIa ? 'Lendo os autos e verificando com a IA…' : 'Lendo os autos…');
+  const rodar = (modo: Modo, b: HTMLButtonElement) => void (async () => {
+    bSemIa.disabled = bVerificar.disabled = true;
+    // a caixa de gravar e a prévia eram da verificação anterior: o Confirmar não pode gravar a nova sem a pessoa ver
+    gravarCaixa.hidden = true;
+    previaCaixa.hidden = true;
+    avisar(modo === 'ia' ? 'Lendo os autos e verificando com a IA…' : 'Lendo os autos e conferindo a presença dos requisitos…');
     try {
-      const r = await deps.rodar();
+      const r = await deps.rodar(modo);
+      if (r.tipo === 'erro') { avisar([r.erro, ...r.erros].join(' '), 'erro'); return; }
       mecanicas = r.pendencias;
-      if (r.tipo === 'erro') { desenhar(); avisar([r.erro, ...r.erros].join(' '), 'erro'); return; }
-      parcial = r.tipo === 'parcial';
-      if (r.tipo === 'completa') v = r.verificacao;
+      v = r.verificacao;
       desenhar();
-      if (r.tipo === 'parcial') { avisar('Verificação parcial pronta.', 'ok'); return; }
-      const g = deps.gasto?.();
-      avisar(`Pronto: ${r.reexaminados} ${r.reexaminados === 1 ? 'item examinado' : 'itens examinados'} nesta rodada.${g ? ` Gasto: US$ ${g.toFixed(3)}.` : ''}`, 'ok');
+      const g = modo === 'ia' ? deps.gasto?.() : 0;
+      avisar(`Pronto: ${r.reexaminados} ${r.reexaminados === 1 ? 'item examinado' : 'itens examinados'} nesta rodada${modo === 'presenca' ? ', sem IA' : ''}.${g ? ` Gasto da IA nesta janela: US$ ${g.toFixed(3)}.` : ''}`, 'ok');
     } catch (e) {
       avisar(mensagem(e), 'erro');
     } finally {
-      bVerificar.disabled = false;
+      bSemIa.disabled = bVerificar.disabled = false;
+      b.focus?.();
     }
-  })());
+  })();
+  bSemIa.addEventListener('click', () => rodar('presenca', bSemIa));
+  bVerificar.addEventListener('click', () => rodar('ia', bVerificar));
   bPrevia.addEventListener('click', () => void (async () => {
     try {
-      previaCaixa.replaceChildren(el(doc, 'h2', {}, 'Prévia'), el(doc, 'iframe', { class: 'gelic-previa', sandbox: '', srcdoc: await deps.previa(), title: 'Prévia do checklist' }));
+      previaCaixa.replaceChildren(el(doc, 'h2', {}, 'Prévia'), el(doc, 'iframe', { class: 'gelic-previa', sandbox: '', srcdoc: await deps.previa(v!.modo), title: 'Prévia do checklist' }));
       previaCaixa.hidden = false;
     } catch (e) {
       avisar(mensagem(e), 'erro');
@@ -170,7 +184,7 @@ export async function montarVerificacao(doc: Document, deps: DepsVerificacao): P
       if (!tipo) { avisar('Escolha o tipo de documento no SEI.', 'erro'); return; }
       confirmar.disabled = true;
       try {
-        const r = await deps.gravar(tipo);
+        const r = await deps.gravar(tipo, v!.modo);
         if (!r.ok) { avisar(r.erro ?? 'O SEI não gravou o documento.', 'erro'); return; }
         gravarCaixa.hidden = true;
         avisar(`Criado o Checklist de Conformidade SEI nº ${r.numero}, não assinado. Confira no SEI antes de assinar.`, 'ok');
@@ -180,19 +194,23 @@ export async function montarVerificacao(doc: Document, deps: DepsVerificacao): P
         confirmar.disabled = false;
       }
     })());
-    gravarCaixa.replaceChildren(
+    gravarCaixa.replaceChildren(...[
       el(doc, 'h2', {}, 'Gravar no SEI'),
-      el(doc, 'p', {}, `Cria o Checklist de Conformidade no processo ${deps.protocolo}. Não assina.${sugerido ? '' : ' O tipo "Checklist de Conformidade" ainda não existe neste SEI: escolha outro, e o nome na árvore sai "Checklist de Conformidade".'}`),
+      el(doc, 'p', {}, `Cria o Checklist de Conformidade (${FORMA_CURTA[v!.modo]}) no processo ${deps.protocolo}. Não assina.`),
+      tipoEhChecklist(sugerido) ? null : el(doc, 'p', { class: 'gelic-nota' }, sugerido
+        ? 'O tipo "Checklist de Conformidade" ainda não existe neste SEI: vai como Despacho, e a árvore mostra "Despacho de Conformidade".'
+        : 'Escolha o tipo: o nome na árvore sai "<tipo> de Conformidade". Use Despacho quando houver; o roteiro reconhece "Despacho de Conformidade".'),
       el(doc, 'label', { for: 'gelic-tipo' }, 'Tipo de documento no SEI'), sel,
-      el(doc, 'div', { class: 'gelic-botoes' }, confirmar, cancelar));
+      el(doc, 'div', { class: 'gelic-botoes' }, confirmar, cancelar),
+    ].filter((x): x is HTMLElement => !!x));
     gravarCaixa.hidden = false;
   })());
 
   raiz.replaceChildren(
     el(doc, 'header', { class: 'gelic-cab' }, el(doc, 'h1', {}, 'Verificação prévia'), el(doc, 'p', {}, `Processo ${deps.protocolo}`)),
-    el(doc, 'p', { class: 'gelic-nota' }, 'Os mesmos critérios do DVI da Gelic. Corrija nos autos e verifique de novo, ou justifique o item. Com o checklist fechado, grave o Checklist de Conformidade no processo.'),
+    el(doc, 'p', { class: 'gelic-nota' }, 'Os critérios do DVI da Gelic, em dois modos à sua escolha: sem IA, a extensão confere só a presença dos requisitos, sem juízo sobre o conteúdo; com IA, o modelo julga o conteúdo de cada item. Corrija nos autos e verifique de novo, ou justifique o item. Com o checklist fechado, grave-o no processo: o documento diz se a verificação usou IA.'),
     faixa, itens,
-    el(doc, 'div', { class: 'gelic-botoes gelic-rodape' }, bVerificar, bIa, bPrevia, bGravar),
+    el(doc, 'div', { class: 'gelic-botoes gelic-rodape' }, bSemIa, bVerificar, bIa, bPrevia, bGravar),
     status, gravarCaixa, previaCaixa);
   desenhar();
 }

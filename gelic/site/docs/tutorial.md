@@ -107,9 +107,10 @@ O **mapa de riscos**, quando a contratação pede, também é feito no Compras.g
 ### 10. Verificar antes de enviar
 
 Antes do envio, clique em **Verificar antes de enviar** no selo (ou em **Verificar**, na linha do roteiro). Uma aba
-própria confere a instrução pelos mesmos critérios do DVI da Gelic. Cada item pendente aparece com o que corrigir:
-corrija nos autos e verifique de novo, ou escreva a justificativa. Com tudo atendido ou justificado, grave o
-**Checklist de Conformidade** no processo e assine-o.
+própria confere a instrução pelos critérios do DVI da Gelic, em dois modos à sua escolha: **sem IA**, só a presença dos
+requisitos, sem juízo sobre o conteúdo; ou **com IA**, que julga o conteúdo de cada item. Cada pendência se corrige
+nos autos ou se justifica. Com tudo atendido ou justificado, grave o **Checklist de Conformidade** no processo (até o
+tipo existir no SEI, ele aparece como "Despacho de Conformidade") e assine-o. A etapa é opcional.
 
 !!! example "Espaço para print"
     Verificação prévia com um item pendente.
@@ -200,7 +201,7 @@ selo mostra a etapa seguinte, que é pedir o empenho, e o PCA recebe a atualiza�
 |---|---|---|---|
 | 1–3 | Item no PCA e criação do processo | Unidade | PCA e SEI CFC |
 | 4–9 | Instrução: DFD, termos, ETP, TR, preços e riscos | Unidade | SEI CFC e Compras.gov.br |
-| 10 | Verificar antes de enviar (Checklist de Conformidade) | Unidade | SEI CFC |
+| 10 | Verificar antes de enviar (opcional, com ou sem IA) | Unidade | SEI CFC |
 | 11 | Envio à Gelic | Unidade | SEI CFC |
 | 12–14 | Etapa, pendências e DVI | Gelic | SEI CFC Gelic |
 | 15–16 | Reserva, autorização e aviso | Gelic | SEI CFC Gelic |

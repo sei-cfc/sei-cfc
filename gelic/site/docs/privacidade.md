@@ -21,7 +21,7 @@ Só se você ligar a extensão ao PCA, com o seu token:
 
 ## O que vai para o provedor de IA
 
-Só quando você pede ao agente de IA uma análise ou um documento, ou clica em **Verificar** na verificação prévia, com
+Só quando você pede ao agente de IA uma análise ou um documento, ou clica em **Verificar com IA** na verificação prévia (a **Verificar sem IA** não manda nada a nenhum serviço), com
 a chave configurada no agente: o recorte dos autos necessário para o pedido. Por padrão, os nomes de pessoas vão trocados por pseudônimos; dá para desligar isso nos ajustes
 do agente.
 

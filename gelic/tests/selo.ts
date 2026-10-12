@@ -128,6 +128,7 @@ export async function verificarSelo(): Promise<void> {
     nada('E-mail solicitação de cotação', 'cotacoes');
     nada('Planilha de cotação', 'cotacoes');
     nada('Lista de Verificação AGU', 'checklist_conformidade');
+    assert.equal(roteiro([{ titulo: 'Despacho de Conformidade', numero: '9', assinado: true }]).passos.find(p => p.chave === 'checklist_conformidade')!.feito, true, 'enquanto o tipo do checklist não existe no SEI');
     nada('Portaria de nomeação de pregoeiro', 'portaria_planejamento');
     nada('Portaria PRES 233/2025', 'portaria_planejamento');
     assert.equal(roteiro([{ titulo: 'Mapa de preços', numero: '9' }]).passos.find(p => p.chave === 'mapa_precos')!.feito, true, 'o nome da árvore inicial');

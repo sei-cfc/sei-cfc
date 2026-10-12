@@ -7,7 +7,7 @@ import { PontePainel } from '../../../agente-ia/src/ponte/cliente';
 import { vinculoDaConfig } from '../pca/dfd';
 import { completarDaConfig, contextoDaJanela, esperarAba, lerConfigAgente } from '../peca/contexto';
 import { areaPadrao, lerUo } from '../peca/guardados';
-import { guardarVerificacao, justificar, lerVerificacao } from './estado';
+import { guardarVerificacao, justificar, lerVerificacao, type Modo } from './estado';
 import { montarVerificacao } from './pagina';
 import { gravarChecklist, previaChecklist, rodarVerificacao } from './rodada';
 
@@ -34,9 +34,10 @@ async function iniciar(): Promise<void> {
   addEventListener('pagehide', () => sinal.abort());
   // A IA pode ser configurada com a janela aberta (em outra aba): `ia` muda e cada rodada lê a atual.
   let ia = await completarDaConfig(lerConfigAgente).catch(() => undefined);
-  const contexto = () => contextoDaJanela({
-    protocolo: processo, ponte, sinal: sinal.signal,
-    // sem chave, o contexto vai sem completar: a rodada é a parcial (só as checagens sem IA)
+  // sem IA, leitura local: nada sai do navegador, e o restrito é lido sem a pergunta do envio ao modelo
+  const contexto = (modo: Modo = 'ia') => contextoDaJanela({
+    protocolo: processo, ponte, sinal: sinal.signal, leituraLocal: modo === 'presenca',
+    // sem chave, o contexto vai sem completar: só a verificação sem IA
     ...(ia ? { completar: (s: string, p: string, sn: AbortSignal) => ia!.completar(s, p, sn) } : {}),
     get privacidade() { return ia?.privacidade; },
     confirmar: async texto => confirm(texto),
@@ -53,8 +54,8 @@ async function iniciar(): Promise<void> {
     const u = (await lerUo(area)).unidade;
     return typeof u === 'string' && u.trim() ? { unidade: u.trim() } : {};
   };
-  const guardada = async () => {
-    const v = await lerVerificacao(area, processo);
+  const guardada = async (modo: Modo) => {
+    const v = await lerVerificacao(area, processo, modo);
     if (!v) throw new Error('Rode a verificação primeiro.');
     return v;
   };
@@ -67,16 +68,20 @@ async function iniciar(): Promise<void> {
       if (a !== 'local' || !mud.agenteIA_config) return;
       void completarDaConfig(lerConfigAgente).catch(() => undefined).then(nova => { ia = nova; f(!!nova); });
     }),
-    anterior: () => lerVerificacao(area, processo),
-    rodar: () => rodarVerificacao(processo, contexto(), { area, agora: () => new Date(), pca: vinculoDaConfig }),
-    justificar: async (id, texto) => {
-      const nova = justificar(await guardada(), id, texto);
+    // a mais recente dos dois modos: é a que a pessoa estava vendo
+    anterior: async () => {
+      const [a, b] = await Promise.all([lerVerificacao(area, processo, 'presenca'), lerVerificacao(area, processo, 'ia')]);
+      return !a ? b : !b ? a : a.em > b.em ? a : b;
+    },
+    rodar: modo => rodarVerificacao(processo, contexto(modo), { area, agora: () => new Date(), pca: vinculoDaConfig }, modo),
+    justificar: async (id, texto, modo) => {
+      const nova = justificar(await guardada(modo), id, texto);
       await guardarVerificacao(area, nova);
       return nova;
     },
-    previa: async () => previaChecklist(await guardada(), { ...(await unidade()), agora: new Date() }),
+    previa: async modo => previaChecklist(await guardada(modo), { ...(await unidade()), agora: new Date() }),
     tipos: async () => ((await contexto().sei<{ nome: string }[]>('opcoes', { lista: 'tipos_documento', processo })) ?? []).map(o => o.nome),
-    gravar: async tipo => gravarChecklist({ processo, tipo, ...(await unidade()), ctx: contexto(), area, agora: () => new Date() }),
+    gravar: async (tipo, modo) => gravarChecklist({ processo, tipo, modo, ...(await unidade()), ctx: contexto('presenca'), area, agora: () => new Date() }),
     gasto: () => ia?.uso().custo ?? 0,
   });
 }
