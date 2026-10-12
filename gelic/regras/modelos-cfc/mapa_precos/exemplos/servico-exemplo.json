@@ -1,0 +1,43 @@
+{
+  "_origem": "Exemplo inventado (dados fictícios), no formato do ctx que o gera monta em documentos/respostas.py::contexto_documento.",
+  "area_nome": "Gerência Executiva de Exemplo - GEX-EXEM",
+  "responsavel_nome": "Fulana de Tal Exemplo",
+  "responsavel_email": "fulana.exemplo@exemplo.invalid",
+  "responsavel_matricula": "000123",
+  "orgao": {
+    "nome": "CONSELHO FEDERAL DE CONTABILIDADE",
+    "endereco": "SAUS Quadra 05, Lote 03, Bloco J, Edifício CFC, Bairro Asa Sul, Brasília/DF, CEP 70070-920",
+    "contato": "Telefone: (61) 3314-9600 - www.cfc.org.br - E-mail: cfc@cfc.org.br"
+  },
+  "versao": "1.0",
+  "objeto": "Contratação de serviço fictício de manutenção de equipamentos de exemplo.",
+  "justificativa_pesquisa": "Pesquisa de exemplo em contratações similares fictícias (IN SEGES/ME nº 65/2021, art. 5º, II).",
+  "proposta_instituicao": "Empresa Fictícia de Exemplo Ltda.",
+  "proposta_valor_unitario": "95,00",
+  "proposta_valor_global": "1.140,00",
+  "quantidade_estimada": "até 12 serviços mensais",
+  "fonte_1_instituicao": "Órgão Fictício A",
+  "fonte_1_objeto": "Manutenção de exemplo A.",
+  "fonte_1_valor_unitario": "100,00",
+  "fonte_2_instituicao": "Órgão Fictício B",
+  "fonte_2_objeto": "Manutenção de exemplo B.",
+  "fonte_2_valor_unitario": "110,00",
+  "fonte_3_instituicao": "Órgão Fictício C",
+  "fonte_3_objeto": "Manutenção de exemplo C.",
+  "fonte_3_valor_unitario": "104,50",
+  "conclusao": "O preço proposto é compatível com os valores de exemplo pesquisados.",
+  "projetos_contas": [
+    {
+      "projeto": "Projeto 0000 - Projeto de exemplo",
+      "conta": "0.0.0.0.00.00.000 - Conta de exemplo"
+    }
+  ],
+  "equipe_planejamento": [
+    {
+      "nome": "Fulana de Tal Exemplo"
+    },
+    {
+      "nome": "Beltrano Exemplo da Silva"
+    }
+  ]
+}

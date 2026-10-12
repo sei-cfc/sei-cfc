@@ -1,0 +1,86 @@
+[
+ {
+  "chave": "dfd",
+  "rotulo": "DFD",
+  "nota": "Documento de Formalização de Demanda: necessidade, objeto, quantidade, estimativa preliminar de valor, data pretendida e responsável (lista de verificação AGU: \"Consta documento de formalização de demanda?\").",
+  "check_list_id": "[F01]",
+  "modelo": true
+ },
+ {
+  "chave": "termos_cientificacao",
+  "rotulo": "Termos de cientificação",
+  "nota": "Ciência expressa de cada pessoa chamada a participar do processo (equipe de planejamento, gestores, fiscais) quanto à indicação e às atribuições. Quatro, por padrão.",
+  "check_list_id": null,
+  "modelo": true
+ },
+ {
+  "chave": "portaria_planejamento",
+  "rotulo": "Portaria - Equipe de Planejamento",
+  "nota": "Ato da autoridade que institui a equipe de planejamento da contratação. Título na árvore: \"Portaria nº <n> - Equipe de Planejamento\".",
+  "check_list_id": null,
+  "modelo": false
+ },
+ {
+  "chave": "portaria_gestores",
+  "rotulo": "Portaria - Gestores de Contrato",
+  "nota": "Ato da autoridade que designa os gestores e fiscais do contrato. Título na árvore: \"Portaria nº <n> - Gestores de Contrato\".",
+  "check_list_id": null,
+  "modelo": false
+ },
+ {
+  "chave": "etp",
+  "rotulo": "ETP",
+  "nota": "Estudo Técnico Preliminar: necessidade, estimativa de quantitativo e de valor, manifestação sobre parcelamento e sobre a viabilidade, no mínimo (lista de verificação AGU: \"O Estudo Técnico Preliminar contempla ao menos...?\").",
+  "check_list_id": "[T01]",
+  "modelo": false
+ },
+ {
+  "chave": "pesquisa_banco_precos",
+  "rotulo": "Pesquisa de preços - Banco de Preços",
+  "nota": "Relatório da pesquisa nos bancos públicos de preços (Banco de Preços, contratações similares), documento externo.",
+  "check_list_id": null,
+  "modelo": false
+ },
+ {
+  "chave": "cotacoes",
+  "rotulo": "Cotações de fornecedores",
+  "nota": "Cotações enviadas pelos fornecedores, em PDF (três ou quatro, por padrão), documentos externos.",
+  "check_list_id": null,
+  "modelo": false
+ },
+ {
+  "chave": "mapa_precos",
+  "rotulo": "Mapa de preços",
+  "nota": "Mapa Comparativo de Preços (documento do SEI): série de preços coletados, método estatístico e memória de cálculo do valor estimado, com a justificativa da pesquisa abaixo da tabela — contas refeitas pelo sistema, nunca digitadas.",
+  "check_list_id": null,
+  "modelo": true
+ },
+ {
+  "chave": "tr",
+  "rotulo": "TR",
+  "nota": "Termo de Referência: objeto, fundamentação da contratação, descrição da solução, requisitos, modelo de execução, modelo de gestão, critérios de medição e de pagamento, forma de seleção do fornecedor e estimativa de valor.",
+  "check_list_id": "[R01]",
+  "modelo": true
+ },
+ {
+  "chave": "mapa_riscos",
+  "rotulo": "Mapa de riscos",
+  "nota": "Análise/Mapa de riscos com probabilidade, impacto, prevenção, contingência e responsável, assinado pela equipe de planejamento (lista de verificação AGU: \"Há Análise de Riscos?\").",
+  "check_list_id": "[K01]",
+  "modelo": false
+ },
+ {
+  "chave": "checklist_conformidade",
+  "rotulo": "Checklist de Conformidade",
+  "nota": "Verificação prévia da unidade, pelos mesmos critérios do DVI da Gelic, antes do envio (gerada pela verificação prévia).",
+  "check_list_id": null,
+  "modelo": false
+ },
+ {
+  "chave": "despacho_delic",
+  "rotulo": "Despacho de envio à Gelic",
+  "nota": "Despacho de encaminhamento do processo à Gerência de Licitações e Contratos (Gelic), identificando objeto, fundamento e as peças encaminhadas.",
+  "check_list_id": null,
+  "modelo": true
+ }
+]

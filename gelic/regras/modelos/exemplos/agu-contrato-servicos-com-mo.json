@@ -1,0 +1,111 @@
+{
+ "regime": {
+  "valor": "14133",
+  "sei": "1000010",
+  "p": 12,
+  "nota": "edital do pregão eletrônico (Lei nº 14.133/2021)"
+ },
+ "processo": {
+  "valor": "12345670000000.000000/2026-00",
+  "nota": "cabeçalho dos autos"
+ },
+ "contrato": {
+  "numero": "12/2026"
+ },
+ "licitacao": {
+  "concorrencia": false,
+  "numero": "90005/2026"
+ },
+ "nomeacao": {
+  "portaria": "0/2026",
+  "data": "2 de janeiro de 2026",
+  "dou": "5 de janeiro de 2026",
+  "matricula": "0000"
+ },
+ "contratada": {
+  "razao_social": {
+   "valor": "Exemplo Terceirização Ltda.",
+   "sei": "1000020",
+   "p": 40
+  },
+  "cnpj": {
+   "valor": "00.000.000/0001-00",
+   "sei": "1000020",
+   "p": 40
+  },
+  "endereco": "Rua Exemplo, nº 1, Setor Central, CEP 74000-000",
+  "cidade": "Goiânia/GO"
+ },
+ "representante": {
+  "nome": {
+   "valor": "Nome do Representante",
+   "sei": "1000021",
+   "p": 45
+  },
+  "funcao": "Procurador",
+  "por_procuracao": true
+ },
+ "objeto_servico": "limpeza, conservação e higienização das instalações da sede do CFC",
+ "itens": [
+  {
+   "item": "1",
+   "especificacao": "Servente de limpeza (posto 44h semanais)",
+   "codigo": "000000",
+   "unidade": "posto",
+   "quantidade": "20",
+   "valor_unitario": "5.000,00",
+   "valor_total": "1.200.000,00"
+  },
+  {
+   "item": "2",
+   "especificacao": "Encarregado de limpeza (posto 44h semanais)",
+   "codigo": "000001",
+   "unidade": "posto",
+   "quantidade": "2",
+   "valor_unitario": "7.000,00",
+   "valor_total": "168.000,00"
+  }
+ ],
+ "vigencia": {
+  "prazo": "12 (doze) meses",
+  "termo_inicial": "da data de assinatura"
+ },
+ "valor_mensal": "114.000,00",
+ "valor_mensal_extenso": "cento e catorze mil reais",
+ "valor_global": "1.368.000,00",
+ "valor_global_extenso": "um milhão, trezentos e sessenta e oito mil reais",
+ "valor_por_demanda": true,
+ "prazo_decisao": "1 (um) mês",
+ "prazo_reequilibrio": "1 (um) mês",
+ "garantia": true,
+ "manutencao": {
+  "locais": "SAUS Quadra 5, Bloco J, Ed. CFC, Brasília/DF",
+  "distancia": "50 (cinquenta) quilômetros"
+ },
+ "transicao_contratual": true,
+ "cessao_direitos": {
+  "obra_imaterial": true
+ },
+ "reserva_mulheres": {
+  "inferior_25": false,
+  "percentual": "8"
+ },
+ "seguranca_privada": false,
+ "lgpd": true,
+ "dotacao": {
+  "fonte": "recursos próprios",
+  "projeto": "5008",
+  "conta": "6.3.1.3.02.01.009",
+  "plano_interno": "não se aplica",
+  "empenho": "2026NE000000"
+ },
+ "local_data": "Brasília/DF, 20 de outubro de 2026.",
+ "testemunhas": [
+  {
+   "nome": "Nome da Testemunha 1"
+  },
+  {
+   "nome": "Nome da Testemunha 2"
+  }
+ ]
+}

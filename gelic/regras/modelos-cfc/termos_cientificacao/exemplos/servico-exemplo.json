@@ -1,0 +1,29 @@
+{
+  "_origem": "Exemplo inventado (dados fictícios), no formato do ctx que o gera monta em documentos/respostas.py::contexto_documento.",
+  "area_nome": "Gerência Executiva de Exemplo - GEX-EXEM",
+  "responsavel_nome": "Fulana de Tal Exemplo",
+  "responsavel_email": "fulana.exemplo@exemplo.invalid",
+  "responsavel_matricula": "000123",
+  "orgao": {
+    "nome": "CONSELHO FEDERAL DE CONTABILIDADE",
+    "endereco": "SAUS Quadra 05, Lote 03, Bloco J, Edifício CFC, Bairro Asa Sul, Brasília/DF, CEP 70070-920",
+    "contato": "Telefone: (61) 3314-9600 - www.cfc.org.br - E-mail: cfc@cfc.org.br"
+  },
+  "versao": "1.0",
+  "vinculo_padrao": "empregado efetivo deste Conselho Federal de Contabilidade",
+  "pessoas_sem_treinamento": "Beltrano Exemplo da Silva",
+  "pessoas_termo": [
+    {
+      "nome": "Fulana de Tal Exemplo",
+      "matricula": "000123",
+      "papel": "membro de equipe de planejamento de contrato",
+      "apto": true
+    },
+    {
+      "nome": "Beltrano Exemplo da Silva",
+      "matricula": "000456",
+      "papel": "fiscal de contrato",
+      "apto": false
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+site_name: SEI CFC
+site_description: Extensões do Conselho Federal de Contabilidade para o SEI (SEI CFC e SEI CFC Gelic).
+site_url: https://sei-cfc.github.io/
+copyright: Conselho Federal de Contabilidade · extensões feitas sobre o <a href="https://seipro.app">SEI Pro</a> (AGPL-3.0)
+docs_dir: docs
+
+theme:
+  name: material
+  language: pt-BR
+  logo: assets/cfc.png
+  favicon: assets/cfc.png
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Modo escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Modo claro
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - toc.follow
+
+# O --strict só para a publicação no que vem como aviso: por isso tudo aqui é warn.
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    not_found: warn
+    anchors: warn
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Início: index.md
+  - SEI CFC: sei-cfc.md
+  - SEI CFC Gelic: sei-cfc-gelic.md
+  - Instalar e atualizar: instalar.md
+  - Novidades: novidades.md
+  - Privacidade: privacidade.md

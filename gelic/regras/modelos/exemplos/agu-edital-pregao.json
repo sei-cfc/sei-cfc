@@ -1,0 +1,78 @@
+{
+ "regime": "14133",
+ "registro_precos": true,
+ "processo": {"valor": "12345670000000.000000/2026-00", "nota": "cabeçalho dos autos"},
+ "licitacao": {
+  "modalidade": "pregão eletrônico",
+  "numero": "90012",
+  "ano": "2026",
+  "objeto": "o registro de preços para eventual aquisição de materiais de expediente",
+  "sitio_autos": "https://sei.cfc.org.br/pesquisa-publica",
+  "sitio_edital": "https://cfc.org.br/licitacoes"
+ },
+ "conducao": {"agente": "Pregoeiro"},
+ "objeto_curto": {"valor": "aquisição de materiais de expediente", "sei": "1000020", "p": 5},
+ "valor_global": {"valor": "123.456,78", "sei": "1000030", "p": 9},
+ "orcamento_sigiloso": false,
+ "sessao": {"data": "10/11/2026", "hora": "10"},
+ "maior_desconto": false,
+ "julgamento": {"forma": "por grupo"},
+ "disputa": {"modo": "aberto e fechado"},
+ "preferencia_me_epp": true,
+ "margem_preferencia": false,
+ "divisao": {"grupos": true},
+ "exclusiva_me_epp": {"itens": "1, 2 e 3"},
+ "me_epp": {"itens_sem_tratamento": "7, 8 e 9"},
+ "vedadas_cooperativas": true,
+ "vedado_consorcio": false,
+ "vedadas_pessoas_fisicas": true,
+ "habilitacao": {
+  "antecede": false,
+  "outro_meio": "meio eletrônico, no próprio sistema",
+  "prazo_documentos": "2 (duas) horas",
+  "prazo_complementacao": "2 (duas)"
+ },
+ "desempate": {"integridade": true},
+ "proposta": {
+  "campo_valor": "valor unitário e valor total do item",
+  "marca": true,
+  "fabricante": true,
+  "quantidade_minima": "10 (dez) unidades.",
+  "validade": "60 (sessenta)"
+ },
+ "admite_quantitativo_inferior": true,
+ "simples_nacional_vedado": false,
+ "lances": {"intervalo_minimo": "R$ 0,01 (um centavo)"},
+ "negociacao": {"prazo_proposta": "2 (duas) horas"},
+ "dedicacao_exclusiva": true,
+ "convencao_coletiva": {"paradigma": "Convenção Coletiva de Trabalho 2026/2026 firmada entre o sindicato patronal e o sindicato laboral da categoria no Distrito Federal (fictícia)"},
+ "reserva_vagas": {"menos_25": false},
+ "engenharia": true,
+ "consorcio_permitido": {"acrescimo": "10% (dez por cento)"},
+ "vistoria": {"agendamento": "pelo e-mail licitacoes@exemplo.gov.br, com antecedência mínima de 1 (um) dia útil"},
+ "contratacao": {
+  "prazo_assinatura": "5 (cinco)",
+  "prazo_devolucao": "5 (cinco)",
+  "prazo_assinatura_digital": "5 (cinco)",
+  "prazo_resposta": "5 (cinco)"
+ },
+ "instrumento_equivalente": "Nota de Empenho",
+ "grande_vulto": true,
+ "ata": {"prazo_assinatura": "5 (cinco)", "renova_quantitativo": true},
+ "multa": {
+  "prazo_recolhimento": "10 (dez)",
+  "leve_min": "0,5%",
+  "leve_max": "15%",
+  "grave_min": "15%",
+  "grave_max": "30%"
+ },
+ "impugnacao": {"meios": "e-mail licitacoes@exemplo.gov.br"},
+ "edital": {"anexos": [
+  "Anexo II – Minuta de Termo de Contrato",
+  "Anexo III – Minuta de Ata de Registro de Preços",
+  "Anexo IV – Regras aplicáveis ao instrumento substitutivo ao contrato",
+  "Anexo V – Declaração de Responsabilidade pelo enquadramento sindical"
+ ]},
+ "local_data": "Brasília/DF, 20 de outubro de 2026.",
+ "autoridade": {"nome": "Nome da Autoridade", "cargo": "Cargo da Autoridade"}
+}

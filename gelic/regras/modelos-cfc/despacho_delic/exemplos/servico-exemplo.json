@@ -1,0 +1,18 @@
+{
+  "_origem": "Exemplo inventado (dados fictícios), no formato do ctx que o gera monta em documentos/respostas.py::contexto_documento.",
+  "area_nome": "Gerência Executiva de Exemplo - GEX-EXEM",
+  "responsavel_nome": "Fulana de Tal Exemplo",
+  "responsavel_email": "fulana.exemplo@exemplo.invalid",
+  "responsavel_matricula": "000123",
+  "orgao": {
+    "nome": "CONSELHO FEDERAL DE CONTABILIDADE",
+    "endereco": "SAUS Quadra 05, Lote 03, Bloco J, Edifício CFC, Bairro Asa Sul, Brasília/DF, CEP 70070-920",
+    "contato": "Telefone: (61) 3314-9600 - www.cfc.org.br - E-mail: cfc@cfc.org.br"
+  },
+  "versao": "1.0",
+  "destinatario": "Gerência de Licitações e Contratos",
+  "objeto": "Contratação de serviço fictício de manutenção de equipamentos de exemplo.",
+  "fundamento_contratacao": "Licitação na modalidade pregão, nos termos da Lei nº 14.133/2021.",
+  "documentos_encaminhados": "DFD\nTermos de cientificação\nMapa de preços\nTR",
+  "signatario_cargo": "Gerente de Exemplo"
+}

@@ -1,0 +1,31 @@
+# Formulário do modelo Despacho de envio à Gelic (era ao Delic no Gera CFC, Quick 261003-k9t).
+#
+# "destinatario" não é pergunta aqui — vem fixo de `constantes.json` (todo despacho desta etapa vai
+# para a Gelic). "objeto" reaproveita o cadastro único (D-14). Despacho, não memorando (2026-10-10):
+# sem número (o SEI numera) e sem assunto.
+
+- id: objeto
+  texto: "Objeto da contratação"
+  tipo: texto_longo
+  obrigatoria: true
+  le_do_cadastro: objeto
+
+- id: fundamento_contratacao
+  texto: "Fundamento da contratação"
+  tipo: texto_longo
+  obrigatoria: true
+  nota: "Ex.: \"dispensa de licitação, nos termos do artigo 75, XV, da Lei 14.133/2021\"."
+  le_do_cadastro: null
+
+- id: documentos_encaminhados
+  texto: "Documentos encaminhados"
+  tipo: texto_longo
+  obrigatoria: true
+  nota: "Um documento por linha."
+  le_do_cadastro: null
+
+- id: signatario_cargo
+  texto: "Cargo de quem assina o despacho"
+  tipo: texto
+  obrigatoria: true
+  le_do_cadastro: null

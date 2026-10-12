@@ -1,0 +1,75 @@
+{
+ "processo": {
+  "valor": "12345670000037.000016/2022-18",
+  "nota": "cabeçalho dos autos"
+ },
+ "unidade_gestora": "COLOG",
+ "regime": {
+  "valor": "8666",
+  "sei": "1234501",
+  "nota": "preâmbulo: regido pela Lei nº 8.666/1993"
+ },
+ "aditivo": {
+  "ordinal": "QUARTO"
+ },
+ "contrato": {
+  "numero": {
+   "valor": "12/2022",
+   "sei": "1234501"
+  },
+  "objeto": {
+   "valor": "contratação de empresa especializada na execução de serviços de limpeza/higienização robotizada e desinfecção no sistema de dutos de ar condicionado central do edifício sede do Conselho Federal de Contabilidade (CFC)",
+   "sei": "1234501"
+  }
+ },
+ "contratada": {
+  "razao_social": {
+   "valor": "Empresa Exemplo de Climatização Ltda",
+   "sei": "1234501"
+  },
+  "cnpj": {
+   "valor": "12.345.678/0001-90",
+   "sei": "1234501"
+  },
+  "endereco": {
+   "valor": "Rua Exemplo, nº 100 – Bairro Modelo - Rio de Janeiro/RJ",
+   "sei": "1234501"
+  }
+ },
+ "representante": {
+  "nome": {
+   "valor": "Fulano de Tal",
+   "sei": "1234501"
+  },
+  "funcao": "Representante Legal",
+  "tratamento": "pelo Senhor"
+ },
+ "licitacao": {
+  "origem": {
+   "valor": "Pregão Eletrônico nº 15/2022",
+   "sei": "1234501"
+  }
+ },
+ "prorrogacao": {
+  "prazo": "12 (doze) meses",
+  "inicio": {
+   "valor": "04/11/2026",
+   "nota": "vigência atual até 03/11/2026 (SEI 1234501, cl. 1.1.1)"
+  },
+  "fim": "03/11/2027"
+ },
+ "reajuste": {
+  "percentual": "4,641330%",
+  "indice": "IPCA (Índice de Preços ao Consumidor Amplo)",
+  "periodo": "julho de 2025 a junho de 2026",
+  "sei": "1234502"
+ },
+ "valor_global": "33.632,23",
+ "valor_global_extenso": "trinta e três mil seiscentos e trinta e dois reais e vinte e três centavos",
+ "dotacao": {
+  "conta": "6.3.1.3.02.01.030",
+  "conta_descricao": "Manutenção e Conservação dos Bens Imóveis",
+  "projeto": "5008",
+  "projeto_descricao": "Modernização"
+ }
+}

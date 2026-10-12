@@ -1,0 +1,142 @@
+{
+ "processo": {
+  "valor": "12345670000000.000000/2026-00",
+  "nota": "cabeçalho dos autos"
+ },
+ "regime": {
+  "valor": "14133",
+  "sei": "1000010",
+  "p": 12,
+  "nota": "preâmbulo do contrato"
+ },
+ "contrato": {
+  "numero": "30/2026"
+ },
+ "nomeacao": {
+  "portaria": "1/2026",
+  "data": "2 de janeiro de 2026",
+  "dou": "5 de janeiro de 2026",
+  "matricula": "0000"
+ },
+ "contratada": {
+  "razao_social": {
+   "valor": "Construtora Exemplo Engenharia Ltda.",
+   "sei": "1000010",
+   "p": 12
+  },
+  "cnpj": {
+   "valor": "00.000.000/0001-00",
+   "sei": "1000010",
+   "p": 12
+  },
+  "endereco": "Rua Exemplo, nº 1, Setor Industrial, CEP 70000-000",
+  "cidade": "Brasília/DF"
+ },
+ "representante": {
+  "nome": {
+   "valor": "Nome do Representante",
+   "sei": "1000045",
+   "p": 35
+  },
+  "funcao": "Sócio-Administrador",
+  "por_procuracao": false
+ },
+ "licitacao": {
+  "concorrencia": true
+ },
+ "inexigibilidade": false,
+ "dispensa_eletronica": false,
+ "contratacao": {
+  "numero": "90001/2026"
+ },
+ "objeto_contratacao": "empresa especializada para a reforma do edifício-sede do Conselho Federal de Contabilidade, com fornecimento de materiais e mão de obra",
+ "itens": [
+  {
+   "item": "1",
+   "especificacao": "Reforma do edifício-sede (conforme projeto básico e planilha orçamentária)",
+   "codigo": "0000",
+   "unidade": "serviço",
+   "quantidade": "1",
+   "valor_unitario": "2.400.000,00",
+   "valor_total": "2.400.000,00"
+  }
+ ],
+ "regime_execucao": "empreitada por preço global",
+ "vigencia": {
+  "escopo": true,
+  "prazo": "18 (dezoito) meses",
+  "termo_inicial": "da data de assinatura"
+ },
+ "matriz_risco": {
+  "contratante": [
+   {
+    "texto": "alteração do projeto por decisão do CONTRATANTE;"
+   },
+   {
+    "texto": "atraso na liberação das áreas de intervenção; e"
+   },
+   {
+    "texto": "caso fortuito ou força maior não segurável."
+   }
+  ],
+  "contratado": [
+   {
+    "texto": "erros de quantitativos da sua proposta;"
+   },
+   {
+    "texto": "variação de produtividade da mão de obra; e"
+   },
+   {
+    "texto": "acidentes de trabalho no canteiro."
+   }
+  ],
+  "compartilhados": [
+   {
+    "texto": "chuvas acima da média histórica do período;"
+   },
+   {
+    "texto": "interferências não cadastradas nas redes existentes; e"
+   },
+   {
+    "texto": "greves gerais da construção civil."
+   }
+  ],
+  "percentual_contratante": "50% (cinquenta por cento)",
+  "percentual_contratado": "50% (cinquenta por cento)"
+ },
+ "valor_global": "2.400.000,00",
+ "valor_global_extenso": "dois milhões e quatrocentos mil reais",
+ "valor_por_demanda": false,
+ "prazo_decisao": "1 (um) mês",
+ "prazo_reequilibrio": "1 (um) mês",
+ "garantia": true,
+ "documentos_recebimento": true,
+ "arquivar_documentos": true,
+ "manutencao": {
+  "distancia": "50 km (cinquenta quilômetros)",
+  "locais": "SAUS Quadra 5, Bloco J, Ed. CFC, Brasília/DF"
+ },
+ "projeto_executivo_contratado": true,
+ "natureza_intelectual": true,
+ "lgpd": true,
+ "dotacao": {
+  "fonte": "recursos próprios",
+  "projeto": "5008",
+  "conta": "6.3.2.1.01.01.001",
+  "plano_interno": "não se aplica",
+  "empenho": "2026NE000000"
+ },
+ "local_data": "Brasília/DF, 20 de outubro de 2026.",
+ "testemunhas": [
+  {
+   "nome": "Testemunha Um"
+  },
+  {
+   "nome": "Testemunha Dois"
+  }
+ ],
+ "transicao_contratual": true,
+ "cessao_direitos": {
+  "obra_imaterial": true
+ }
+}

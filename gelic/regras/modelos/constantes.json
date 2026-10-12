@@ -1,0 +1,35 @@
+{
+  "cfc": {
+    "nome": "Conselho Federal de Contabilidade",
+    "sigla": "CFC",
+    "cnpj": "33.618.570/0001-07",
+    "sede": "SAUS Quadra 5, Bloco J, Ed. CFC, Brasília/DF",
+    "uasg": "383500",
+    "setor_licitacoes": "Departamento de Licitações e Contratos",
+    "cidade": "Brasília/DF"
+  },
+  "destinos": {
+    "gex": "À Gerência Executiva de Gestão de Licitações, Contratos e Serviços."
+  },
+  "prazo_projur": "7 (sete) dias",
+  "norma_sancao": "Portaria CFC nº 266/2025",
+  "autoridades": {
+    "vp_gestao": {
+      "nome": "Weberth Fernandes",
+      "cargo": "Vice-Presidente de Gestão Administrativa-Financeira"
+    },
+    "diretora_digeo": {
+      "nome": "Adriana da Silva Guimarães",
+      "cargo": "Diretora de Gestão Estratégica"
+    },
+    "presidente": {
+      "nome": "Aécio Prado Dantas Júnior",
+      "cargo": "Presidente"
+    }
+  },
+  "modelos_projur": {
+    "versao": "28/01/2026",
+    "processo": "90796110000005.000003/2025-51",
+    "assinado_por": "Procurador-Chefe PROJUR/CFC"
+  }
+}

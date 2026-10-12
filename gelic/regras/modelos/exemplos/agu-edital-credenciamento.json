@@ -1,0 +1,50 @@
+{
+ "regime": "14133",
+ "processo": {"valor": "12345670000000.000000/2026-00", "nota": "cabeçalho dos autos"},
+ "credenciamento": {
+  "numero": "1",
+  "ano": "2026",
+  "objeto": {"valor": "tradução juramentada de documentos, sob demanda", "sei": "1000020", "p": 3},
+  "inciso": "I"
+ },
+ "fornecimento": false,
+ "valor_global": {"valor": "150.000,00", "sei": "1000030", "p": 7},
+ "edital": {
+  "vigencia": "12 (doze) meses",
+  "vigencia_inicio": "01/12/2026",
+  "sitio_eletronico": "https://www.exemplo.gov.br/licitacoes"
+ },
+ "vedadas_cooperativas": true,
+ "vedado_consorcio": true,
+ "vedadas_pessoas_fisicas": true,
+ "descricao_marca_fabricante": true,
+ "mercados_fluidos": true,
+ "calamidade_lei_14981": true,
+ "habilitacao": {
+  "outro_meio": "qualquer processo de cópia autenticada por meio eletrônico",
+  "prazo_analise": "5 (cinco)",
+  "prazo_complementacao": "2 (duas)"
+ },
+ "recurso": {"prazo_intencao": "3 (três)"},
+ "vista_autos": {"sitio": "https://www.exemplo.gov.br/sei-pesquisa-publica"},
+ "multa": {
+  "prazo_recolhimento": "20 (vinte)",
+  "faixa1_min": "0,5%",
+  "faixa1_max": "15%",
+  "faixa2_min": "15%",
+  "faixa2_max": "30%"
+ },
+ "impugnacao": {"meios": "e-mail licitacao@exemplo.gov.br e protocolo eletrônico do órgão"},
+ "contratacao": {"prazo_assinatura": "5 (cinco)"},
+ "vigencia": {"prazo": "12 (doze) meses", "inicio": "01/02/2027", "fim": "31/01/2028"},
+ "contratacoes_paralelas": {
+  "criterios": [
+   {"texto": "distribuição da demanda em rodízio, pela ordem da lista de credenciados;"},
+   {"texto": "novo credenciado ingressa no fim da fila do rodízio vigente; e"},
+   {"texto": "recusa de demanda pelo credenciado desloca-o para o fim da fila."}
+  ]
+ },
+ "descredenciamento": {"prazo_pedido": "30 (trinta)"},
+ "local_data": "Brasília/DF, 20 de novembro de 2026.",
+ "autoridade": {"nome": "Nome da Autoridade", "cargo": "Cargo da Autoridade"}
+}

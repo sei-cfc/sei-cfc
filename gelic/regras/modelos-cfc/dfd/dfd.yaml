@@ -1,0 +1,91 @@
+# Formulário do modelo DFD (Documento de Formalização de Demanda) — Gera CFC, Fase 43 Plan 03.
+#
+# Cada pergunta: id, texto, tipo (texto|texto_longo|data|escolha|tabela_itens|lista_pessoas|
+# somente_leitura), opcoes (só tipo escolha), obrigatoria, nota ((i) explicativa, opcional),
+# check_list_id (id do check-list [F01].. da Gelic, opcional), le_do_cadastro (chave de
+# Contratacao.cadastro quando a resposta vem/vai para o cadastro único — D-14 — ou null quando a
+# pergunta só existe neste documento) e quando_aparece.
+#
+# Vocabulário de "quando_aparece" (avaliado pela Plan 04 sobre o ctx já montado; ausente = a
+# pergunta sempre aparece):
+#   "nao <var>"            — aparece só quando <var> é falso/ausente no ctx (ex.: sem item do PCA)
+#   "<var> in (v1, v2)"     — aparece só quando o valor de <var> está entre os listados
+#
+# Variáveis derivadas (D-17/D-16/D-14 — decisão documentada no cabeçalho de dfd.md): algumas
+# perguntas alimentam uma variável DIFERENTE no texto do motor, calculada por quem monta o ctx
+# (Plan 04), não por um `@calcula` novo:
+#   data_pretendida      -> {data_pretendida_extenso} (item 5)
+#   grau_prioridade      -> {prioridade_baixo}/{prioridade_medio}/{prioridade_alto} (item 6)
+
+- id: justificativa
+  texto: "Justificativa da necessidade da contratação, considerando o Planejamento Estratégico"
+  tipo: texto_longo
+  obrigatoria: true
+  nota: "Cada parágrafo (separado por linha em branco) recebe numeração automática no documento (D-15)."
+  check_list_id: "[F01]"
+  le_do_cadastro: justificativa
+
+- id: objeto
+  texto: "Descrição sucinta do objeto"
+  tipo: texto_longo
+  obrigatoria: true
+  check_list_id: "[F01]"
+  le_do_cadastro: objeto
+
+- id: data_pretendida
+  texto: "Indicação da data pretendida para a conclusão da contratação"
+  tipo: data
+  obrigatoria: true
+  nota: "Pré-preenchida com o último dia do mês previsto do cadastro e editável (D-16)."
+  check_list_id: "[F01]"
+  le_do_cadastro: null
+
+- id: grau_prioridade
+  texto: "Grau de prioridade da compra ou da contratação"
+  tipo: escolha
+  opcoes: ["Baixo", "Médio", "Alto"]
+  obrigatoria: true
+  quando_aparece: "nao tem_item_pca"
+  nota: "Com item do PCA vinculado, o grau vem do PCA e esta pergunta não aparece."
+  le_do_cadastro: null
+
+- id: vinculacao
+  texto: "Indicação da vinculação ou dependência com o objeto de outro DFD"
+  tipo: texto
+  obrigatoria: false
+  nota: "Padrão \"Não se aplica\" quando em branco."
+  le_do_cadastro: null
+
+- id: pdtic
+  texto: "Alinhamento ao Plano Diretor de Tecnologia da Informação (PDTI)"
+  tipo: texto_longo
+  obrigatoria: false
+  nota: "Sugerida para contratações de TIC."
+  le_do_cadastro: null
+
+- id: diretor_nome
+  texto: "Nome do diretor da área (assinatura \"De acordo\")"
+  tipo: texto
+  obrigatoria: true
+  le_do_cadastro: null
+
+- id: diretor_cargo
+  texto: "Cargo do diretor da área"
+  tipo: texto
+  obrigatoria: true
+  le_do_cadastro: null
+
+- id: autoridade_nome
+  texto: "Nome da autoridade que autoriza a abertura do processo"
+  tipo: texto
+  obrigatoria: true
+  nota: "Valor inicial vem das constantes do modelo (cargo fixo: Vice-Presidente Administrativo)."
+  le_do_cadastro: null
+
+- id: fundamento_contratacao_direta
+  texto: "Fundamento da contratação direta"
+  tipo: texto_longo
+  obrigatoria: true
+  quando_aparece: "via in (dispensa, inexigibilidade)"
+  nota: "Só aparece nas vias de dispensa ou inexigibilidade (D-06)."
+  le_do_cadastro: null

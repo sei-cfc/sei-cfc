@@ -1,0 +1,2 @@
+/* GERADO por agente-ia/build.mjs. NAO EDITE ESTE ARQUIVO. Rode: npm run build */
+import{a,b,c,d,e,f,g,h,i}from"./chunk-GE3H6AJB.js";import"./chunk-D2FMHJXO.js";import"./chunk-CWEJDRMD.js";import"./chunk-VDTER5CG.js";import"./chunk-T5JYQECD.js";export{g as CHAVE_VALORES,e as FONTES,b as LIMITE_INTEGRAL,c as MAX_FONTES,a as ORCAMENTO_MODELO,i as caberNoOrcamentoModelo,h as recortarFonte,f as selecionarFontes,d as tipoFonte};

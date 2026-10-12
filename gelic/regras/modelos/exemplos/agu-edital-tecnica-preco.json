@@ -1,0 +1,127 @@
+{
+ "regime": "14133",
+ "processo": {
+  "valor": "12345670000000.000000/2026-00",
+  "nota": "cabeçalho dos autos"
+ },
+ "licitacao": {
+  "numero": "90001",
+  "ano": "2026",
+  "objeto": "a contratação de serviços técnicos especializados de consultoria em gestão de riscos corporativos",
+  "sitio_autos": "https://www.exemplo.gov.br/sei-pesquisa-publica",
+  "sitio_edital": "https://www.exemplo.gov.br/licitacoes"
+ },
+ "valor_global": {
+  "valor": "1.234.567,89",
+  "sei": "1000030",
+  "p": 12
+ },
+ "sessao": {
+  "data": "15/12/2026",
+  "hora": "10"
+ },
+ "preferencia_me_epp": true,
+ "margem_preferencia": true,
+ "conducao": {
+  "agente": "Agente de Contratação/Comissão",
+  "o": "o",
+  "ao": "ao"
+ },
+ "divisao": {
+  "itens_e_grupos": true
+ },
+ "exclusiva_me_epp": {
+  "itens": "3 e 4"
+ },
+ "vedadas_cooperativas": true,
+ "vedado_consorcio": false,
+ "consorcio_permitido": {
+  "acrescimo": "10% (dez por cento)"
+ },
+ "orcamento_sigiloso": false,
+ "proposta_tecnica": {
+  "requisitos": [
+   "metodologia de execução dos serviços;",
+   "qualificação da equipe técnica a ser alocada;",
+   "atestados de experiência anterior em serviços similares."
+  ]
+ },
+ "proposta": {
+  "campo_valor": "mensal e anual do item",
+  "marca": true,
+  "fabricante": true,
+  "validade": "60 (sessenta)"
+ },
+ "dedicacao_exclusiva": true,
+ "vigilancia_patrimonial": false,
+ "simples_nacional_vedado": false,
+ "tecnica": {
+  "parametro": "NT = 100 * T1/T2, onde NT = Nota da proposta técnica do licitante; T1 = Pontuação técnica atribuída ao licitante; T2 = Máxima pontuação técnica atribuída entre todos os licitantes.",
+  "peso": "70"
+ },
+ "preco": {
+  "peso": "30"
+ },
+ "engenharia": {
+  "preco_unitario": false
+ },
+ "habilitacao": {
+  "outro_meio": "qualquer processo de cópia autenticada por meio eletrônico",
+  "prazo_documentos": "2 (duas) horas",
+  "prazo_complementacao": "2 (duas)",
+  "antecede": false
+ },
+ "vistoria": {
+  "agendamento": "pelo e-mail informado no Termo de Referência, com antecedência mínima de 2 (dois) dias úteis"
+ },
+ "contratacao": {
+  "prazo_assinatura": "5 (cinco)",
+  "prazo_devolucao": "5 (cinco)",
+  "prazo_assinatura_digital": "5 (cinco)",
+  "prazo_resposta": "5 (cinco)"
+ },
+ "instrumento_equivalente": "Nota de Empenho",
+ "grande_vulto": true,
+ "multa": {
+  "prazo_recolhimento": "20 (vinte)",
+  "leve_min": "0,5%",
+  "leve_max": "15%",
+  "grave_min": "15%",
+  "grave_max": "30%"
+ },
+ "impugnacao": {
+  "meios": "e-mail licitacao@exemplo.gov.br e protocolo eletrônico do órgão"
+ },
+ "objeto_curto": {
+  "valor": "serviços técnicos especializados de consultoria em gestão de riscos corporativos",
+  "sei": "1000020",
+  "p": 3
+ },
+ "me_epp": {
+  "itens_sem_tratamento": "1 e 2"
+ },
+ "convencao_coletiva": {
+  "paradigma": "Convenção Coletiva de Trabalho 2026/2026 do sindicato da categoria no Distrito Federal (registro MTE DF000000/2026)"
+ },
+ "negociacao": {
+  "prazo_proposta": "2 (duas) horas"
+ },
+ "reserva_vagas": {
+  "menos_25": false
+ },
+ "edital": {
+  "anexos": [
+   "Anexo II – Anteprojeto / Projeto Básico",
+   "Anexo III – Minuta de Termo de Contrato",
+   "Anexo IV –Regras aplicáveis ao instrumento substitutivo ao contrato",
+   "Anexo V – Termo de Ciência e concordância",
+   "Anexo VI – Declaração de Responsabilidade pelo enquadramento sindical",
+   "Anexo VII – Modelo de Proposta Técnica"
+  ]
+ },
+ "local_data": "Brasília/DF, 20 de outubro de 2026.",
+ "autoridade": {
+  "nome": "Nome da Autoridade",
+  "cargo": "Cargo da Autoridade"
+ }
+}

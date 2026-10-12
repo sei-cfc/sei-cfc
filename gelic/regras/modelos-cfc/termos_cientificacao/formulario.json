@@ -1,0 +1,13 @@
+[
+ {
+  "id": "pessoas_sem_treinamento",
+  "texto": "Pessoas que necessitam de treinamento para a atribuição conferida",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "Um nome por linha, EXATAMENTE como está em \"Dados da contratação\" (equipe de planejamento/gestores/fiscais). Em branco, todos saem marcados aptos.",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ }
+]

@@ -1,0 +1,82 @@
+{
+  "_origem": "Exemplo inventado (dados fictícios), no formato do ctx que o gera monta em documentos/respostas.py::contexto_documento.",
+  "area_nome": "Gerência Executiva de Exemplo - GEX-EXEM",
+  "responsavel_nome": "Fulana de Tal Exemplo",
+  "responsavel_email": "fulana.exemplo@exemplo.invalid",
+  "responsavel_matricula": "000123",
+  "orgao": {
+    "nome": "CONSELHO FEDERAL DE CONTABILIDADE",
+    "endereco": "SAUS Quadra 05, Lote 03, Bloco J, Edifício CFC, Bairro Asa Sul, Brasília/DF, CEP 70070-920",
+    "contato": "Telefone: (61) 3314-9600 - www.cfc.org.br - E-mail: cfc@cfc.org.br"
+  },
+  "versao": "1.0",
+  "portarias_pca": {
+    "2026": "Portaria PRES/CFC nº 999, de 1º de janeiro de 2026"
+  },
+  "vinculacao_padrao": "Não se aplica",
+  "autoridade": {
+    "nome": "[A PREENCHER PELO ADMINISTRADOR]",
+    "cargo": "Vice-Presidente Administrativo"
+  },
+  "via": "pregao",
+  "contratacao_direta": false,
+  "tem_item_pca": true,
+  "item_pca": 99,
+  "ano_exercicio": 2026,
+  "portaria_pca": "Portaria PRES/CFC nº 999, de 1º de janeiro de 2026",
+  "justificativa": "A demanda decorre da necessidade de manter em funcionamento o serviço fictício de exemplo.\n\nA contratação atende ao objetivo estratégico de exemplo, sem relação com processo real.\n\nA não contratação interromperia a atividade de exemplo.",
+  "fundamento_contratacao_direta": "",
+  "objeto": "Contratação de serviço fictício de manutenção de equipamentos de exemplo, pelo período de 12 (doze) meses.",
+  "itens": [
+    {
+      "descricao": "Serviço de manutenção de exemplo",
+      "unidade_medida": "Serviço/mês",
+      "quantidade": "12"
+    },
+    {
+      "descricao": "Peça de reposição de exemplo",
+      "unidade_medida": "Unidade",
+      "quantidade": "05"
+    }
+  ],
+  "vigencia": {
+    "meses": 12
+  },
+  "vigencia_meses": 12,
+  "valor_estimado": "12.345,67",
+  "valor_estimado_fmt": "12.345,67",
+  "valor_estimado_extenso": "doze mil, trezentos e quarenta e cinco reais e sessenta e sete centavos",
+  "data_pretendida": "30/11/2026",
+  "data_pretendida_extenso": "30 de novembro de 2026",
+  "grau_prioridade": "Alto",
+  "prioridade_baixo": false,
+  "prioridade_medio": false,
+  "prioridade_alto": true,
+  "vinculacao": "Não se aplica",
+  "pdtic": "",
+  "projetos_contas": [
+    {
+      "projeto": "Projeto 0000 - Projeto de exemplo",
+      "conta": "0.0.0.0.00.00.000 - Conta de exemplo"
+    }
+  ],
+  "pessoas": [
+    {
+      "nome": "Fulana de Tal Exemplo",
+      "matricula": "000123",
+      "papel": "equipe_planejamento"
+    }
+  ],
+  "equipe_planejamento": [
+    {
+      "nome": "Fulana de Tal Exemplo"
+    },
+    {
+      "nome": "Beltrano Exemplo da Silva"
+    }
+  ],
+  "diretor_nome": "Sicrana Exemplo Diretora",
+  "diretor_cargo": "Diretora de Exemplo",
+  "autoridade_nome": "Autoridade Fictícia de Exemplo",
+  "autoridade_cargo": "Vice-Presidente Administrativo"
+}

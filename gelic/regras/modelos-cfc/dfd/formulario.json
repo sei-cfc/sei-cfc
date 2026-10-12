@@ -1,0 +1,116 @@
+[
+ {
+  "id": "justificativa",
+  "texto": "Justificativa da necessidade da contratação, considerando o Planejamento Estratégico",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Cada parágrafo (separado por linha em branco) recebe numeração automática no documento (D-15).",
+  "check_list_id": "[F01]",
+  "le_do_cadastro": "justificativa",
+  "quando_aparece": null
+ },
+ {
+  "id": "objeto",
+  "texto": "Descrição sucinta do objeto",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": "[F01]",
+  "le_do_cadastro": "objeto",
+  "quando_aparece": null
+ },
+ {
+  "id": "data_pretendida",
+  "texto": "Indicação da data pretendida para a conclusão da contratação",
+  "tipo": "data",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Pré-preenchida com o último dia do mês previsto do cadastro e editável (D-16).",
+  "check_list_id": "[F01]",
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "grau_prioridade",
+  "texto": "Grau de prioridade da compra ou da contratação",
+  "tipo": "escolha",
+  "opcoes": [
+   "Baixo",
+   "Médio",
+   "Alto"
+  ],
+  "obrigatoria": true,
+  "nota": "Com item do PCA vinculado, o grau vem do PCA e esta pergunta não aparece.",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": "nao tem_item_pca"
+ },
+ {
+  "id": "vinculacao",
+  "texto": "Indicação da vinculação ou dependência com o objeto de outro DFD",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "Padrão \"Não se aplica\" quando em branco.",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "pdtic",
+  "texto": "Alinhamento ao Plano Diretor de Tecnologia da Informação (PDTI)",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "Sugerida para contratações de TIC.",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "diretor_nome",
+  "texto": "Nome do diretor da área (assinatura \"De acordo\")",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "diretor_cargo",
+  "texto": "Cargo do diretor da área",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "autoridade_nome",
+  "texto": "Nome da autoridade que autoriza a abertura do processo",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Valor inicial vem das constantes do modelo (cargo fixo: Vice-Presidente Administrativo).",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "fundamento_contratacao_direta",
+  "texto": "Fundamento da contratação direta",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Só aparece nas vias de dispensa ou inexigibilidade (D-06).",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": "via in (dispensa, inexigibilidade)"
+ }
+]

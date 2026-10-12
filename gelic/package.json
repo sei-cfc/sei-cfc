@@ -1,0 +1,31 @@
+{
+  "name": "sei-pro-gelic",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0",
+  "type": "module",
+  "description": "SEI Pro Gelic: camada da Licitacao do CFC sobre o SEI Pro",
+  "scripts": {
+    "build": "tsx gerar.ts && npm run verificar && node build.mjs && tsx empacotar.ts && tsx empacotar.ts --perfil cfc",
+    "empacotar": "tsx empacotar.ts",
+    "empacotar:cfc": "tsx empacotar.ts --perfil cfc",
+    "zip": "tsx empacotar.ts --zip",
+    "zip:cfc": "tsx empacotar.ts --perfil cfc --zip",
+    "zip:todos": "tsx empacotar.ts --zip && tsx empacotar.ts --perfil cfc --zip",
+    "tipos": "tsc --noEmit",
+    "verificar": "tsx tests/verificar.ts",
+    "e2e": "bash tests/e2e/rodar.sh",
+    "e2e:cfc": "GELIC_PERFIL=cfc bash tests/e2e/rodar.sh",
+    "e2e:todos": "bash tests/e2e/rodar.sh && GELIC_PERFIL=cfc bash tests/e2e/rodar.sh",
+    "regras": "bash regras/sincronizar.sh && tsx gerar.ts",
+    "gerar": "tsx gerar.ts"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.300",
+    "@types/node": "^22.20.4",
+    "esbuild": "^0.25.0",
+    "linkedom": "^0.18.13",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}

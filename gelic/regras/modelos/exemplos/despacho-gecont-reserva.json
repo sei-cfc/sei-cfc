@@ -1,0 +1,51 @@
+{
+ "processo": {
+  "valor": "12345670000000.000000/2026-00",
+  "nota": "cabeçalho dos autos"
+ },
+ "regime": {
+  "valor": "14133",
+  "sei": "1000010",
+  "p": 12,
+  "nota": "preâmbulo do contrato"
+ },
+ "objeto": {
+  "valor": "contratação de serviços continuados de apoio administrativo, conforme condições estabelecidas no Termo de Referência.",
+  "sei": "1000010",
+  "p": 12
+ },
+ "contrato": {
+  "numero": {
+   "valor": "10/2025",
+   "sei": "1000010",
+   "p": 12
+  },
+  "sei": "1000010"
+ },
+ "contratada": {
+  "razao_social": {
+   "valor": "Empresa Exemplo Serviços Ltda.",
+   "sei": "1000010",
+   "p": 12
+  },
+  "razao_social_maiusculas": "EMPRESA EXEMPLO SERVIÇOS LTDA.",
+  "cnpj": {
+   "valor": "00.000.000/0001-00",
+   "sei": "1000010",
+   "p": 12
+  },
+  "endereco": "Rua Exemplo, nº 1, Brasília/DF, CEP 70000-000"
+ },
+ "autoridade": {
+  "nome": "Nome da Autoridade",
+  "cargo": "Vice-Presidente de Gestão Administrativa-Financeira"
+ },
+ "natureza": "reajuste",
+ "natureza_valor": "o reajuste contratual",
+ "valor": {
+  "valor": "32.926,75",
+  "sei": "1000050",
+  "p": 40
+ },
+ "valor_extenso": "trinta e dois mil novecentos e vinte e seis reais e setenta e cinco centavos"
+}

@@ -1,0 +1,1202 @@
+{
+ "acrescimo": {
+  "fonte": "regra",
+  "descricao": "variantes do termo aditivo (modelo Projur JAN/2026)"
+ },
+ "acrescimo.descricao": {
+  "fonte": "agente",
+  "descricao": "texto que exige leitura dos autos — marcado para validação"
+ },
+ "acrescimo.fundamento": {
+  "fonte": "agente",
+  "descricao": "fundamento proposto pelo agente, validado por você"
+ },
+ "acrescimo.percentual": {
+  "fonte": "agente",
+  "descricao": "texto que exige leitura dos autos — marcado para validação"
+ },
+ "adesao": {
+  "fonte": "regra",
+  "descricao": "admite adesão de não participantes"
+ },
+ "aditivo.ordinal": {
+  "fonte": "calculo",
+  "descricao": "ordinal do aditivo = aditivos anteriores nos autos + 1 (PRIMEIRO, SEGUNDO...)"
+ },
+ "adjudicacao_por_grupo": {
+  "fonte": "regra",
+  "descricao": "adjudicação por preço global de grupo"
+ },
+ "admite_quantitativo_inferior": {
+  "fonte": "regra",
+  "descricao": "fornecedor pode ofertar quantidade inferior à máxima (falso imprime 'não poderá')"
+ },
+ "alteracao_multipla": {
+  "fonte": "regra",
+  "descricao": "mais de uma alteração no aditivo (acréscimo e supressão): plural em \"a(s) seguinte(s) alteração(ões)\""
+ },
+ "apostilamento.numero": {
+  "fonte": "autos",
+  "descricao": "número de ordem do apostilamento = apostilamentos anteriores nos autos + 1 (1, 2, 3...)"
+ },
+ "apostilamento.ordinal": {
+  "fonte": "calculo",
+  "descricao": "gerado pelo motor a partir de apostilamento.numero (PRIMEIRO, SEGUNDO...)"
+ },
+ "arquivar_documentos": {
+  "fonte": "regra",
+  "descricao": "obrigação do CONTRATANTE de arquivar projetos e as built"
+ },
+ "art75_inciso": {
+  "fonte": "regra",
+  "descricao": "inciso do art. 75 da hipótese (ex.: inciso II)"
+ },
+ "ata": {
+  "fonte": "autos",
+  "descricao": "descrição do documento citado, como consta nos autos"
+ },
+ "ata.ano": {
+  "fonte": "calculo",
+  "descricao": "ano da ata"
+ },
+ "ata.numero": {
+  "fonte": "autos",
+  "descricao": "número da ata (sem o ano)"
+ },
+ "ata.prazo_assinatura": {
+  "fonte": "autos",
+  "descricao": "prazo em dias, com extenso, para assinar a ata de registro de preços"
+ },
+ "ata.prorrogavel": {
+  "fonte": "regra",
+  "descricao": "ata prorrogável por igual período (art. 84)"
+ },
+ "ata.renova_quantitativo": {
+  "fonte": "regra",
+  "descricao": "na prorrogação da ata, o quantitativo poderá (verdadeiro) ou não (falso) ser renovado"
+ },
+ "ata.vias": {
+  "fonte": "autos",
+  "descricao": "número de vias da ata"
+ },
+ "ata.vias_extenso": {
+  "fonte": "calculo",
+  "descricao": "número de vias por extenso"
+ },
+ "autoridade.cargo": {
+  "fonte": "regra",
+  "descricao": "quem assina pela CONTRATANTE: padrão do template (@padrao; termos e PAR = VP de Gestão Administrativa-Financeira); na autorização de contratação direta depende da alçada — informar"
+ },
+ "autoridade.nome": {
+  "fonte": "regra",
+  "descricao": "quem assina pela CONTRATANTE: padrão do template (@padrao; termos e PAR = VP de Gestão Administrativa-Financeira); na autorização de contratação direta depende da alçada — informar"
+ },
+ "aviso.ano": {
+  "fonte": "calculo",
+  "descricao": "ano do aviso (4 dígitos; o modelo traz 202X)"
+ },
+ "aviso.numero": {
+  "fonte": "autos",
+  "descricao": "número do aviso de contratação direta no Compras.gov.br (sem o ano)"
+ },
+ "cadastro_reserva.precos_iguais": {
+  "fonte": "autos",
+  "descricao": "fornecedores que cotaram igual ao adjudicatário"
+ },
+ "cadastro_reserva.proposta_original": {
+  "fonte": "autos",
+  "descricao": "fornecedores que mantiveram a proposta original"
+ },
+ "calamidade_lei_14981": {
+  "fonte": "regra",
+  "descricao": "credenciamento também sob a Lei 14.981/2024: admite registro cadastral de outro órgão"
+ },
+ "certame.ano": {
+  "fonte": "autos",
+  "descricao": "ano do edital/aviso"
+ },
+ "certame.numero": {
+  "fonte": "autos",
+  "descricao": "número do edital/aviso (sem o ano)"
+ },
+ "certame.publicacao_data": {
+  "fonte": "autos",
+  "descricao": "data de publicação do edital/aviso"
+ },
+ "certame.publicacao_veiculo": {
+  "fonte": "autos",
+  "descricao": "onde o edital/aviso foi publicado"
+ },
+ "cessao_direitos": {
+  "fonte": "regra",
+  "descricao": "cessão de direitos patrimoniais (art. 93)"
+ },
+ "cessao_direitos.obra_imaterial": {
+  "fonte": "regra",
+  "descricao": "obra imaterial tecnológica (art. 93, § 1º)"
+ },
+ "cfc.cidade": {
+  "fonte": "config",
+  "descricao": "cidade da sede (constantes.json)"
+ },
+ "cfc.cnpj": {
+  "fonte": "config",
+  "descricao": "constante do CFC (templates/constantes.json)"
+ },
+ "cfc.nome": {
+  "fonte": "config",
+  "descricao": "nome do órgão (constantes.json)"
+ },
+ "cfc.sede": {
+  "fonte": "config",
+  "descricao": "constante do CFC (templates/constantes.json)"
+ },
+ "cfc.setor_licitacoes": {
+  "fonte": "config",
+  "descricao": "setor que conduz as licitações (constantes.json)"
+ },
+ "cfc.uasg": {
+  "fonte": "config",
+  "descricao": "UASG do CFC (constantes.json)"
+ },
+ "conducao.agente": {
+  "fonte": "regra",
+  "descricao": "quem conduz: pregão → Pregoeiro; concorrência → Agente de Contratação ou Comissão de Contratação"
+ },
+ "conducao.ao": {
+  "fonte": "regra",
+  "descricao": "contração: ao / à"
+ },
+ "conducao.o": {
+  "fonte": "regra",
+  "descricao": "artigo de quem conduz: o / a"
+ },
+ "considerando": {
+  "fonte": "agente",
+  "descricao": "texto que exige leitura dos autos — marcado para validação"
+ },
+ "consorcio_permitido": {
+  "fonte": "regra",
+  "descricao": "consórcio permitido (art. 15, § 1º)"
+ },
+ "consorcio_permitido.acrescimo": {
+  "fonte": "autos",
+  "descricao": "acréscimo de 10% a 30% na habilitação econômico-financeira do consórcio"
+ },
+ "contratacao.numero": {
+  "fonte": "autos",
+  "descricao": "número do processo ou da contratação de origem"
+ },
+ "contratacao.prazo_assinatura": {
+  "fonte": "autos",
+  "descricao": "prazo, com unidade e extenso, para assinar o contrato ou aceitar o instrumento (ex.: 5 (cinco) dias úteis)"
+ },
+ "contratacao.prazo_assinatura_digital": {
+  "fonte": "autos",
+  "descricao": "dias úteis, com extenso, para assinar digitalmente"
+ },
+ "contratacao.prazo_devolucao": {
+  "fonte": "autos",
+  "descricao": "prazo em dias, com extenso, para devolver o contrato assinado"
+ },
+ "contratacao.prazo_resposta": {
+  "fonte": "autos",
+  "descricao": "dias úteis, com extenso, para resposta por outro meio eletrônico"
+ },
+ "contratacao_direta": {
+  "fonte": "regra",
+  "descricao": "ata de contratação direta (Aviso) × pregão (Edital)"
+ },
+ "contratacoes_paralelas": {
+  "fonte": "regra",
+  "descricao": "contratações paralelas e não excludentes (art. 79, I): inclui a seção de critérios de ordem de contratação"
+ },
+ "contratacoes_paralelas.criterios": {
+  "fonte": "autos",
+  "descricao": "lista de {texto}: critérios de distribuição da demanda"
+ },
+ "contratada.cidade": {
+  "fonte": "autos",
+  "descricao": "cidade da sede da contratada (endereço sem a cidade)"
+ },
+ "contratada.cnpj": {
+  "fonte": "autos",
+  "descricao": "qualificação da contratada (contrato, SICAF, ato constitutivo)"
+ },
+ "contratada.endereco": {
+  "fonte": "autos",
+  "descricao": "qualificação da contratada (contrato, SICAF, ato constitutivo)"
+ },
+ "contratada.razao_social": {
+  "fonte": "autos",
+  "descricao": "qualificação da contratada (contrato, SICAF, ato constitutivo)"
+ },
+ "contratada.uf": {
+  "fonte": "autos",
+  "descricao": "UF da sede da contratada"
+ },
+ "contrato.clausula_reajuste": {
+  "fonte": "autos",
+  "descricao": "cláusula do contrato que prevê o reajuste (ex.: Cláusula Sétima)"
+ },
+ "contrato.numero": {
+  "fonte": "autos",
+  "descricao": "dados do contrato vigente"
+ },
+ "contrato.objeto": {
+  "fonte": "autos",
+  "descricao": "objeto do contrato sem artigo inicial e sem ponto final, completando 'O objeto do presente instrumento é a ...'"
+ },
+ "contrato.sei": {
+  "fonte": "autos",
+  "descricao": "dados do contrato vigente"
+ },
+ "convencao_coletiva.paradigma": {
+  "fonte": "autos",
+  "descricao": "acordos/convenções coletivas usados no valor estimado"
+ },
+ "credenciamento.ano": {
+  "fonte": "calculo",
+  "descricao": "ano do credenciamento (4 dígitos; o modelo traz 20...)"
+ },
+ "credenciamento.inciso": {
+  "fonte": "regra",
+  "descricao": "inciso do art. 3º do Decreto 11.878/2024 em que se enquadra o credenciamento (ex.: I)"
+ },
+ "credenciamento.numero": {
+  "fonte": "autos",
+  "descricao": "número do edital de credenciamento (sem o ano)"
+ },
+ "credenciamento.objeto": {
+  "fonte": "autos",
+  "descricao": "bem ou serviço do credenciado, em minúscula e sem ponto, completando 'fornecer ...' / 'prestar serviços de ...' (na capa sai em maiúsculas)"
+ },
+ "dedicacao_exclusiva": {
+  "fonte": "regra",
+  "descricao": "variantes do termo aditivo (modelo Projur JAN/2026)"
+ },
+ "descredenciamento.prazo_pedido": {
+  "fonte": "autos",
+  "descricao": "dias, com extenso, de antecedência do pedido de descredenciamento"
+ },
+ "descricao_marca_fabricante": {
+  "fonte": "regra",
+  "descricao": "o requerimento exige descrição detalhada do objeto com marca e fabricante"
+ },
+ "desempate.integridade": {
+  "fonte": "regra",
+  "descricao": "inclui a declaração de programa de integridade para desempate (art. 60, IV)"
+ },
+ "destinos.gex": {
+  "fonte": "config",
+  "descricao": "constante do CFC (templates/constantes.json)"
+ },
+ "dispensa_eletronica": {
+  "fonte": "regra",
+  "descricao": "tipo de contratação direta e hipótese legal"
+ },
+ "dispensa_eletronica.relatorio_sei": {
+  "fonte": "autos",
+  "descricao": "SEI de documento citado"
+ },
+ "disputa.modo": {
+  "fonte": "regra",
+  "descricao": "aberto | aberto e fechado | fechado e aberto"
+ },
+ "divisao.grupo_unico": {
+  "fonte": "regra",
+  "descricao": "licitação em grupo único"
+ },
+ "divisao.grupo_unico.qtd_itens": {
+  "fonte": "autos",
+  "descricao": "número de itens do grupo único, com extenso"
+ },
+ "divisao.grupos": {
+  "fonte": "regra",
+  "descricao": "licitação dividida em grupos"
+ },
+ "divisao.item_unico": {
+  "fonte": "regra",
+  "descricao": "licitação em item único"
+ },
+ "divisao.itens": {
+  "fonte": "regra",
+  "descricao": "licitação dividida em itens"
+ },
+ "divisao.itens_e_grupos": {
+  "fonte": "regra",
+  "descricao": "licitação com itens isolados e grupos"
+ },
+ "documento_base.descricao": {
+  "fonte": "autos",
+  "descricao": "descrição do documento citado, como consta nos autos"
+ },
+ "documento_base.sei": {
+  "fonte": "autos",
+  "descricao": "SEI de documento citado"
+ },
+ "documentos_recebimento": {
+  "fonte": "regra",
+  "descricao": "exige as built, habite-se etc. no recebimento definitivo"
+ },
+ "dotacao.conta": {
+  "fonte": "autos",
+  "descricao": "dotação orçamentária (reserva da Gecont)"
+ },
+ "dotacao.conta_descricao": {
+  "fonte": "autos",
+  "descricao": "descrição da conta contábil (reserva da Gecont)"
+ },
+ "dotacao.empenho": {
+  "fonte": "autos",
+  "descricao": "número da nota de empenho"
+ },
+ "dotacao.exercicio": {
+  "fonte": "autos",
+  "descricao": "dotação orçamentária (reserva da Gecont)"
+ },
+ "dotacao.fonte": {
+  "fonte": "autos",
+  "descricao": "fonte de recursos (reserva da Gecont)"
+ },
+ "dotacao.gestao_unidade": {
+  "fonte": "autos",
+  "descricao": "gestão/unidade da dotação (reserva da Gecont)"
+ },
+ "dotacao.plano_interno": {
+  "fonte": "autos",
+  "descricao": "plano interno (reserva da Gecont; 'não se aplica' se inexistente)"
+ },
+ "dotacao.projeto": {
+  "fonte": "autos",
+  "descricao": "dotação orçamentária (reserva da Gecont)"
+ },
+ "dotacao.projeto_descricao": {
+  "fonte": "autos",
+  "descricao": "descrição do projeto (reserva da Gecont)"
+ },
+ "dotacao.resolucao": {
+  "fonte": "autos",
+  "descricao": "dotação orçamentária (reserva da Gecont)"
+ },
+ "e_minuta": {
+  "fonte": "regra",
+  "descricao": "motivo do despacho à Projur / dados do termo de extinção"
+ },
+ "edital.anexos": {
+  "fonte": "autos",
+  "descricao": "anexos além do Anexo I, já com numeral romano"
+ },
+ "edital.sitio_eletronico": {
+  "fonte": "autos",
+  "descricao": "endereço eletrônico onde o edital e os anexos ficam disponíveis, além do PNCP"
+ },
+ "edital.vigencia": {
+  "fonte": "autos",
+  "descricao": "prazo de vigência do edital, com extenso e unidade (ex.: 12 (doze) meses)"
+ },
+ "edital.vigencia_inicio": {
+  "fonte": "autos",
+  "descricao": "data de início da vigência do edital (dd/mm/aaaa)"
+ },
+ "efeitos_em": {
+  "fonte": "regra",
+  "descricao": "variantes do termo aditivo (modelo Projur JAN/2026)"
+ },
+ "engenharia": {
+  "fonte": "regra",
+  "descricao": "obras ou serviços comuns de engenharia: critérios de aceitabilidade (art. 59)"
+ },
+ "engenharia.preco_unitario": {
+  "fonte": "regra",
+  "descricao": "engenharia com critério de preço unitário"
+ },
+ "exclusiva_me_epp": {
+  "fonte": "regra",
+  "descricao": "participação exclusiva ME/EPP (art. 48, I, LC 123) em alguns itens"
+ },
+ "exclusiva_me_epp.itens": {
+  "fonte": "autos",
+  "descricao": "itens exclusivos ME/EPP, como no TR (ex.: 1, 2 e 3)"
+ },
+ "exige_marca": {
+  "fonte": "regra",
+  "descricao": "inclui a coluna Marca"
+ },
+ "exige_modelo": {
+  "fonte": "regra",
+  "descricao": "inclui a coluna Modelo"
+ },
+ "extincao": {
+  "fonte": "regra",
+  "descricao": "motivo do despacho à Projur / dados do termo de extinção"
+ },
+ "extincao.data_efeito": {
+  "fonte": "regra",
+  "descricao": "motivo do despacho à Projur / dados do termo de extinção"
+ },
+ "extincao.ultimo_dia": {
+  "fonte": "regra",
+  "descricao": "motivo do despacho à Projur / dados do termo de extinção"
+ },
+ "fornecedores": {
+  "fonte": "autos",
+  "descricao": "fornecedores signatários: razao_social, representante, funcao"
+ },
+ "fornecimento": {
+  "fonte": "regra",
+  "descricao": "verdadeiro = 'fornecer' (bens); falso = 'prestar serviços de'"
+ },
+ "fundamento.clausula": {
+  "fonte": "autos",
+  "descricao": "cláusula do contrato que prevê a extinção"
+ },
+ "fundamento.inciso_137": {
+  "fonte": "agente",
+  "descricao": "fundamento proposto pelo agente, validado por você"
+ },
+ "fundamento_projur": {
+  "fonte": "regra",
+  "descricao": "fundamento do envio à Projur pelo regime: 8666 → inciso VI e parágrafo único do art. 38 da Lei nº 8.666/1993; 14133 → art. 53, § 4º, da Lei nº 14.133/2021 (conferir)"
+ },
+ "garantia": {
+  "fonte": "regra",
+  "descricao": "variantes do termo aditivo (modelo Projur JAN/2026)"
+ },
+ "garantia.percentual": {
+  "fonte": "autos",
+  "descricao": "garantia exigida no contrato"
+ },
+ "garantia.prazo": {
+  "fonte": "autos",
+  "descricao": "garantia exigida no contrato"
+ },
+ "gecont_destino": {
+  "fonte": "config",
+  "descricao": "assinaturas (assets/assinaturas.json)"
+ },
+ "gelic.cargo": {
+  "fonte": "config",
+  "descricao": "assinaturas (assets/assinaturas.json)"
+ },
+ "gelic.nome": {
+  "fonte": "config",
+  "descricao": "assinaturas (assets/assinaturas.json)"
+ },
+ "gex.cargo": {
+  "fonte": "config",
+  "descricao": "assinaturas (assets/assinaturas.json)"
+ },
+ "gex.nome": {
+  "fonte": "config",
+  "descricao": "assinaturas (assets/assinaturas.json)"
+ },
+ "grande_vulto": {
+  "fonte": "regra",
+  "descricao": "contratação de grande vulto (art. 6º, XXII)"
+ },
+ "habilitacao.antecede": {
+  "fonte": "regra",
+  "descricao": "habilitação antes de propostas e lances (art. 17, § 1º)"
+ },
+ "habilitacao.outro_meio": {
+  "fonte": "autos",
+  "descricao": "outro meio admitido para apresentar os documentos de habilitação"
+ },
+ "habilitacao.prazo_analise": {
+  "fonte": "autos",
+  "descricao": "dias úteis, com extenso, para o órgão analisar a habilitação (ex.: 5 (cinco))"
+ },
+ "habilitacao.prazo_complementacao": {
+  "fonte": "autos",
+  "descricao": "horas, com extenso, para complementar documentos de habilitação, no mínimo duas (ex.: 2 (duas))"
+ },
+ "habilitacao.prazo_documentos": {
+  "fonte": "autos",
+  "descricao": "prazo para envio de documentos complementares, com unidade e extenso"
+ },
+ "hipotese.dispensa_valor": {
+  "fonte": "regra",
+  "descricao": "tipo de contratação direta e hipótese legal"
+ },
+ "hipotese.inex_exclusivo": {
+  "fonte": "regra",
+  "descricao": "tipo de contratação direta e hipótese legal"
+ },
+ "hipotese.inex_treinamento": {
+  "fonte": "regra",
+  "descricao": "tipo de contratação direta e hipótese legal"
+ },
+ "impugnacao.meios": {
+  "fonte": "autos",
+  "descricao": "meios eletrônicos de recepção de impugnações e pedidos de esclarecimento"
+ },
+ "inexigibilidade": {
+  "fonte": "regra",
+  "descricao": "tipo de contratação direta e hipótese legal"
+ },
+ "informacao_tecnica.descricao": {
+  "fonte": "autos",
+  "descricao": "descrição do documento citado, como consta nos autos"
+ },
+ "informacao_tecnica.sei": {
+  "fonte": "autos",
+  "descricao": "SEI de documento citado"
+ },
+ "infratores": {
+  "fonte": "agente",
+  "descricao": "texto que exige leitura dos autos — marcado para validação"
+ },
+ "instrumento.numero": {
+  "fonte": "autos",
+  "descricao": "instrumento a extinguir (tipo, número, origem, objeto)"
+ },
+ "instrumento.o": {
+  "fonte": "regra",
+  "descricao": "artigo do instrumento: o (Contrato) / a (Ordem de Fornecimento)"
+ },
+ "instrumento.objeto": {
+  "fonte": "autos",
+  "descricao": "instrumento a extinguir (tipo, número, origem, objeto)"
+ },
+ "instrumento.origem": {
+  "fonte": "autos",
+  "descricao": "instrumento a extinguir (tipo, número, origem, objeto)"
+ },
+ "instrumento.sei": {
+  "fonte": "autos",
+  "descricao": "SEI de documento citado"
+ },
+ "instrumento.tipo": {
+  "fonte": "autos",
+  "descricao": "instrumento a extinguir (tipo, número, origem, objeto)"
+ },
+ "instrumento_equivalente": {
+  "fonte": "regra",
+  "descricao": "instrumento que substitui o contrato (ex.: Nota de Empenho); vazio = Termo de Contrato"
+ },
+ "interessados": {
+  "fonte": "autos",
+  "descricao": "empresas interessadas (ata/despacho do pregoeiro)"
+ },
+ "itens": {
+  "fonte": "autos",
+  "descricao": "itens adjudicados (relatório da dispensa eletrônica)"
+ },
+ "julgamento.forma": {
+  "fonte": "regra",
+  "descricao": "por item | por grupo | global"
+ },
+ "lances.intervalo_minimo": {
+  "fonte": "autos",
+  "descricao": "intervalo mínimo entre lances, com extenso"
+ },
+ "lgpd": {
+  "fonte": "regra",
+  "descricao": "contratação envolve tratamento de dados pessoais (TR) → inclui a cláusula de LGPD"
+ },
+ "licitacao": {
+  "fonte": "regra",
+  "descricao": "contrato decorre de licitação: {concorrencia: true|false}; ausente = contratação direta"
+ },
+ "licitacao.ano": {
+  "fonte": "calculo",
+  "descricao": "ano da licitação (4 dígitos)"
+ },
+ "licitacao.concorrencia": {
+  "fonte": "regra",
+  "descricao": "modalidade: verdadeiro = Concorrência; falso = Pregão Eletrônico"
+ },
+ "licitacao.modalidade": {
+  "fonte": "regra",
+  "descricao": "pregão eletrônico | concorrência (sai em maiúsculas na capa e no título)"
+ },
+ "licitacao.numero": {
+  "fonte": "autos",
+  "descricao": "número/ano da licitação de origem (ex.: 90005/2026)"
+ },
+ "licitacao.objeto": {
+  "fonte": "autos",
+  "descricao": "objeto do TR com artigo, completando 'O objeto da presente licitação é ...'"
+ },
+ "licitacao.origem": {
+  "fonte": "autos",
+  "descricao": "modalidade e número da licitação de origem, como no preâmbulo do contrato (ex.: Pregão Eletrônico nº 15/2022)"
+ },
+ "licitacao.sitio_autos": {
+  "fonte": "config",
+  "descricao": "sítio com vista franqueada dos autos (candidato a constantes.json)"
+ },
+ "licitacao.sitio_edital": {
+  "fonte": "config",
+  "descricao": "endereço eletrônico onde o edital e os anexos ficam disponíveis (candidato a constantes.json)"
+ },
+ "limite_dispensa.decreto": {
+  "fonte": "config",
+  "descricao": "limite do art. 75, II, atualizado pelo decreto do exercício (preencher todo janeiro)"
+ },
+ "limite_dispensa.exercicio": {
+  "fonte": "config",
+  "descricao": "limite do art. 75, II, atualizado pelo decreto do exercício (preencher todo janeiro)"
+ },
+ "limite_dispensa.valor": {
+  "fonte": "config",
+  "descricao": "limite do art. 75, II, atualizado pelo decreto do exercício (preencher todo janeiro)"
+ },
+ "local_data": {
+  "fonte": "calculo",
+  "descricao": "local e data de assinatura (ex.: Brasília/DF, 20 de outubro de 2026.)"
+ },
+ "maior_desconto": {
+  "fonte": "regra",
+  "descricao": "critério de julgamento: verdadeiro = maior desconto; falso = menor preço (TR)"
+ },
+ "manifestacao_contratada.sei": {
+  "fonte": "autos",
+  "descricao": "SEI de documento citado"
+ },
+ "manifestacao_gestor.sei": {
+  "fonte": "autos",
+  "descricao": "SEI de documento citado"
+ },
+ "manual_usuario": {
+  "fonte": "regra",
+  "descricao": "bem com manual e assistência técnica: exige manual em português e rede autorizada"
+ },
+ "manutencao": {
+  "fonte": "regra",
+  "descricao": "serviço de manutenção e assistência técnica (art. 47, § 2º)"
+ },
+ "manutencao.distancia": {
+  "fonte": "autos",
+  "descricao": "distância máxima da unidade de serviço, com extenso"
+ },
+ "manutencao.locais": {
+  "fonte": "autos",
+  "descricao": "endereço(s) da manutenção"
+ },
+ "margem_preferencia": {
+  "fonte": "regra",
+  "descricao": "algum item com margem de preferência (art. 26)"
+ },
+ "matriz_risco": {
+  "fonte": "agente",
+  "descricao": "matriz de riscos; ausente = sem matriz"
+ },
+ "matriz_risco.compartilhados": {
+  "fonte": "agente",
+  "descricao": "riscos compartilhados [{texto}]"
+ },
+ "matriz_risco.contratado": {
+  "fonte": "agente",
+  "descricao": "riscos do CONTRATADO [{texto}]"
+ },
+ "matriz_risco.contratante": {
+  "fonte": "agente",
+  "descricao": "riscos do CONTRATANTE [{texto}]"
+ },
+ "matriz_risco.percentual_contratado": {
+  "fonte": "autos",
+  "descricao": "proporção do CONTRATADO nos riscos compartilhados"
+ },
+ "matriz_risco.percentual_contratante": {
+  "fonte": "autos",
+  "descricao": "proporção do CONTRATANTE nos riscos compartilhados"
+ },
+ "me_epp.itens_sem_tratamento": {
+  "fonte": "autos",
+  "descricao": "itens sem tratamento favorecido (art. 4º, § 1º)"
+ },
+ "mercados_fluidos": {
+  "fonte": "regra",
+  "descricao": "hipótese do art. 79, III (mercados fluidos): requerimento informa o percentual mínimo de desconto"
+ },
+ "minuta.sei": {
+  "fonte": "autos",
+  "descricao": "SEI de documento citado"
+ },
+ "motivacao": {
+  "fonte": "agente",
+  "descricao": "texto que exige leitura dos autos — marcado para validação"
+ },
+ "motivo_resumo": {
+  "fonte": "agente",
+  "descricao": "texto que exige leitura dos autos — marcado para validação"
+ },
+ "multa.faixa1_max": {
+  "fonte": "autos",
+  "descricao": "multa máxima da primeira faixa de infrações (ex.: 15%)"
+ },
+ "multa.faixa1_min": {
+  "fonte": "autos",
+  "descricao": "multa mínima da primeira faixa de infrações (ex.: 0,5%)"
+ },
+ "multa.faixa2_max": {
+  "fonte": "autos",
+  "descricao": "multa máxima da segunda faixa de infrações (ex.: 30%)"
+ },
+ "multa.faixa2_min": {
+  "fonte": "autos",
+  "descricao": "multa mínima da segunda faixa de infrações (ex.: 15%)"
+ },
+ "multa.grave_max": {
+  "fonte": "autos",
+  "descricao": "multa máxima das infrações graves"
+ },
+ "multa.grave_min": {
+  "fonte": "autos",
+  "descricao": "multa mínima das infrações graves"
+ },
+ "multa.leve_max": {
+  "fonte": "autos",
+  "descricao": "multa máxima das infrações leves"
+ },
+ "multa.leve_min": {
+  "fonte": "autos",
+  "descricao": "multa mínima das infrações leves"
+ },
+ "multa.prazo_recolhimento": {
+  "fonte": "autos",
+  "descricao": "dias úteis, com extenso, para recolher a multa"
+ },
+ "natureza": {
+  "fonte": "regra",
+  "descricao": "natureza da despesa no despacho de reserva (reajuste, prorrogação, contratação...)"
+ },
+ "natureza_intelectual": {
+  "fonte": "regra",
+  "descricao": "serviço de natureza intelectual: reunião inicial registrada em ata"
+ },
+ "natureza_valor": {
+  "fonte": "regra",
+  "descricao": "natureza da despesa no despacho de reserva (reajuste, prorrogação, contratação...)"
+ },
+ "negociacao.prazo_proposta": {
+  "fonte": "autos",
+  "descricao": "prazo para enviar a proposta ajustada, com extenso (mínimo 2 (duas) horas)"
+ },
+ "nomeacao": {
+  "fonte": "regra",
+  "descricao": "há ato de nomeação da autoridade signatária (imprime Portaria/DOU/matrícula)"
+ },
+ "nomeacao.data": {
+  "fonte": "config",
+  "descricao": "data da portaria de nomeação, por extenso"
+ },
+ "nomeacao.dou": {
+  "fonte": "config",
+  "descricao": "data de publicação da portaria de nomeação, por extenso"
+ },
+ "nomeacao.matricula": {
+  "fonte": "config",
+  "descricao": "matrícula funcional da autoridade signatária"
+ },
+ "nomeacao.portaria": {
+  "fonte": "config",
+  "descricao": "nº da portaria de nomeação da autoridade signatária (modelo AGU; a revisar para o CFC)"
+ },
+ "norma_sancao": {
+  "fonte": "config",
+  "descricao": "constante do CFC (templates/constantes.json)"
+ },
+ "objeto": {
+  "fonte": "autos",
+  "descricao": "objeto copiado do contrato/TR, iniciando em minúscula e terminando com ponto"
+ },
+ "objeto_contratacao": {
+  "fonte": "autos",
+  "descricao": "objeto como no TR, completando \"a contratação de ...\" (sem ponto final)"
+ },
+ "objeto_curto": {
+  "fonte": "autos",
+  "descricao": "objeto em minúscula, sem ponto final, para meio de frase (no cabeçalho sai em maiúsculas)"
+ },
+ "objeto_servico": {
+  "fonte": "autos",
+  "descricao": "objeto completando 'serviços ... de ...' (minúscula, sem ponto)"
+ },
+ "orcamento_sigiloso": {
+  "fonte": "regra",
+  "descricao": "orçamento estimado sigiloso (art. 24)"
+ },
+ "participantes": {
+  "fonte": "autos",
+  "descricao": "órgãos participantes (IRP); vazio = não há"
+ },
+ "planilha_custos": {
+  "fonte": "regra",
+  "descricao": "exige planilha de custos unitários e formação de preços"
+ },
+ "prazo_decisao": {
+  "fonte": "autos",
+  "descricao": "prazo para a Administração decidir requerimentos (art. 123); padrão legal 1 (um) mês"
+ },
+ "prazo_projur": {
+  "fonte": "config",
+  "descricao": "prazo padrão dado à Projur (constantes.json)"
+ },
+ "prazo_reequilibrio": {
+  "fonte": "autos",
+  "descricao": "prazo para responder pedido de reequilíbrio (art. 92, XI); em regra o mesmo do art. 123"
+ },
+ "preco.peso": {
+  "fonte": "calculo",
+  "descricao": "peso do preço = 100 − tecnica.peso"
+ },
+ "precos_diferentes": {
+  "fonte": "regra",
+  "descricao": "admite preços diferentes (art. 15, III, Decreto 11.462/2023)"
+ },
+ "precos_diferentes.criterios": {
+  "fonte": "agente",
+  "descricao": "critérios de preços diferentes, conforme o TR"
+ },
+ "preferencia_me_epp": {
+  "fonte": "regra",
+  "descricao": "SIM/NÃO no campo Preferência ME/EPP/Equiparadas"
+ },
+ "processo": {
+  "fonte": "autos",
+  "descricao": "número do processo SEI (cabeçalho de _leitura.md)"
+ },
+ "processo_origem": {
+  "fonte": "autos",
+  "descricao": "número do processo ou da contratação de origem"
+ },
+ "projeto_basico": {
+  "fonte": "regra",
+  "descricao": "obras/engenharia: 'Projeto Básico' e/ou 'Projeto Executivo'; vazio nos demais casos"
+ },
+ "projeto_executivo_contratado": {
+  "fonte": "regra",
+  "descricao": "o CONTRATADO elabora o projeto executivo"
+ },
+ "proposta.campo_valor": {
+  "fonte": "autos",
+  "descricao": "campo de valor da proposta no sistema (ex.: valor unitário e total do item)"
+ },
+ "proposta.fabricante": {
+  "fonte": "regra",
+  "descricao": "proposta informa fabricante"
+ },
+ "proposta.marca": {
+  "fonte": "regra",
+  "descricao": "proposta informa marca"
+ },
+ "proposta.quantidade_minima": {
+  "fonte": "autos",
+  "descricao": "quantidade mínima a cotar, com extenso; vazio = sem o subitem"
+ },
+ "proposta.validade": {
+  "fonte": "autos",
+  "descricao": "validade mínima da proposta em dias, com extenso (ex.: 60 (sessenta))"
+ },
+ "proposta_tecnica.requisitos": {
+  "fonte": "autos",
+  "descricao": "lista de requisitos da proposta técnica"
+ },
+ "prorrogacao": {
+  "fonte": "regra",
+  "descricao": "motivo do despacho à Projur / dados do termo de extinção"
+ },
+ "prorrogacao.fim": {
+  "fonte": "calculo",
+  "descricao": "novo período = dia seguinte ao fim da vigência atual + prazo"
+ },
+ "prorrogacao.inicio": {
+  "fonte": "calculo",
+  "descricao": "novo período = dia seguinte ao fim da vigência atual + prazo"
+ },
+ "prorrogacao.prazo": {
+  "fonte": "autos",
+  "descricao": "prazo da prorrogação pedido no formulário"
+ },
+ "protecao_trabalho": {
+  "fonte": "regra",
+  "descricao": "execução com trabalhadores do contratado: inclui obrigações de proteção ao trabalho"
+ },
+ "reajuste": {
+  "fonte": "regra",
+  "descricao": "variantes do termo aditivo (modelo Projur JAN/2026)"
+ },
+ "reajuste.composto": {
+  "fonte": "calculo",
+  "descricao": "mais de uma parcela"
+ },
+ "reajuste.data_base": {
+  "fonte": "autos",
+  "descricao": "data do orçamento estimado (MCP), dd/mm/aaaa"
+ },
+ "reajuste.data_base_extenso": {
+  "fonte": "calculo",
+  "descricao": "data por extenso, gerada pelo motor"
+ },
+ "reajuste.efeitos": {
+  "fonte": "autos",
+  "descricao": "início dos efeitos financeiros, dd/mm/aaaa; tem de ser aniversário da data-base"
+ },
+ "reajuste.efeitos_extenso": {
+  "fonte": "calculo",
+  "descricao": "data por extenso, gerada pelo motor"
+ },
+ "reajuste.indice": {
+  "fonte": "autos",
+  "descricao": "índice e percentual do reajuste (memória de cálculo)"
+ },
+ "reajuste.parcelas": {
+  "fonte": "autos",
+  "descricao": "lista de parcelas: descricao, periodicidade (mensal|anual), valor_atual; opcional valor_reajustado_informado (o motor confere)"
+ },
+ "reajuste.percentual": {
+  "fonte": "autos",
+  "descricao": "índice e percentual do reajuste (memória de cálculo)"
+ },
+ "reajuste.periodo": {
+  "fonte": "autos",
+  "descricao": "período acumulado do índice (memória de cálculo)"
+ },
+ "reajuste.sei": {
+  "fonte": "autos",
+  "descricao": "SEI da memória de cálculo do reajuste"
+ },
+ "reajuste.sigla": {
+  "fonte": "autos",
+  "descricao": "sigla do índice (ex.: IPCA)"
+ },
+ "reajuste.total_anual": {
+  "fonte": "calculo",
+  "descricao": "soma dos valores anuais reajustados, gerada pelo motor"
+ },
+ "reajuste.total_anual_extenso": {
+  "fonte": "calculo",
+  "descricao": "soma dos valores anuais reajustados, gerada pelo motor"
+ },
+ "reajuste.total_informado": {
+  "fonte": "autos",
+  "descricao": "opcional: total anual informado nos autos (o motor confere)"
+ },
+ "recurso.prazo_intencao": {
+  "fonte": "autos",
+  "descricao": "dias úteis, com extenso, para manifestar a intenção de recorrer, no máximo 3 (três)"
+ },
+ "regime": {
+  "fonte": "regra",
+  "descricao": "regime legal do contrato (14133 ou 8666), pelo preâmbulo; o template recusa regime errado"
+ },
+ "regime_execucao": {
+  "fonte": "autos",
+  "descricao": "obras/serviços comuns de engenharia: regime de execução do art. 46, como no TR; vazio nos demais casos"
+ },
+ "registro_precos": {
+  "fonte": "regra",
+  "descricao": "dispensa para registro de preços: inclui preâmbulo SRP, seções Registro de Preços, Ata e Cadastro de Reserva e o Anexo III"
+ },
+ "representante.funcao": {
+  "fonte": "autos",
+  "descricao": "representante da contratada (procuração ou ato constitutivo)"
+ },
+ "representante.nome": {
+  "fonte": "autos",
+  "descricao": "representante da contratada (procuração ou ato constitutivo)"
+ },
+ "representante.por_procuracao": {
+  "fonte": "regra",
+  "descricao": "variantes do termo aditivo (modelo Projur JAN/2026)"
+ },
+ "representante.tratamento": {
+  "fonte": "autos",
+  "descricao": "pelo Senhor | pela Senhora"
+ },
+ "reserva_mulheres": {
+  "fonte": "regra",
+  "descricao": "reserva de vagas para mulheres vítimas de violência doméstica (Decreto 11.430/2023)"
+ },
+ "reserva_mulheres.inferior_25": {
+  "fonte": "regra",
+  "descricao": "contrato com menos de 25 colaboradores"
+ },
+ "reserva_mulheres.percentual": {
+  "fonte": "autos",
+  "descricao": "percentual de vagas reservadas"
+ },
+ "reserva_vagas.menos_25": {
+  "fonte": "regra",
+  "descricao": "contrato com menos de 25 colaboradores"
+ },
+ "reserva_vagas.menos_25.percentual": {
+  "fonte": "autos",
+  "descricao": "percentual de vagas reservadas a mulheres vítimas de violência"
+ },
+ "reter_creditos": {
+  "fonte": "regra",
+  "descricao": "motivo do despacho à Projur / dados do termo de extinção"
+ },
+ "seguranca_privada": {
+  "fonte": "regra",
+  "descricao": "vigilância/transporte de valores: capital mínimo da Lei 14.967/2024"
+ },
+ "servico_agregado": {
+  "fonte": "regra",
+  "descricao": "compra com execução no local (instalação/montagem): inclui obrigações de execução do contratado"
+ },
+ "sessao.data": {
+  "fonte": "autos",
+  "descricao": "data da sessão da dispensa eletrônica (dd/mm/aaaa)"
+ },
+ "sessao.hora": {
+  "fonte": "autos",
+  "descricao": "hora da sessão sem o 'h' (ex.: 10)"
+ },
+ "sessao.hora_fim": {
+  "fonte": "autos",
+  "descricao": "fim da fase de lances (hh:mm)"
+ },
+ "sessao.hora_inicio": {
+  "fonte": "autos",
+  "descricao": "início da fase de lances (hh:mm)"
+ },
+ "sessao.link": {
+  "fonte": "config",
+  "descricao": "link do sistema (https://www.gov.br/compras/pt-br)"
+ },
+ "simples_nacional_vedado": {
+  "fonte": "regra",
+  "descricao": "ME/EPP não podem usar o Simples (cessão de mão de obra)"
+ },
+ "supressao": {
+  "fonte": "regra",
+  "descricao": "variantes do termo aditivo (modelo Projur JAN/2026)"
+ },
+ "supressao.descricao": {
+  "fonte": "agente",
+  "descricao": "texto que exige leitura dos autos — marcado para validação"
+ },
+ "supressao.fundamento": {
+  "fonte": "agente",
+  "descricao": "fundamento proposto pelo agente, validado por você"
+ },
+ "supressao.percentual": {
+  "fonte": "agente",
+  "descricao": "texto que exige leitura dos autos — marcado para validação"
+ },
+ "tecnica.parametro": {
+  "fonte": "agente",
+  "descricao": "fórmula da Nota Técnica, justificada"
+ },
+ "tecnica.peso": {
+  "fonte": "autos",
+  "descricao": "peso da técnica na nota final (máx. 70)"
+ },
+ "testemunhas": {
+  "fonte": "autos",
+  "descricao": "lista de testemunhas [{nome}] (nota AGU: 2 testemunhas)"
+ },
+ "tr.anexo": {
+  "fonte": "autos",
+  "descricao": "número do anexo que é o TR"
+ },
+ "tr.itens": {
+  "fonte": "autos",
+  "descricao": "itens do TR que especificam o objeto"
+ },
+ "tr.sei": {
+  "fonte": "autos",
+  "descricao": "SEI de documento citado"
+ },
+ "transicao_contratual": {
+  "fonte": "regra",
+  "descricao": "transição contratual com transferência de conhecimento"
+ },
+ "unidade_gestora": {
+  "fonte": "autos",
+  "descricao": "unidade gestora do contrato"
+ },
+ "valor": {
+  "fonte": "autos",
+  "descricao": "valores como constam nos autos (formulário, proposta, reserva)"
+ },
+ "valor_extenso": {
+  "fonte": "calculo",
+  "descricao": "valor por extenso (gelic_lib.por_extenso_reais)"
+ },
+ "valor_global": {
+  "fonte": "autos",
+  "descricao": "valores como constam nos autos (formulário, proposta, reserva)"
+ },
+ "valor_global_extenso": {
+  "fonte": "calculo",
+  "descricao": "valor por extenso (gelic_lib.por_extenso_reais)"
+ },
+ "valor_mensal": {
+  "fonte": "autos",
+  "descricao": "valores como constam nos autos (formulário, proposta, reserva)"
+ },
+ "valor_mensal_extenso": {
+  "fonte": "calculo",
+  "descricao": "valor por extenso (gelic_lib.por_extenso_reais)"
+ },
+ "valor_por_demanda": {
+  "fonte": "regra",
+  "descricao": "variantes do termo aditivo (modelo Projur JAN/2026)"
+ },
+ "varios_itens": {
+  "fonte": "regra",
+  "descricao": "contratação com mais de um item (habilitação cumulativa)"
+ },
+ "vedadas_cooperativas": {
+  "fonte": "regra",
+  "descricao": "vedada a participação de cooperativas"
+ },
+ "vedadas_pessoas_fisicas": {
+  "fonte": "regra",
+  "descricao": "vedada a participação de pessoas físicas (justificar no ETP: IN SEGES/ME 116/2021, art. 4º, par. único)"
+ },
+ "vedado_consorcio": {
+  "fonte": "regra",
+  "descricao": "vedada a participação de consórcio (justificar pelo art. 15)"
+ },
+ "vigencia.continuada": {
+  "fonte": "regra",
+  "descricao": "fornecimento/serviço continuado (arts. 106 e 107)"
+ },
+ "vigencia.emergencial": {
+  "fonte": "regra",
+  "descricao": "contratação emergencial (art. 75, VIII)"
+ },
+ "vigencia.escopo": {
+  "fonte": "regra",
+  "descricao": "objeto por escopo (art. 105)"
+ },
+ "vigencia.fim": {
+  "fonte": "autos",
+  "descricao": "data de encerramento da vigência dos contratos decorrentes (dd/mm/aaaa)"
+ },
+ "vigencia.inicio": {
+  "fonte": "autos",
+  "descricao": "data de início da vigência dos contratos decorrentes (dd/mm/aaaa)"
+ },
+ "vigencia.prazo": {
+  "fonte": "autos",
+  "descricao": "prazo de vigência do TR, por extenso (\"12 (doze) meses\")"
+ },
+ "vigencia.termo_inicial": {
+  "fonte": "autos",
+  "descricao": "termo inicial da vigência, completando \"contados ...\" (\"da data de assinatura\")"
+ },
+ "vigilancia_patrimonial": {
+  "fonte": "regra",
+  "descricao": "vigilância patrimonial: tira o subitem PIS/COFINS não cumulativo"
+ },
+ "vista_autos.sitio": {
+  "fonte": "autos",
+  "descricao": "sítio eletrônico com vista franqueada dos autos"
+ },
+ "vistoria": {
+  "fonte": "regra",
+  "descricao": "vistoria prévia (art. 63, §§ 2º e 3º)"
+ },
+ "vistoria.agendamento": {
+  "fonte": "autos",
+  "descricao": "forma de agendamento da vistoria"
+ }
+}

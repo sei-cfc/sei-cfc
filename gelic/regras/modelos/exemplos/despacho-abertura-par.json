@@ -1,0 +1,69 @@
+{
+ "processo": {
+  "valor": "12345670000000.000000/2026-00",
+  "nota": "cabeçalho dos autos"
+ },
+ "regime": {
+  "valor": "14133",
+  "sei": "1000010",
+  "p": 12,
+  "nota": "preâmbulo do contrato"
+ },
+ "objeto": {
+  "valor": "contratação de serviços continuados de apoio administrativo, conforme condições estabelecidas no Termo de Referência.",
+  "sei": "1000010",
+  "p": 12
+ },
+ "contrato": {
+  "numero": {
+   "valor": "10/2025",
+   "sei": "1000010",
+   "p": 12
+  },
+  "sei": "1000010"
+ },
+ "contratada": {
+  "razao_social": {
+   "valor": "Empresa Exemplo Serviços Ltda.",
+   "sei": "1000010",
+   "p": 12
+  },
+  "razao_social_maiusculas": "EMPRESA EXEMPLO SERVIÇOS LTDA.",
+  "cnpj": {
+   "valor": "00.000.000/0001-00",
+   "sei": "1000010",
+   "p": 12
+  },
+  "endereco": "Rua Exemplo, nº 1, Brasília/DF, CEP 70000-000"
+ },
+ "interessados": "Empresa A Ltda.; Empresa B Ltda.",
+ "processo_origem": "12345670000000.000001/2025-00",
+ "documento_base": {
+  "descricao": "Despacho do Pregoeiro",
+  "sei": "1000080"
+ },
+ "ata": "Ata de Realização do Pregão Eletrônico nº 26/2026",
+ "infratores": [
+  {
+   "razao_social": "EMPRESA A LTDA",
+   "cnpj": "00.000.000/0001-01",
+   "infracoes": [
+    {
+     "texto": "Item 01 - não encaminhamento da proposta de preços (§ 2º, alínea \"a\", do art. 13)"
+    },
+    {
+     "texto": "Item 02 - atestados de capacidade técnica incompatíveis com o objeto (§ 2º, alínea \"b\", do art. 13)"
+    }
+   ]
+  },
+  {
+   "razao_social": "EMPRESA B LTDA",
+   "cnpj": "00.000.000/0001-02",
+   "infracoes": [
+    {
+     "texto": "Item 03 - não encaminhamento da proposta de preços (§ 2º, alínea \"a\", do art. 13)"
+    }
+   ]
+  }
+ ]
+}

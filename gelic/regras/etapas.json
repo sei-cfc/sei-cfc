@@ -1,0 +1,987 @@
+{
+ "_leia": "Etapas do fluxo da Gelic (fluxo/fluxo-gelic.drawio) e como reconhecê-las pelos documentos dos autos. 'tipos' traduz o título do documento no SEI para um tipo canônico (primeira regex que casar, sem diferenciar maiúsculas). 'marcas' acrescenta ao documento rótulos lidos do título inteiro (ex.: formulário de prorrogação × de acréscimo/supressão). 'etapas' são avaliadas em ordem: a primeira cuja condição vale é a etapa. Condições: tem / nao_tem / tem_algum (tipo presente nos autos), depois_de [a, b] ou lista de pares (o último a é posterior ao último b; '*' = qualquer documento; 'a|b' = qualquer dos tipos), nao_depois_de idem, marca / sem_marca [tipo, marca] ou lista de pares (o último documento do tipo tem / não tem a marca), familia (do _estado.json). Cada condição é um FATO de references/fatos-etapa.json: a regra calcula o fato pelos títulos, o Jev responde o mesmo fato (sim/não ou escolha de até 4 opções) e o código combina os fatos aqui — o Jev nunca escolhe a etapa ('if inteligente', scripts/etapa.py). 'descricao' é o que a pessoa lê. 'documento' é UM destes: {template, dados} (o documento a gerar; dados = blocos do modelo a ligar), {acao} (o que fazer quando não há documento; 'comando' opcional), ou {criterio, opcoes, motivo} quando os títulos não bastam — criterio 'usuario' (sempre pergunta), 'fato' (o valor do fato 'fato' escolhe a opção por 'por_valor'; valor sem opção, lista de opções ou fato incerto → pergunta entre as opções) ou 'portaria_233' (etapa.py calcula pelo valor com references/limites.json; enquanto os limites estiverem vazios, pergunta). Cada opção é {template, dados} ou {acao}. 'modelos' dá o nome legível de cada template citado. Não há modelo de despacho à Projur para contratação direta, minuta de contrato, edital ou aditivo de alteração (despacho-projur só tem os blocos prorrogacao e extincao, texto PROJUR imutável): nesses casos a etapa é uma ação.",
+ "tipos": {
+  "dvi": [
+   "verifica[çc][ãa]o inicial",
+   "(^|[^a-z])DVI([^a-z]|$)"
+  ],
+  "despacho_devolucao": [
+   "despacho.*(devolu|ajuste|reexame)"
+  ],
+  "despacho_reserva": [
+   "despacho.*(reserva|gecont|disponibilidade)"
+  ],
+  "nota_reserva": [
+   "nota de reserva",
+   "pr[ée]-?empenho"
+  ],
+  "despacho_projur": [
+   "despacho.*projur",
+   "envio [àa] projur"
+  ],
+  "parecer": [
+   "parecer"
+  ],
+  "autorizacao": [
+   "autoriza[çc][ãa]o de contrata[çc][ãa]o",
+   "autoriza[çc][ãa]o.*(dispensa|inexigibilidade)"
+  ],
+  "aviso_dispensa": [
+   "aviso de (dispensa|contrata[çc][ãa]o direta)"
+  ],
+  "edital": [
+   "\\bedital\\b"
+  ],
+  "homologacao": [
+   "homologa[çc][ãa]o",
+   "adjudica[çc][ãa]o"
+  ],
+  "minuta_contrato": [
+   "minuta de contrato"
+  ],
+  "contrato": [
+   "^contrato\\b",
+   "termo de contrato"
+  ],
+  "nota_empenho": [
+   "nota de empenho",
+   "\\bempenho\\b"
+  ],
+  "publicacao": [
+   "publica[çc][ãa]o",
+   "\\bPNCP\\b",
+   "extrato"
+  ],
+  "formulario_alteracao": [
+   "formul[áa]rio.*(prorroga|reajuste|repactua|altera|acr[ée]scimo|supress)",
+   "pedido de (prorroga|reajuste|repactua)"
+  ],
+  "minuta_aditivo": [
+   "minuta.*aditivo"
+  ],
+  "termo_aditivo": [
+   "^termo aditivo",
+   "aditivo \\["
+  ],
+  "apostila": [
+   "apostil"
+  ],
+  "informacao_inexecucao": [
+   "informa[çc][ãa]o t[ée]cnica",
+   "inexecu[çc][ãa]o",
+   "relat[óo]rio de fiscaliza"
+  ],
+  "notificacao": [
+   "notifica[çc][ãa]o",
+   "of[íi]cio.*(ci[êe]ncia|notific)"
+  ],
+  "termo_extincao": [
+   "(termo|minuta).*(extin[çc][ãa]o|rescis[ãa]o)"
+  ],
+  "abertura_par": [
+   "apura[çc][ãa]o de responsabilidade",
+   "abertura (de )?PAR"
+  ],
+  "etp": [
+   "estudo t[ée]cnico preliminar",
+   "(^|[^a-z])ETP([^a-z]|$)"
+  ],
+  "tr": [
+   "termo de refer[êe]ncia",
+   "(^|[^a-z])TR([^a-z]|$)"
+  ],
+  "dfd": [
+   "(^|[^a-z])DFD([^a-z]|$)",
+   "documento de formaliza[çc][ãa]o"
+  ]
+ },
+ "marcas": {
+  "prorrogacao": [
+   "prorroga"
+  ],
+  "acrescimo_supressao": [
+   "acr[ée]scimo",
+   "supress"
+  ],
+  "reajuste": [
+   "reajuste",
+   "repactua"
+  ],
+  "registro_precos": [
+   "registro de pre[çc]os",
+   "(^|[^a-z])SRP([^a-z]|$)"
+  ],
+  "inexigibilidade": [
+   "inexigibilidade"
+  ],
+  "dispensa_eletronica": [
+   "dispensa eletr[ôo]nica"
+  ]
+ },
+ "modelos": {
+  "despacho-projur": "Despacho de envio à Projur",
+  "termo-extincao-unilateral": "Termo de extinção unilateral",
+  "termo-aditivo-prorrogacao": "Termo aditivo de prorrogação",
+  "termo-aditivo-alteracao": "Termo aditivo de alteração (acréscimo/supressão)",
+  "termo-apostilamento-reajuste": "Termo de apostilamento de reajuste (modelo CFC)",
+  "autorizacao-contratacao-direta": "Autorização de contratação direta",
+  "aviso-dispensa-eletronica": "Aviso de dispensa eletrônica",
+  "contrato-compras": "Contrato de compras (modelo PROJUR)",
+  "contrato-servicos": "Contrato de serviços (modelo PROJUR)",
+  "agu-contrato-compras": "Contrato de compras (modelo AGU)",
+  "agu-contrato-servicos-sem-mo": "Contrato de serviços sem mão de obra exclusiva (modelo AGU)",
+  "agu-contrato-servicos-com-mo": "Contrato de serviços com mão de obra exclusiva (modelo AGU)",
+  "agu-contrato-obras": "Contrato de obras e serviços de engenharia (modelo AGU)",
+  "agu-ata-registro-precos": "Ata de registro de preços (modelo AGU)"
+ },
+ "etapas": [
+  {
+   "id": "extincao_termo",
+   "descricao": "Extinção unilateral com parecer jurídico juntado: lavrar o termo de extinção.",
+   "quando": {
+    "tem": [
+     "informacao_inexecucao",
+     "despacho_projur",
+     "parecer"
+    ],
+    "nao_tem": [
+     "termo_extincao"
+    ],
+    "depois_de": [
+     "parecer",
+     "despacho_projur"
+    ]
+   },
+   "documento": {
+    "template": "termo-extincao-unilateral",
+    "dados": {}
+   }
+  },
+  {
+   "id": "extincao_projur",
+   "descricao": "Inexecução contratual informada pela fiscalização e contratada notificada: enviar à Projur para parecer sobre a extinção.",
+   "quando": {
+    "tem": [
+     "contrato",
+     "informacao_inexecucao",
+     "notificacao"
+    ],
+    "nao_tem": [
+     "termo_extincao"
+    ],
+    "nao_depois_de": [
+     "despacho_projur",
+     "informacao_inexecucao"
+    ]
+   },
+   "documento": {
+    "template": "despacho-projur",
+    "dados": {
+     "extincao": true
+    }
+   }
+  },
+  {
+   "id": "aguarda_parecer",
+   "descricao": "Despacho enviado à Projur depois do último parecer juntado: aguardar o parecer.",
+   "quando": {
+    "tem": [
+     "despacho_projur"
+    ],
+    "depois_de": [
+     "despacho_projur",
+     "parecer"
+    ]
+   },
+   "documento": {
+    "acao": "aguardar o parecer da Projur"
+   }
+  },
+  {
+   "id": "concluido",
+   "descricao": "Instrumento (contrato, termo aditivo ou apostila) assinado, publicado e empenhado depois do último pedido: nada a fazer pela Gelic; arquivar ou devolver ao gestor.",
+   "quando": {
+    "tem_algum": [
+     "termo_aditivo",
+     "contrato",
+     "apostila"
+    ],
+    "tem": [
+     "publicacao",
+     "nota_empenho"
+    ],
+    "depois_de": [
+     [
+      "nota_empenho",
+      "termo_aditivo|contrato|apostila"
+     ],
+     [
+      "termo_aditivo|contrato|apostila",
+      "formulario_alteracao|dvi|despacho_reserva"
+     ]
+    ],
+    "nao_depois_de": [
+     [
+      "informacao_inexecucao|notificacao|despacho_projur|parecer|formulario_alteracao",
+      "nota_empenho"
+     ]
+    ]
+   },
+   "documento": {
+    "acao": "nada a fazer: arquivar ou devolver ao gestor"
+   }
+  },
+  {
+   "id": "aditivo_assinado",
+   "descricao": "Termo aditivo assinado depois do pedido, ainda sem publicação ou empenho posteriores: publicar e pedir o empenho.",
+   "quando": {
+    "tem": [
+     "contrato",
+     "formulario_alteracao",
+     "termo_aditivo"
+    ],
+    "depois_de": [
+     "termo_aditivo",
+     "formulario_alteracao"
+    ]
+   },
+   "documento": {
+    "acao": "publicar o extrato no PNCP e pedir o empenho à Gecont — sem modelo de despacho de empenho; redigir à mão"
+   }
+  },
+  {
+   "id": "aditivo_termo_prorrogacao",
+   "descricao": "Prorrogação contratual com minuta de aditivo, envio à Projur e parecer juntado: lavrar o termo aditivo de prorrogação para assinatura, com os ajustes do parecer.",
+   "quando": {
+    "tem": [
+     "contrato",
+     "formulario_alteracao",
+     "minuta_aditivo",
+     "despacho_projur",
+     "parecer"
+    ],
+    "depois_de": [
+     [
+      "despacho_projur",
+      "formulario_alteracao"
+     ],
+     [
+      "minuta_aditivo",
+      "formulario_alteracao"
+     ],
+     [
+      "parecer",
+      "despacho_projur"
+     ]
+    ],
+    "nao_depois_de": [
+     [
+      "termo_aditivo",
+      "formulario_alteracao"
+     ]
+    ],
+    "marca": [
+     "formulario_alteracao",
+     "prorrogacao"
+    ]
+   },
+   "documento": {
+    "template": "termo-aditivo-prorrogacao",
+    "dados": {}
+   }
+  },
+  {
+   "id": "aditivo_termo_alteracao",
+   "descricao": "Acréscimo/supressão contratual com minuta de aditivo, envio à Projur e parecer juntado: lavrar o termo aditivo de alteração para assinatura, com os ajustes do parecer.",
+   "quando": {
+    "tem": [
+     "contrato",
+     "formulario_alteracao",
+     "minuta_aditivo",
+     "despacho_projur",
+     "parecer"
+    ],
+    "depois_de": [
+     [
+      "despacho_projur",
+      "formulario_alteracao"
+     ],
+     [
+      "minuta_aditivo",
+      "formulario_alteracao"
+     ],
+     [
+      "parecer",
+      "despacho_projur"
+     ]
+    ],
+    "nao_depois_de": [
+     [
+      "termo_aditivo",
+      "formulario_alteracao"
+     ]
+    ],
+    "marca": [
+     "formulario_alteracao",
+     "acrescimo_supressao"
+    ],
+    "sem_marca": [
+     [
+      "formulario_alteracao",
+      "prorrogacao"
+     ]
+    ]
+   },
+   "documento": {
+    "template": "termo-aditivo-alteracao",
+    "dados": {}
+   }
+  },
+  {
+   "id": "aditivo_projur_prorrogacao",
+   "descricao": "Prorrogação contratual com minuta de termo aditivo juntada depois do DVI/reserva e ainda não enviada à Projur: enviar à Projur para parecer.",
+   "quando": {
+    "tem": [
+     "contrato",
+     "formulario_alteracao",
+     "minuta_aditivo"
+    ],
+    "depois_de": [
+     [
+      "minuta_aditivo",
+      "formulario_alteracao"
+     ],
+     [
+      "minuta_aditivo",
+      "dvi|despacho_reserva"
+     ]
+    ],
+    "nao_depois_de": [
+     [
+      "despacho_projur",
+      "formulario_alteracao"
+     ],
+     [
+      "termo_aditivo",
+      "formulario_alteracao"
+     ]
+    ],
+    "marca": [
+     "formulario_alteracao",
+     "prorrogacao"
+    ]
+   },
+   "documento": {
+    "template": "despacho-projur",
+    "dados": {
+     "prorrogacao": true
+    }
+   }
+  },
+  {
+   "id": "aditivo_projur_alteracao",
+   "descricao": "Acréscimo/supressão contratual com minuta de termo aditivo juntada depois do DVI/reserva e ainda não enviada à Projur: enviar à Projur para parecer.",
+   "quando": {
+    "tem": [
+     "contrato",
+     "formulario_alteracao",
+     "minuta_aditivo"
+    ],
+    "depois_de": [
+     [
+      "minuta_aditivo",
+      "formulario_alteracao"
+     ],
+     [
+      "minuta_aditivo",
+      "dvi|despacho_reserva"
+     ]
+    ],
+    "nao_depois_de": [
+     [
+      "despacho_projur",
+      "formulario_alteracao"
+     ],
+     [
+      "termo_aditivo",
+      "formulario_alteracao"
+     ]
+    ],
+    "marca": [
+     "formulario_alteracao",
+     "acrescimo_supressao"
+    ],
+    "sem_marca": [
+     [
+      "formulario_alteracao",
+      "prorrogacao"
+     ]
+    ]
+   },
+   "documento": {
+    "acao": "enviar a minuta do aditivo de alteração à Projur para parecer — o modelo despacho-projur só tem os blocos de prorrogação e de extinção (texto PROJUR imutável); redigir o despacho à mão"
+   }
+  },
+  {
+   "id": "aditivo_minuta_prorrogacao",
+   "descricao": "Prorrogação contratual já analisada, sem impeditivo e com reserva: minutar o termo aditivo de prorrogação.",
+   "quando": {
+    "tem": [
+     "contrato",
+     "formulario_alteracao",
+     "despacho_reserva"
+    ],
+    "depois_de": [
+     [
+      "despacho_reserva",
+      "formulario_alteracao"
+     ],
+     [
+      "formulario_alteracao",
+      "contrato"
+     ]
+    ],
+    "nao_depois_de": [
+     [
+      "minuta_aditivo",
+      "formulario_alteracao"
+     ],
+     [
+      "termo_aditivo",
+      "formulario_alteracao"
+     ]
+    ],
+    "marca": [
+     "formulario_alteracao",
+     "prorrogacao"
+    ]
+   },
+   "documento": {
+    "template": "termo-aditivo-prorrogacao",
+    "dados": {}
+   }
+  },
+  {
+   "id": "aditivo_minuta_alteracao",
+   "descricao": "Acréscimo/supressão contratual já analisado, sem impeditivo e com reserva: minutar o termo aditivo de alteração.",
+   "quando": {
+    "tem": [
+     "contrato",
+     "formulario_alteracao",
+     "despacho_reserva"
+    ],
+    "depois_de": [
+     [
+      "despacho_reserva",
+      "formulario_alteracao"
+     ],
+     [
+      "formulario_alteracao",
+      "contrato"
+     ]
+    ],
+    "nao_depois_de": [
+     [
+      "minuta_aditivo",
+      "formulario_alteracao"
+     ],
+     [
+      "termo_aditivo",
+      "formulario_alteracao"
+     ]
+    ],
+    "marca": [
+     "formulario_alteracao",
+     "acrescimo_supressao"
+    ],
+    "sem_marca": [
+     [
+      "formulario_alteracao",
+      "prorrogacao"
+     ]
+    ]
+   },
+   "documento": {
+    "template": "termo-aditivo-alteracao",
+    "dados": {}
+   }
+  },
+  {
+   "id": "aditivo_instrumento_indefinido",
+   "descricao": "Pedido contratual (reajuste, repactuação ou alteração sem dizer qual) já analisado e com reserva, sem aditivo assinado: o título do formulário não diz se é prorrogação ou acréscimo/supressão — escolher o instrumento.",
+   "quando": {
+    "tem": [
+     "contrato",
+     "formulario_alteracao",
+     "despacho_reserva"
+    ],
+    "depois_de": [
+     [
+      "despacho_reserva",
+      "formulario_alteracao"
+     ],
+     [
+      "formulario_alteracao",
+      "contrato"
+     ]
+    ],
+    "nao_depois_de": [
+     "termo_aditivo",
+     "formulario_alteracao"
+    ],
+    "sem_marca": [
+     [
+      "formulario_alteracao",
+      "prorrogacao"
+     ],
+     [
+      "formulario_alteracao",
+      "acrescimo_supressao"
+     ]
+    ]
+   },
+   "documento": {
+    "criterio": "fato",
+    "fato": "instrumento_alteracao",
+    "por_valor": {
+     "apostila": "apostila"
+    },
+    "motivo": "o título do formulário não diz se é prorrogação ou acréscimo/supressão e o Jev não firmou o instrumento (reajuste/repactuação isolados costumam ir por apostila)",
+    "opcoes": {
+     "apostila": {
+      "template": "termo-apostilamento-reajuste",
+      "dados": {}
+     },
+     "termo-aditivo-prorrogacao": {
+      "template": "termo-aditivo-prorrogacao",
+      "dados": {}
+     },
+     "termo-aditivo-alteracao": {
+      "template": "termo-aditivo-alteracao",
+      "dados": {}
+     }
+    }
+   }
+  },
+  {
+   "id": "alteracao_reexame",
+   "descricao": "Alteração contratual com DVI já emitido e documentos novos da unidade depois dele ou da última devolução da Gelic: reexame (a skill decide devolução ou envio à Gecont).",
+   "quando": {
+    "tem": [
+     "contrato",
+     "formulario_alteracao",
+     "dvi"
+    ],
+    "depois_de": [
+     [
+      "dvi",
+      "contrato"
+     ],
+     [
+      "*",
+      "dvi|despacho_devolucao"
+     ]
+    ]
+   },
+   "documento": {
+    "criterio": "fato",
+    "fato": "instrumento_alteracao",
+    "por_valor": {
+     "apostila": "apostila",
+     "termo_aditivo": "reexame"
+    },
+    "padrao": "reexame",
+    "motivo": "reajuste formalizado por apostila vai direto ao termo de apostilamento; termo aditivo, ou instrumento que os autos não dizem, segue o reexame dos documentos novos",
+    "opcoes": {
+     "reexame": {
+      "acao": "reexaminar os documentos novos e emitir a devolução ou o despacho à Gecont (a skill escolhe o formato)",
+      "comando": "$gelic <pasta>"
+     },
+     "apostila": {
+      "template": "termo-apostilamento-reajuste",
+      "dados": {}
+     }
+    }
+   }
+  },
+  {
+   "id": "alteracao_aguarda_unidade",
+   "descricao": "Alteração contratual com DVI emitido e nenhum documento novo da unidade depois do DVI ou da última devolução: aguardar a resposta.",
+   "quando": {
+    "tem": [
+     "contrato",
+     "formulario_alteracao",
+     "dvi"
+    ],
+    "depois_de": [
+     "dvi",
+     "contrato"
+    ],
+    "nao_depois_de": [
+     "*",
+     "dvi|despacho_devolucao"
+    ]
+   },
+   "documento": {
+    "acao": "aguardar a unidade"
+   }
+  },
+  {
+   "id": "alteracao_analise",
+   "descricao": "Contrato vigente com pedido de prorrogação, reajuste, repactuação ou alteração ainda não analisado pela Gelic: analisar e emitir o DVI.",
+   "quando": {
+    "tem": [
+     "contrato",
+     "formulario_alteracao"
+    ],
+    "depois_de": [
+     "formulario_alteracao",
+     "contrato"
+    ],
+    "nao_depois_de": [
+     "dvi",
+     "contrato"
+    ]
+   },
+   "documento": {
+    "acao": "analisar o pedido e emitir o DVI (a skill escolhe o formato)",
+    "comando": "$gelic prorrogacao|reajuste <pasta>"
+   }
+  },
+  {
+   "id": "empenho",
+   "descricao": "Contrato assinado sem nota de empenho: pedir o empenho à Gecont.",
+   "quando": {
+    "tem": [
+     "contrato"
+    ],
+    "nao_tem": [
+     "nota_empenho",
+     "formulario_alteracao"
+    ]
+   },
+   "documento": {
+    "acao": "pedir o empenho à Gecont — sem modelo de despacho de empenho; redigir à mão"
+   }
+  },
+  {
+   "id": "dispensa_autorizacao",
+   "descricao": "Dispensa eletrônica com resultado homologado e sem autorização: minutar a autorização de contratação direta.",
+   "quando": {
+    "tem": [
+     "aviso_dispensa",
+     "homologacao"
+    ],
+    "nao_tem": [
+     "autorizacao",
+     "contrato"
+    ]
+   },
+   "documento": {
+    "template": "autorizacao-contratacao-direta",
+    "dados": {}
+   }
+  },
+  {
+   "id": "dispensa_em_andamento",
+   "descricao": "Aviso de dispensa eletrônica publicado, sem homologação: aguardar a sessão e a homologação.",
+   "quando": {
+    "tem": [
+     "aviso_dispensa"
+    ],
+    "nao_tem": [
+     "homologacao",
+     "autorizacao",
+     "contrato"
+    ]
+   },
+   "documento": {
+    "acao": "aguardar a sessão e a homologação da dispensa eletrônica"
+   }
+  },
+  {
+   "id": "contrato_direta",
+   "descricao": "Contratação direta autorizada e sem contrato: minutar o contrato (modelo PROJUR de compras ou de serviços).",
+   "quando": {
+    "tem": [
+     "autorizacao"
+    ],
+    "nao_tem": [
+     "contrato"
+    ]
+   },
+   "documento": {
+    "criterio": "fato",
+    "fato": "objeto_contrato",
+    "por_valor": {
+     "compras": "contrato-compras",
+     "servicos": "contrato-servicos"
+    },
+    "motivo": "compras × serviços não se lê dos títulos dos autos e o Jev não firmou o objeto",
+    "opcoes": {
+     "contrato-compras": {
+      "template": "contrato-compras",
+      "dados": {}
+     },
+     "contrato-servicos": {
+      "template": "contrato-servicos",
+      "dados": {}
+     }
+    }
+   }
+  },
+  {
+   "id": "ata_registro_precos",
+   "descricao": "Licitação para registro de preços (edital SRP) homologada e sem ata: minutar a ata de registro de preços.",
+   "quando": {
+    "tem": [
+     "edital",
+     "homologacao"
+    ],
+    "nao_tem": [
+     "contrato",
+     "autorizacao",
+     "aviso_dispensa"
+    ],
+    "marca": [
+     "edital",
+     "registro_precos"
+    ]
+   },
+   "documento": {
+    "template": "agu-ata-registro-precos",
+    "dados": {}
+   }
+  },
+  {
+   "id": "contrato_licitacao",
+   "descricao": "Licitação homologada e sem contrato: minutar o contrato (modelo AGU conforme o objeto).",
+   "quando": {
+    "tem": [
+     "homologacao"
+    ],
+    "nao_tem": [
+     "contrato",
+     "autorizacao",
+     "aviso_dispensa"
+    ]
+   },
+   "documento": {
+    "criterio": "fato",
+    "fato": "objeto_contrato",
+    "por_valor": {
+     "compras": "agu-contrato-compras",
+     "servicos": [
+      "agu-contrato-servicos-sem-mo",
+      "agu-contrato-servicos-com-mo"
+     ],
+     "obras": "agu-contrato-obras"
+    },
+    "motivo": "o tipo de objeto (compras, serviços com/sem mão de obra exclusiva, obras) não se lê dos títulos dos autos e o Jev não o firmou",
+    "opcoes": {
+     "agu-contrato-compras": {
+      "template": "agu-contrato-compras",
+      "dados": {}
+     },
+     "agu-contrato-servicos-sem-mo": {
+      "template": "agu-contrato-servicos-sem-mo",
+      "dados": {}
+     },
+     "agu-contrato-servicos-com-mo": {
+      "template": "agu-contrato-servicos-com-mo",
+      "dados": {}
+     },
+     "agu-contrato-obras": {
+      "template": "agu-contrato-obras",
+      "dados": {}
+     }
+    }
+   }
+  },
+  {
+   "id": "contratacao_projur",
+   "descricao": "Contratação com reserva e minuta de contrato ou edital pronta, ainda não enviada à Projur: enviar à Projur para parecer.",
+   "quando": {
+    "tem": [
+     "despacho_reserva"
+    ],
+    "tem_algum": [
+     "minuta_contrato",
+     "edital"
+    ],
+    "nao_tem": [
+     "despacho_projur",
+     "parecer",
+     "contrato",
+     "homologacao",
+     "autorizacao",
+     "aviso_dispensa"
+    ]
+   },
+   "documento": {
+    "acao": "enviar a minuta de contrato/edital à Projur para parecer — o modelo despacho-projur só tem os blocos de prorrogação e de extinção (texto PROJUR imutável); redigir o despacho à mão"
+   }
+  },
+  {
+   "id": "licitacao_em_andamento",
+   "descricao": "Edital com parecer da Projur juntado e sem homologação: aguardar a licitação (publicação, sessão e homologação).",
+   "quando": {
+    "tem": [
+     "edital",
+     "despacho_projur",
+     "parecer"
+    ],
+    "depois_de": [
+     "parecer",
+     "despacho_projur"
+    ],
+    "nao_tem": [
+     "homologacao",
+     "contrato",
+     "autorizacao",
+     "aviso_dispensa"
+    ]
+   },
+   "documento": {
+    "acao": "aguardar a licitação (publicação do edital, sessão e homologação)"
+   }
+  },
+  {
+   "id": "direta_pos_parecer",
+   "descricao": "Contratação direta com reserva e parecer da Projur juntado, sem autorização nem aviso: minutar a autorização de contratação direta ou o aviso de dispensa eletrônica.",
+   "quando": {
+    "tem": [
+     "despacho_reserva",
+     "despacho_projur",
+     "parecer"
+    ],
+    "depois_de": [
+     "parecer",
+     "despacho_projur"
+    ],
+    "nao_tem": [
+     "edital",
+     "autorizacao",
+     "aviso_dispensa",
+     "contrato",
+     "homologacao"
+    ]
+   },
+   "documento": {
+    "criterio": "fato",
+    "fato": "forma_contratacao_direta",
+    "por_valor": {
+     "sem_disputa": "autorizacao-contratacao-direta",
+     "dispensa_eletronica": "aviso-dispensa-eletronica"
+    },
+    "motivo": "autorização (inexigibilidade ou dispensa sem disputa) × aviso de dispensa eletrônica depende da hipótese legal, que os títulos não dizem e o Jev não firmou",
+    "opcoes": {
+     "autorizacao-contratacao-direta": {
+      "template": "autorizacao-contratacao-direta",
+      "dados": {}
+     },
+     "aviso-dispensa-eletronica": {
+      "template": "aviso-dispensa-eletronica",
+      "dados": {}
+     }
+    }
+   }
+  },
+  {
+   "id": "autorizacao",
+   "descricao": "Contratação direta com instrução saneada e reserva orçamentária, sem minuta de contrato, edital ou envio à Projur: pelo valor e pela Portaria 233, minutar a autorização de contratação direta, o aviso de dispensa eletrônica ou enviar à Projur.",
+   "quando": {
+    "tem": [
+     "despacho_reserva"
+    ],
+    "nao_tem": [
+     "autorizacao",
+     "aviso_dispensa",
+     "edital",
+     "contrato",
+     "minuta_contrato",
+     "despacho_projur",
+     "parecer",
+     "homologacao"
+    ]
+   },
+   "documento": {
+    "criterio": "portaria_233",
+    "motivo": "a escolha depende do valor da contratação, dos limites do art. 75 e do critério da Portaria PRES CFC 233/2025",
+    "opcoes": {
+     "autorizacao-contratacao-direta": {
+      "template": "autorizacao-contratacao-direta",
+      "dados": {}
+     },
+     "aviso-dispensa-eletronica": {
+      "template": "aviso-dispensa-eletronica",
+      "dados": {}
+     },
+     "despacho-projur": {
+      "acao": "enviar à Projur para parecer — o modelo despacho-projur só tem os blocos de prorrogação e de extinção (texto PROJUR imutável); redigir o despacho à mão"
+     }
+    }
+   }
+  },
+  {
+   "id": "preparatoria_reexame",
+   "descricao": "Fase preparatória com DVI emitido e documentos novos da unidade depois dele ou da última devolução da Gelic: reexame (a skill decide devolução ou despacho à Gecont para reserva).",
+   "quando": {
+    "tem": [
+     "dvi"
+    ],
+    "nao_tem": [
+     "contrato",
+     "despacho_reserva"
+    ],
+    "depois_de": [
+     "*",
+     "dvi|despacho_devolucao"
+    ]
+   },
+   "documento": {
+    "acao": "reexaminar os documentos novos e emitir a devolução ou o despacho à Gecont para reserva (a skill escolhe o formato)",
+    "comando": "$gelic <pasta>"
+   }
+  },
+  {
+   "id": "preparatoria_aguarda_unidade",
+   "descricao": "Fase preparatória com DVI emitido e nada novo depois do DVI ou da última devolução da Gelic: aguardar a unidade.",
+   "quando": {
+    "tem": [
+     "dvi"
+    ],
+    "nao_tem": [
+     "contrato",
+     "despacho_reserva"
+    ],
+    "nao_depois_de": [
+     "*",
+     "dvi|despacho_devolucao"
+    ]
+   },
+   "documento": {
+    "acao": "aguardar a unidade"
+   }
+  },
+  {
+   "id": "preparatoria_analise",
+   "descricao": "Fase preparatória (DFD, ETP, TR, pesquisa de preços) recebida e ainda sem DVI: analisar e emitir o DVI.",
+   "quando": {
+    "tem_algum": [
+     "tr",
+     "etp",
+     "dfd"
+    ],
+    "nao_tem": [
+     "dvi",
+     "contrato"
+    ]
+   },
+   "documento": {
+    "acao": "analisar a fase preparatória e emitir o DVI (a skill escolhe o formato)",
+    "comando": "$gelic <tipo> <pasta>"
+   }
+  }
+ ]
+}

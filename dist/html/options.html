@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Configurações</title>
+    <link rel="stylesheet" href="../css/fontawesome.pro.min.css">
+    <link rel="stylesheet" href="../css/seipro-ui.css">
+    <link rel="stylesheet" href="page.css">
+</head>
+<body class="SEIPro">
+    <header class="topo">
+        <div class="pagina topo-in">
+            <img class="icon-space" src="../icons/lab/icon-32.png" alt="" width="32" height="32">
+            <h1><span class="name-space"></span> <span class="sep" aria-hidden="true">|</span> Configurações</h1>
+        </div>
+    </header>
+    <div class="barra-acoes" role="toolbar" aria-label="Ações das configurações">
+        <div class="pagina barra-acoes-in">
+            <button id="export" type="button" class="btn btn-secundario" aria-label="Baixar configurações"><i class="fas fa-download" aria-hidden="true"></i><span class="btn-texto">Baixar configurações</span></button>
+            <input type="file" id="selectFiles" accept="application/json,.json" hidden>
+            <button id="import" type="button" class="btn btn-secundario" aria-label="Carregar configurações"><i class="fas fa-file-upload" aria-hidden="true"></i><span class="btn-texto">Carregar configurações</span></button>
+            <button id="abrirFerramentasPdf" type="button" class="btn btn-terciario" aria-label="Ferramentas de PDF"><i class="fas fa-file-pdf" aria-hidden="true"></i><span class="btn-texto">Ferramentas de PDF</span></button>
+            <span class="espaco"></span>
+            <button type="button" class="save btn btn-primario"><i class="fas fa-save" aria-hidden="true"></i> Salvar</button>
+        </div>
+    </div>
+    <main class="pagina">
+        <div class="abas" role="tablist" aria-label="Seções das configurações">
+            <button type="button" role="tab" id="tab-geral" aria-controls="aba-geral" aria-selected="true"><i class="fas fa-cog" aria-hidden="true"></i> Geral</button>
+            <button type="button" role="tab" id="tab-base" aria-controls="aba-base" aria-selected="false" tabindex="-1"><i class="fas fa-database" aria-hidden="true"></i> Base de Dados</button>
+            <button type="button" role="tab" id="tab-complementos" aria-controls="aba-complementos" aria-selected="false" tabindex="-1"><i class="fas fa-puzzle-piece" aria-hidden="true"></i> Complementos</button>
+        </div>
+        <section id="aba-geral" role="tabpanel" aria-labelledby="tab-geral">
+            <div class="busca">
+                <label class="sr" for="busca">Buscar nas opções</label>
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input id="busca" type="search" placeholder="Buscar nas opções" autocomplete="off">
+            </div>
+            <p id="sem-resultado" class="sem-resultado" hidden>Nenhuma opção encontrada.</p>
+            <div id="geral-conteudo"></div>
+        </section>
+        <section id="aba-base" role="tabpanel" aria-labelledby="tab-base" hidden>
+            <div id="perfis"></div>
+            <button id="new" type="button" class="btn btn-secundario"><i class="fas fa-database" aria-hidden="true"></i> Adicionar nova base</button>
+        </section>
+        <section id="aba-complementos" role="tabpanel" aria-labelledby="tab-complementos" hidden>
+            <div id="complementos-conteudo"></div>
+        </section>
+    </main>
+    <script src="options.js"></script>
+    <script type="module" src="../js/favoritos/opcoes.js"></script>
+</body>
+</html>

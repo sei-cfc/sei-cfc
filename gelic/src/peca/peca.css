@@ -1,0 +1,72 @@
+/* Janela do formulário das peças do SEI CFC (página da extensão). Mesma paleta do selo (src/pagina/selo.css). */
+:root {
+  --g-fundo: #ffffff;
+  --g-texto: #1b1f24;
+  --g-suave: #5d6772;
+  --g-borda: #d6dbe0;
+  --g-tom: #0e5c7a;
+  --g-falta: #b7791f;
+  --g-erro: #b42318;
+  --g-ok: #2f855a;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --g-fundo: #1a1d21; --g-texto: #e7e9ec; --g-suave: #a4abb3; --g-borda: #3a4048; --g-tom: #4fb3d9; --g-falta: #e8b04a; --g-erro: #f97066; --g-ok: #5cc48a; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--g-fundo); color: var(--g-texto); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+#gelic-peca { max-width: 780px; margin: 0 auto; padding: 16px 20px 48px; }
+.gelic-cab { border-left: 4px solid var(--g-tom); padding-left: 12px; margin-bottom: 12px; }
+.gelic-cab h1 { font-size: 18px; margin: 0; }
+.gelic-cab p { margin: 2px 0 0; color: var(--g-suave); }
+h1 { font-size: 18px; }
+h2 { font-size: 15px; margin: 18px 0 8px; }
+.gelic-faixa { margin: 0 0 12px; padding: 6px 10px; border-radius: 6px; background: color-mix(in srgb, var(--g-ok) 10%, var(--g-fundo)); }
+.gelic-faixa-falta { background: color-mix(in srgb, var(--g-falta) 14%, var(--g-fundo)); }
+.gelic-faixa-erro { background: color-mix(in srgb, var(--g-erro) 12%, var(--g-fundo)); color: var(--g-erro); font-weight: 600; }
+.gelic-campo { display: grid; gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--g-borda); }
+.gelic-campo label { font-weight: 600; }
+.gelic-falta label::after { content: " · falta"; color: var(--g-falta); font-weight: 500; }
+.gelic-obrig { color: var(--g-falta); }
+.gelic-origem { font-size: 12px; color: var(--g-suave); }
+.gelic-origem-ia { color: var(--g-falta); font-weight: 600; }
+.gelic-nota { color: var(--g-suave); }
+input[type=text], input[type=password], input[type=date], textarea, select {
+  width: 100%; padding: 6px 8px; font: inherit; color: inherit; background: var(--g-fundo);
+  border: 1px solid var(--g-borda); border-radius: 4px;
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--g-tom); outline-offset: 1px; }
+.gelic-tabela table { width: 100%; border-collapse: collapse; }
+.gelic-tabela th { text-align: left; font-size: 12px; color: var(--g-suave); text-transform: capitalize; }
+.gelic-tabela td { padding: 2px 4px 2px 0; }
+.gelic-botoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.gelic-rodape { position: sticky; bottom: 0; padding: 10px 0; background: var(--g-fundo); border-top: 1px solid var(--g-borda); }
+.gelic-botao, .gelic-mini {
+  font: inherit; padding: 6px 12px; border-radius: 4px; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--g-tom) 45%, var(--g-borda)); background: var(--g-fundo); color: var(--g-tom); font-weight: 600;
+}
+.gelic-mini { padding: 2px 8px; font-size: 12px; margin-top: 4px; }
+.gelic-primario { background: var(--g-tom); color: #fff; }
+.gelic-botao:disabled { opacity: .55; cursor: progress; }
+.gelic-status { margin: 10px 0; color: var(--g-suave); }
+.gelic-status-erro { color: var(--g-erro); font-weight: 600; }
+.gelic-status-ok { color: var(--g-ok); font-weight: 600; }
+.gelic-gravar { margin-top: 12px; padding: 12px; border: 1px solid var(--g-borda); border-left: 4px solid var(--g-tom); border-radius: 6px; display: grid; gap: 6px; }
+.gelic-check { font-weight: 400; }
+iframe.gelic-previa { width: 100%; height: 70vh; border: 1px solid var(--g-borda); border-radius: 4px; background: #fff; }
+@media (max-width: 520px) { #gelic-peca { padding: 12px; } }
+
+/* Dados da contratação: conflito e "sobe depois" (src/peca/conflito.ts) */
+.gelic-conflito, .gelic-subir { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--g-falta); border-radius: 6px; }
+.gelic-conflito h2 { margin-top: 0; }
+.gelic-cf-campo { display: grid; gap: 6px; margin: 8px 0 0; padding: 8px 0 0; border: 0; border-top: 1px solid var(--g-borda); }
+.gelic-cf-campo legend { padding: 0; font-weight: 600; }
+.gelic-cf-opcao { text-align: left; padding: 6px 8px; border: 1px solid var(--g-borda); border-radius: 6px; background: var(--g-fundo); color: var(--g-texto); font: inherit; cursor: pointer; }
+.gelic-cf-opcao[aria-pressed="true"] { border-color: var(--g-tom); box-shadow: inset 0 0 0 1px var(--g-tom); }
+.gelic-cf-valor { white-space: pre-wrap; }
+
+/* Barra dos dados da contratação (src/peca/pagina.ts) */
+.gelic-dados { margin: 0 0 12px; padding: 6px 10px; border-left: 3px solid var(--g-tom); background: color-mix(in srgb, var(--g-tom) 8%, var(--g-fundo)); }
+.gelic-dados p { margin: 0; }
+.gelic-dados[data-gelic-dados="leitura"], .gelic-dados[data-gelic-dados="navegador"] { border-left-color: var(--g-falta); background: color-mix(in srgb, var(--g-falta) 10%, var(--g-fundo)); }
+.gelic-trazido { background: color-mix(in srgb, var(--g-tom) 10%, var(--g-fundo)); }

@@ -1,0 +1,334 @@
+[
+ {
+  "id": "objeto",
+  "texto": "Descrição sucinta do objeto",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": "objeto",
+  "quando_aparece": null
+ },
+ {
+  "id": "natureza_classificacao",
+  "texto": "Classificação do objeto quanto à heterogeneidade ou complexidade",
+  "tipo": "escolha",
+  "opcoes": [
+   "comum(ns)",
+   "especiais"
+  ],
+  "obrigatoria": true,
+  "nota": "Serviço comum = especificação usual de mercado; especial = exige justificativa técnica própria no ETP.",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "justificativa_continuidade",
+  "texto": "Justificativa da continuidade do serviço (em branco = serviço não contínuo/por escopo)",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "Só preencher quando o serviço for contínuo (vigência plurianual mais vantajosa); em branco, o TR sai como \"não contínuo ou contratado por escopo\".",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "termo_inicial_vigencia",
+  "texto": "Termo inicial da vigência do contrato",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Ex.: \"da assinatura do contrato\" ou \"do recebimento da ordem de serviço\".",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "sustentabilidade",
+  "texto": "Requisitos de sustentabilidade (Guia Nacional de Contratações Sustentáveis)",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "marcas_admitidas",
+  "texto": "Marcas, características ou modelos admitidos na indicação",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "subcontratacao_limite_pct",
+  "texto": "Limite de subcontratação permitido, em % do valor do contrato (em branco = não permitida)",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "garantia_percentual",
+  "texto": "Percentual exigido de garantia da contratação (em branco = sem exigência de garantia)",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "vistoria_horario",
+  "texto": "Horário de realização da vistoria prévia, ex.: \"9h às 12h\" (em branco = vistoria não obrigatória)",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "prazo_inicio_execucao",
+  "texto": "Prazo para início da execução do objeto",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Ex.: \"10 (dez) dias\".",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "metodo_execucao",
+  "texto": "Descrição detalhada dos métodos, rotinas, etapas e periodicidade de execução do trabalho",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "local_execucao",
+  "texto": "Local de prestação dos serviços",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "horario_execucao",
+  "texto": "Horário de prestação dos serviços",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "materiais_disponibilizados",
+  "texto": "Materiais, equipamentos, ferramentas e utensílios que o Contratado deve disponibilizar",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "dimensionamento_proposta",
+  "texto": "Informações relevantes para o dimensionamento da proposta",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "procedimentos_transicao",
+  "texto": "Procedimentos de transição e finalização do contrato (em branco = não necessários)",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": false,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "prazo_recebimento_provisorio",
+  "texto": "Prazo para recebimento provisório, em dias",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "prazo_recebimento_definitivo",
+  "texto": "Prazo para recebimento definitivo, em dias, contados do recebimento provisório",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "indice_reajuste",
+  "texto": "Índice de reajuste a ser aplicado após o interregno de um ano",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Ex.: \"IPCA\", \"INPC\".",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "multa_moratoria_pct",
+  "texto": "Percentual da multa moratória, por dia de atraso injustificado",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Formato \"0,5\" (sem o símbolo %).",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "multa_compensatoria_min_pct",
+  "texto": "Percentual mínimo da multa compensatória",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "multa_compensatoria_max_pct",
+  "texto": "Percentual máximo da multa compensatória",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "modalidade_licitacao",
+  "texto": "Modalidade da licitação",
+  "tipo": "escolha",
+  "opcoes": [
+   "PREGÃO",
+   "CONCORRÊNCIA"
+  ],
+  "obrigatoria": true,
+  "nota": "Só aparece quando a via da contratação (capa) não é dispensa/inexigibilidade.",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": "nao contratacao_direta"
+ },
+ {
+  "id": "criterio_julgamento",
+  "texto": "Critério de julgamento da proposta",
+  "tipo": "escolha",
+  "opcoes": [
+   "MENOR PREÇO",
+   "MAIOR DESCONTO",
+   "TÉCNICA E PREÇO"
+  ],
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": "nao contratacao_direta"
+ },
+ {
+  "id": "fundamento_contratacao_direta",
+  "texto": "Fundamento legal e enquadramento da contratação direta",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Ex.: \"art. 75, inciso II, da Lei nº 14.133, de 2021\".",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": "via in (dispensa, inexigibilidade)"
+ },
+ {
+  "id": "regime_execucao",
+  "texto": "Regime de execução do objeto",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Ex.: \"fornecimento e prestação de serviço associado\" ou \"empreitada por preço global\".",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "criterio_preco",
+  "texto": "Critério de aceitabilidade de preços",
+  "tipo": "escolha",
+  "opcoes": [
+   "global",
+   "unitário"
+  ],
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "qualificacao_tecnica",
+  "texto": "Exigências de qualificação técnica (atestados de capacidade, registro em conselho, etc.)",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "foro",
+  "texto": "Município e Seção Judiciária do foro da Justiça Federal",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Ex.: \"Brasília/DF\".",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ }
+]

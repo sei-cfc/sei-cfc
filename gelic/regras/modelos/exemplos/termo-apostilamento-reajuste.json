@@ -1,0 +1,85 @@
+{
+ "processo": {
+  "valor": "12345670000037.000010/2023-13",
+  "nota": "cabeçalho dos autos"
+ },
+ "unidade_gestora": "GESERV",
+ "regime": {
+  "valor": "14133",
+  "sei": "1234503",
+  "nota": "preâmbulo: Lei nº 14.133/2021"
+ },
+ "apostilamento": {
+  "numero": {
+   "valor": 3,
+   "sei": "1234503",
+   "nota": "dois apostilamentos anteriores nos autos"
+  }
+ },
+ "contrato": {
+  "numero": {
+   "valor": "23/2023",
+   "sei": "1234503"
+  },
+  "clausula_reajuste": {
+   "valor": "Cláusula Sétima",
+   "sei": "1234503"
+  },
+  "objeto": {
+   "valor": "prestação de serviços de manutenção preventiva e corretiva de sistemas de ar condicionado, incluindo equipamentos de ar condicionado central, split e cassete de teto, e unidades portáteis, com fornecimento de peças sob demanda, a serem executados no edifício-sede do Conselho Federal de Contabilidade",
+   "sei": "1234503"
+  }
+ },
+ "contratada": {
+  "razao_social": {
+   "valor": "Empresa Exemplo de Engenharia Ltda ME",
+   "sei": "1234503"
+  }
+ },
+ "licitacao": {
+  "origem": {
+   "valor": "Pregão Eletrônico nº 11/2023",
+   "sei": "1234503"
+  }
+ },
+ "reajuste": {
+  "indice": "Índice Nacional de Preços ao Consumidor Amplo — IPCA",
+  "sigla": "IPCA",
+  "percentual": {
+   "valor": "4,641330%",
+   "sei": "1234503"
+  },
+  "periodo": "julho/2025 a junho/2026",
+  "data_base": {
+   "valor": "28/07/2023",
+   "sei": "1234503",
+   "nota": "data do Mapa Comparativo de Preços (MCP)"
+  },
+  "efeitos": {
+   "valor": "28/07/2026",
+   "sei": "1234503"
+  },
+  "sei": {
+   "valor": "1234503",
+   "nota": "o texto do apostilamento não cita o SEI da memória de cálculo; no uso real, SEI do despacho/planilha com a memória"
+  },
+  "parcelas": [
+   {
+    "descricao": "Peças e componentes",
+    "periodicidade": "anual",
+    "valor_atual": {
+     "valor": "54.368,53",
+     "sei": "1234503"
+    }
+   },
+   {
+    "descricao": "Prestação de serviços",
+    "periodicidade": "mensal",
+    "valor_atual": {
+     "valor": "8.469,89",
+     "sei": "1234503"
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,62 @@
+{
+  "_origem": "Exemplo inventado (dados fictícios), no formato do ctx que o gera monta em documentos/respostas.py::contexto_documento.",
+  "area_nome": "Gerência Executiva de Exemplo - GEX-EXEM",
+  "responsavel_nome": "Fulana de Tal Exemplo",
+  "responsavel_email": "fulana.exemplo@exemplo.invalid",
+  "responsavel_matricula": "000123",
+  "orgao": {
+    "nome": "CONSELHO FEDERAL DE CONTABILIDADE",
+    "endereco": "SAUS Quadra 05, Lote 03, Bloco J, Edifício CFC, Bairro Asa Sul, Brasília/DF, CEP 70070-920",
+    "contato": "Telefone: (61) 3314-9600 - www.cfc.org.br - E-mail: cfc@cfc.org.br"
+  },
+  "versao": "1.0",
+  "origem": "AGU — Modelo de Termo de Referência, serviços e obras, Lei nº 14.133, mai/26",
+  "via": "pregao",
+  "contratacao_direta": false,
+  "tem_item_pca": true,
+  "item_pca": 99,
+  "ano_exercicio": 2026,
+  "objeto": "Contratação de serviço fictício de manutenção de equipamentos de exemplo.",
+  "natureza_classificacao": "comum(ns)",
+  "justificativa_continuidade": "O serviço de exemplo é necessário de forma permanente.",
+  "termo_inicial_vigencia": "da assinatura do contrato",
+  "vigencia_meses": 12,
+  "sustentabilidade": "Uso de produtos de exemplo com menor impacto ambiental.",
+  "marcas_admitidas": "",
+  "subcontratacao_limite_pct": "",
+  "garantia_percentual": "5",
+  "vistoria_horario": "9h às 12h",
+  "prazo_inicio_execucao": "10 (dez) dias",
+  "metodo_execucao": "Execução mensal conforme cronograma de exemplo.",
+  "local_execucao": "Sede fictícia de exemplo",
+  "horario_execucao": "8h às 18h, de segunda a sexta",
+  "materiais_disponibilizados": "Ferramentas de exemplo.",
+  "dimensionamento_proposta": "",
+  "procedimentos_transicao": "",
+  "prazo_recebimento_provisorio": "5",
+  "prazo_recebimento_definitivo": "10",
+  "indice_reajuste": "IPCA",
+  "multa_moratoria_pct": "0,5",
+  "multa_compensatoria_min_pct": "5",
+  "multa_compensatoria_max_pct": "10",
+  "modalidade_licitacao": "PREGÃO",
+  "criterio_julgamento": "MENOR PREÇO",
+  "fundamento_contratacao_direta": "",
+  "regime_execucao": "empreitada por preço global",
+  "criterio_preco": "global",
+  "qualificacao_tecnica": "Atestado de execução de serviço similar ao de exemplo.",
+  "foro": "Brasília/DF",
+  "projetos_contas": [
+    {
+      "projeto": "Projeto 0000 - Projeto de exemplo",
+      "conta": "0.0.0.0.00.00.000 - Conta de exemplo"
+    }
+  ],
+  "valor_estimado_fmt": "12.345,67",
+  "valor_estimado_extenso": "doze mil, trezentos e quarenta e cinco reais e sessenta e sete centavos",
+  "equipe_planejamento": [
+    {
+      "nome": "Fulana de Tal Exemplo"
+    }
+  ]
+}

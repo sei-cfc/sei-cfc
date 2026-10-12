@@ -1,0 +1,125 @@
+# [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
+
+## ![SEI Pro Link de Legislação](../img/icon-linklegis.png) Adicionar link de legislação
+
+Cite leis, decretos e outras normas **já com o link para o texto oficial**. Você informa o tipo e o número — ou pesquisa por palavra-chave — e o SEI Pro escreve a citação no formato correto, com o hiperlink para a norma publicada.
+
+> ![Tela Adicionar link de legislação](../img/tela-linklegis.gif) 
+
+### Como usar
+
+1. No editor, clique onde a citação deve entrar;
+2. Clique no botão **Adicionar link de legislação**;
+3. Escolha uma das abas:
+   * **Legislação Federal** — informe o tipo (lei, decreto, medida provisória...) e o número, ou pesquise;
+   * **Norma Infralegal** — escolha o órgão, o tipo e o número;
+   * **Lista de Normas** — escolha uma norma conhecida pelo nome, como o Código Civil;
+4. Clique em **Inserir**.
+
+Quando há mais de uma norma com o mesmo número (existem sete Decretos nº 1, por exemplo), o SEI Pro mostra as opções para você escolher. Informe também o **ano** para ir direto à norma certa.
+
+As citações de legislação federal acompanham o hiperlink para a norma no portal [normas.leg.br](https://normas.leg.br).
+
+> **Sobre a consulta:** para encontrar a norma e montar o link, o SEI Pro consulta a **API de legislação do SEI Pro**, montada com os dados abertos do Senado Federal (`legis.seipro.app`), enviando apenas o tipo, o número, o ano ou as palavras pesquisadas. O texto do seu documento não é enviado. Veja a [Política de Privacidade](../PRIVACY_POLICY.md) para saber o que a hospedagem registra.
+
+### Remissão aos atos normativos
+
+Ao inserir mais de um link para a mesma legislação, a ferramenta encurta a remissão aos atos normativos da seguinte forma:
+
+1. **“Lei nº 8.112, de 11 de dezembro de 1990”**, na primeira remissão no corpo do texto; e
+
+2. **“Lei nº 8.112, de 1990”**, nos demais casos; ([art. 14, II, "k" do Decreto 9.191, de  1º de novembro de 2017](http://www.planalto.gov.br/ccivil_03/_Ato2015-2018/2017/Decreto/D9191.htm#art14iik))
+
+### Pesquisa semântica
+
+Atualização: Agora é possível pesquisar a legislação federal publicadas por tipo, pelo ano de publicação (no ano, até o ano ou após o ano informado) ou por palavras-chaves.
+
+Digite mais de uma palavra-chave (separadas por espaço simples). Combine filtros por data ou tipo de ato.
+
+> ![Tela Pesquisa de legislação](../img/tela-linklegis2.gif) 
+
+> Dica: Deixe todos os campos em branco e clique em **Pesquisar** para listar a legislação federal mais recente.
+
+### Legislação Federal
+
+Atualmente estão disponíveis as seguintes legislações: 
+
+|  Legislação Federal  |
+| ------------------- | 
+|  [Constituição Federal](http://www.planalto.gov.br/ccivil_03/Constituicao/Constituicao.htm) |
+|  [Medidas Provisórias](http://www4.planalto.gov.br/legislacao/portal-legis/legislacao-1/medidas-provisorias) |
+|  [Leis Ordinárias](http://www4.planalto.gov.br/legislacao/portal-legis/legislacao-1/leis-ordinarias) |
+|  [Decretos](http://www4.planalto.gov.br/legislacao/portal-legis/legislacao-1/decretos1) 
+|  [Leis Complementares](http://www4.planalto.gov.br/legislacao/portal-legis/legislacao-1/leis-complementares-1) |
+|  [Decretos-Leis](http://www4.planalto.gov.br/legislacao/portal-legis/legislacao-1/decretos-leis) |
+|  Emendas Constitucionais |
+|  Decretos Legislativos |
+|  [Códigos](http://www4.planalto.gov.br/legislacao/portal-legis/legislacao-1/codigos-1) |
+|  [Estatutos](http://www4.planalto.gov.br/legislacao/portal-legis/legislacao-1/estatutos) |
+
+### Norma Infralegal
+
+Atualmente estão disponíveis os seguintes normativos infralegais:
+
+|  Norma Infralegal  |
+| ------------------- | 
+|  [Resoluções Normativas da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
+|  [Resoluções da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
+|  [Súmulas Administrativas da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
+|  [Portarias da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
+|  [Instruções Normativa da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
+|  [Resoluções do Cade](http://www.cade.gov.br/assuntos/assuntos/normas-e-legislacao/normas_legislacao/resolucao) |
+|  [Portarias do Cade](http://www.cade.gov.br/assuntos/assuntos/normas-e-legislacao/normas_legislacao/portarias) |
+
+Deseja adicionar as normas infralegais de outros órgãos? Sugira em [Issues no GitHub](https://github.com/pedrohsoaresadv/sei-pro/issues).
+
+### Lista de Normas
+
+Algumas normas jurídicas de grande relevância são conhecidas pelo seu nome próprio, como o Código Civil (Lei 10.406, de 2002).
+
+Estão disponíveis as seguintes referências nominais:
+
+| Referência nominal  |
+| ------------------- |
+|  [Constituição Federal](http://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm) |
+|  [Código Civil](http://www.planalto.gov.br/ccivil_03/leis/2002/L10406.htm) |
+|  [Código Comercial](http://www.planalto.gov.br/ccivil_03/Leis/LIM/LIM556.htm) |
+|  [Código de Águas](http://www.planalto.gov.br/ccivil_03/decreto/D24643.htm) |
+|  [Código Penal](http://www.planalto.gov.br/CCIVIL_03/Decreto-Lei/Del2848.htm) |
+|  [Código de Processo Penal](http://www.planalto.gov.br/ccivil_03/Decreto-Lei/Del3689.htm) |
+|  [Consolidação das Leis do Trabalho](http://www.planalto.gov.br/ccivil_03/Decreto-Lei/Del5452.htm) |
+|  [Código Brasileiro de Telecomunicações](http://www.planalto.gov.br/ccivil_03/Leis/L4117.htm) |
+|  [Estatuto da Terra](http://www.planalto.gov.br/ccivil_03/Leis/L4504.htm) |
+|  [Código Eleitoral](http://www.planalto.gov.br/ccivil_03/Leis/L4737.htm) |
+|  [Código Tributário Nacional](http://www.planalto.gov.br/ccivil_03/Leis/L5172.htm) |
+|  [Código de Minas](http://www.planalto.gov.br/ccivil_03/Decreto-Lei/Del0227.htm) |
+|  [Código de Processo Penal Militar](http://www.planalto.gov.br/ccivil_03/Decreto-Lei/Del1002.htm) |
+|  [Código Penal Militar](http://www.planalto.gov.br/ccivil_03/Decreto-Lei/Del1001.htm) |
+|  [Código de Processo Civil](http://www.planalto.gov.br/ccivil_03/Leis/L5869.htm) |
+|  [Estatuto do Índio](http://www.planalto.gov.br/ccivil_03/Leis/L6001.htm) |
+|  [Estatuto dos Militares](http://www.planalto.gov.br/ccivil_03/Leis/L6880.htm) |
+|  [Código Brasileiro de Aeronáutica](http://www.planalto.gov.br/ccivil_03/Leis/L7565.htm) |
+|  [Estatuto da Criança e do Adolescente](http://www.planalto.gov.br/ccivil_03/Leis/L8069.htm) |
+|  [Código de Defesa do Consumidor](http://www.planalto.gov.br/ccivil_03/Leis/L8078.htm) |
+|  [Estatuto da Advocacia e da Ordem dos Advogados do Brasil (OAB)](http://www.planalto.gov.br/ccivil_03/Leis/L8906.htm) |
+|  [Estatuto dos Refugiados](http://www.planalto.gov.br/ccivil_03/Leis/L9474.htm) |
+|  [Código de Trânsito Brasileiro](http://www.planalto.gov.br/ccivil_03/Leis/L9503.htm) |
+|  [Estatuto da Cidade](http://www.planalto.gov.br/ccivil_03/Leis/LEIS_2001/L10257.htm) |
+|  [Estatuto de Defesa do Torcedor](http://www.planalto.gov.br/ccivil_03/Leis/2003/L10.671.htm) |
+|  [Estatuto do Idoso](http://www.planalto.gov.br/ccivil_03/Leis/2003/L10.741.htm) |
+|  [Estatuto do Desarmamento](http://www.planalto.gov.br/ccivil_03/Leis/2003/L10.826.htm) |
+|  [Estatuto Nacional da Microempresa e da Empresa de Pequeno Porte](http://www.planalto.gov.br/ccivil_03/Leis/LCP/Lcp123.htm) |
+|  [Estatuto dos Museus](http://www.planalto.gov.br/ccivil_03/_Ato2007-2010/2009/Lei/L11904.htm) |
+|  [Estatuto da Igualdade Racial](http://www.planalto.gov.br/ccivil_03/_Ato2007-2010/2010/Lei/L12288.htm) |
+|  [Código Florestal](http://www.planalto.gov.br/ccivil_03/_Ato2011-2014/2012/Lei/L12651.htm) |
+|  [Estatuto da Juventude](http://www.planalto.gov.br/CCIVIL_03/_Ato2011-2014/2013/Lei/L12852.htm) |
+|  [Código de Processo Civil](http://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/L13105.htm) |
+|  [Estatuto da Pessoa com Deficiência](http://www.planalto.gov.br/CCIVIL_03/_Ato2015-2018/2015/Lei/L13146.htm) |
+
+### Como ativar
+
+O botão aparece sempre no editor do SEI quando o SEI Pro está instalado.
+
+## Próximo item
+
+> [Adicionar link de documento público](../pages/DOCPUBLICO.md)

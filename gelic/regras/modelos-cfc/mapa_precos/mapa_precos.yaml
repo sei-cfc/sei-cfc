@@ -1,0 +1,108 @@
+# Formulário do modelo Mapa de preços — Gera CFC, Quick 261003-k9t.
+#
+# "media_fmt"/"mediana_fmt"/"economia_pct_fmt" não são perguntas aqui — são calculadas por
+# `@calcula estatistica_mcp` (ver cabeçalho de `mapa_precos.md`) a partir dos 3 valores
+# unitários abaixo. "objeto" reaproveita o cadastro único (D-14, mesma chave do DFD).
+
+- id: objeto
+  texto: "Descrição sucinta do objeto"
+  tipo: texto_longo
+  obrigatoria: true
+  le_do_cadastro: objeto
+
+- id: justificativa_pesquisa
+  texto: "Pesquisa de preços e pertinência das referências utilizadas"
+  tipo: texto_longo
+  obrigatoria: true
+  nota: "Parâmetros da IN SEGES/ME nº 65/2021 (art. 5º) usados e por que as referências pesquisadas são pertinentes ao objeto."
+  le_do_cadastro: null
+
+- id: proposta_instituicao
+  texto: "Instituição/empresa da proposta analisada"
+  tipo: texto
+  obrigatoria: true
+  le_do_cadastro: null
+
+- id: proposta_valor_unitario
+  texto: "Valor unitário da proposta (R$)"
+  tipo: texto
+  obrigatoria: true
+  nota: "Formato 138,50 (sem R$)."
+  le_do_cadastro: null
+
+- id: proposta_valor_global
+  texto: "Valor global estimado da proposta (R$)"
+  tipo: texto
+  obrigatoria: true
+  nota: "Formato 27.700.000,00 (sem R$)."
+  le_do_cadastro: null
+
+- id: quantidade_estimada
+  texto: "Quantitativo estimado para a contratação"
+  tipo: texto
+  obrigatoria: true
+  nota: "Ex.: \"até 200.000 inscrições homologadas\"."
+  le_do_cadastro: null
+
+- id: fonte_1_instituicao
+  texto: "Referência 1 — órgão/empresa contratada"
+  tipo: texto
+  obrigatoria: true
+  le_do_cadastro: null
+
+- id: fonte_1_objeto
+  texto: "Referência 1 — objeto da contratação pesquisada"
+  tipo: texto_longo
+  obrigatoria: true
+  le_do_cadastro: null
+
+- id: fonte_1_valor_unitario
+  texto: "Referência 1 — valor unitário considerado na pesquisa (R$)"
+  tipo: texto
+  obrigatoria: true
+  nota: "Formato 173,00 (sem R$)."
+  le_do_cadastro: null
+
+- id: fonte_2_instituicao
+  texto: "Referência 2 — órgão/empresa contratada"
+  tipo: texto
+  obrigatoria: true
+  le_do_cadastro: null
+
+- id: fonte_2_objeto
+  texto: "Referência 2 — objeto da contratação pesquisada"
+  tipo: texto_longo
+  obrigatoria: true
+  le_do_cadastro: null
+
+- id: fonte_2_valor_unitario
+  texto: "Referência 2 — valor unitário considerado na pesquisa (R$)"
+  tipo: texto
+  obrigatoria: true
+  nota: "Formato 180,00 (sem R$)."
+  le_do_cadastro: null
+
+- id: fonte_3_instituicao
+  texto: "Referência 3 — órgão/empresa contratada"
+  tipo: texto
+  obrigatoria: true
+  le_do_cadastro: null
+
+- id: fonte_3_objeto
+  texto: "Referência 3 — objeto da contratação pesquisada"
+  tipo: texto_longo
+  obrigatoria: true
+  le_do_cadastro: null
+
+- id: fonte_3_valor_unitario
+  texto: "Referência 3 — valor unitário considerado na pesquisa (R$)"
+  tipo: texto
+  obrigatoria: true
+  nota: "Formato 134,30 (sem R$)."
+  le_do_cadastro: null
+
+- id: conclusao
+  texto: "Conclusão sobre a compatibilidade do preço proposto"
+  tipo: texto_longo
+  obrigatoria: true
+  le_do_cadastro: null

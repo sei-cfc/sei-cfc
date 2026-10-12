@@ -1,0 +1,111 @@
+{
+ "processo": {
+  "valor": "12345670000000.000000/2026-00",
+  "nota": "cabeçalho dos autos"
+ },
+ "regime": {
+  "valor": "14133",
+  "sei": "1000010",
+  "p": 12,
+  "nota": "edital do pregão"
+ },
+ "contrato": {
+  "numero": "31/2026"
+ },
+ "licitacao": {
+  "concorrencia": false,
+  "numero": {
+   "valor": "90012/2026",
+   "sei": "1000010",
+   "p": 1
+  }
+ },
+ "nomeacao": {
+  "portaria": "12",
+  "data": "2 de janeiro de 2026",
+  "dou": "5 de janeiro de 2026",
+  "matricula": "0000"
+ },
+ "contratada": {
+  "razao_social": {
+   "valor": "Exemplo Climatização Ltda.",
+   "sei": "1000080",
+   "p": 3
+  },
+  "cnpj": {
+   "valor": "00.000.000/0001-00",
+   "sei": "1000080",
+   "p": 3
+  },
+  "endereco": "Rua Exemplo, nº 1, Asa Sul, CEP 70000-000",
+  "cidade": "Brasília/DF"
+ },
+ "representante": {
+  "nome": {
+   "valor": "Nome do Representante",
+   "sei": "1000085",
+   "p": 2
+  },
+  "funcao": "Sócio-Administrador",
+  "por_procuracao": false
+ },
+ "itens": [
+  {
+   "item": "1",
+   "especificacao": "Manutenção preventiva e corretiva de aparelhos de ar-condicionado split",
+   "codigo": "000000",
+   "unidade": "serviço mensal",
+   "quantidade": "12",
+   "valor_unitario": "5.000,00",
+   "valor_total": "60.000,00"
+  },
+  {
+   "item": "2",
+   "especificacao": "Manutenção corretiva sob demanda (hora técnica)",
+   "codigo": "000001",
+   "unidade": "hora",
+   "quantidade": "200",
+   "valor_unitario": "150,00",
+   "valor_total": "30.000,00"
+  }
+ ],
+ "vigencia": {
+  "continuada": true,
+  "prazo": "12 (doze) meses",
+  "termo_inicial": "da data de assinatura"
+ },
+ "valor_mensal": "7.500,00",
+ "valor_mensal_extenso": "sete mil e quinhentos reais",
+ "valor_global": "90.000,00",
+ "valor_global_extenso": "noventa mil reais",
+ "valor_por_demanda": true,
+ "prazo_decisao": "1 (um) mês",
+ "prazo_reequilibrio": "1 (um) mês",
+ "garantia": true,
+ "manutencao": {
+  "locais": "SAUS Quadra 5, Bloco J, Ed. CFC, Brasília/DF",
+  "distancia": "50 (cinquenta) quilômetros"
+ },
+ "transicao_contratual": true,
+ "cessao_direitos": {
+  "obra_imaterial": true
+ },
+ "lgpd": true,
+ "dotacao": {
+  "fonte": "recursos próprios do CFC",
+  "projeto": "5008",
+  "conta": "6.3.1.3.02.01.009",
+  "empenho": "2026NE000123",
+  "plano_interno": "Orçamento Anual para 2026 do CFC, aprovado pela Resolução CFC n.º 0.000/2025"
+ },
+ "local_data": "Brasília/DF, 20 de outubro de 2026.",
+ "testemunhas": [
+  {
+   "nome": "Nome da Testemunha 1"
+  },
+  {
+   "nome": "Nome da Testemunha 2"
+  }
+ ],
+ "objeto_servico": "manutenção preventiva e corretiva de equipamentos de ar-condicionado da sede do CFC"
+}

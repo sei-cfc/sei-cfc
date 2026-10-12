@@ -1,0 +1,27 @@
+{
+  "orgao": {
+    "nome": "CONSELHO FEDERAL DE CONTABILIDADE",
+    "endereco": "SAUS Quadra 05, Lote 03, Bloco J, Edifício CFC, Bairro Asa Sul, Brasília/DF, CEP 70070-920",
+    "contato": "Telefone: (61) 3314-9600 - www.cfc.org.br - E-mail: cfc@cfc.org.br"
+  },
+  "gelic": {"nome": "Gabriel Almeida Granja", "cargo": "Gerente de Licitações e Contratos"},
+  "gex": {"nome": "Eunice Rosa de Melo dos Santos", "cargo": "Gerente Executiva de Gestão de Licitações, Contratos e Serviços"},
+  "gecont_destino": "À Gerência de Contabilidade.",
+  "destino_padrao": "À unidade demandante.",
+  "observacoes": [
+    "A presente verificação não abordou as particularidades da execução do objeto, as quais são de responsabilidade da equipe de planejamento.",
+    "Visando preservar o histórico do processo, nenhum documento submetido à análise deverá ser cancelado pela unidade demandante em caso de reedição ou substituição."
+  ],
+  "observacao_etp": "No que tange ao ETP, a análise limitou-se à verificação dos elementos e requisitos aplicáveis, sem exame do mérito técnico ou da solução adotada.",
+  "checklist": {
+    "titulo": "CHECK-LIST DE INSTRUÇÃO PROCESSUAL",
+    "guia_titulo": "CHECK-LIST DE INSTRUÇÃO PROCESSUAL — GUIA",
+    "legenda": {
+      "atende": "verificado nos autos, com SEI e página",
+      "nao_atende": "apontado no documento formal; constatação e recomendação logo abaixo do item",
+      "nao_se_aplica": "não cabe neste processo; justificativa na coluna Evidência",
+      "nao_verificado": "não examinado nesta análise"
+    },
+    "nota_rodape": "Documento auxiliar gerado a partir dos achados registrados pela Gelic; em caso de divergência, prevalece o documento formal (DVI ou despacho)."
+  }
+}

@@ -1,0 +1,620 @@
+/*
+  Painel do Agente de IA do SEI Pro.
+
+  Um só arquivo, sem framework e sem aninhamento de CSS (o alvo do build inclui
+  Firefox 115). Cores, espaços, raios e sombras vêm de tokens no :root e são
+  redefinidos no modo escuro — nenhuma cor literal fora daqui.
+
+  Estrutura da tela: .topo (marca e ações) · .barra (aba conectada e privacidade)
+  · .tarefas · .conversa (mensagens, passos de ferramenta e cartões) · .rodape
+  (composição). A configuração é um <dialog class="modal">.
+*/
+:root {
+  --acento: #3367d6;
+  --acento-forte: #2a4fb0;
+  --acento-suave: #ecf1fe;
+  --acento-txt: #fff;
+  --grad: linear-gradient(140deg, #4a7dff, #7a5cff);
+  --bg: #f5f6f9;
+  --superficie: #fff;
+  --superficie-2: #eef0f5;
+  --linha: #e2e5ec;
+  --linha-forte: #ccd2dd;
+  --ink: #1a1e27;
+  --ink-2: #596072;
+  --ink-3: #868ea0;
+  --ok: #1a7f46;
+  --ok-bg: #e8f6ed;
+  --erro: #c0392b;
+  --erro-bg: #fdecea;
+  --atencao: #96600a;
+  --atencao-bg: #fdf3e2;
+  --e1: 4px;
+  --e2: 8px;
+  --e3: 12px;
+  --e4: 16px;
+  --e5: 24px;
+  --r1: 8px;
+  --r2: 12px;
+  --r3: 16px;
+  --pilula: 999px;
+  --sombra-1: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .07);
+  --sombra-2: 0 6px 16px -6px rgba(16, 24, 40, .18), 0 2px 6px -2px rgba(16, 24, 40, .08);
+  --sombra-3: 0 24px 48px -16px rgba(16, 24, 40, .35), 0 4px 12px -4px rgba(16, 24, 40, .2);
+  color-scheme: light;
+  accent-color: var(--acento);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --acento: #8ab4f8;
+    --acento-forte: #aecbfa;
+    --acento-suave: #1c2740;
+    --acento-txt: #10141d;
+    --grad: linear-gradient(140deg, #5b86f5, #8f6ef0);
+    --bg: #15171c;
+    --superficie: #1d2025;
+    --superficie-2: #262a31;
+    --linha: #2e333b;
+    --linha-forte: #3d434d;
+    --ink: #e6e9ef;
+    --ink-2: #a2aab8;
+    --ink-3: #7b8493;
+    --ok: #7fd39b;
+    --ok-bg: #16301f;
+    --erro: #f28b82;
+    --erro-bg: #3a2322;
+    --atencao: #f0c674;
+    --atencao-bg: #332b19;
+    --sombra-1: 0 1px 2px rgba(0, 0, 0, .3);
+    --sombra-2: 0 6px 16px -6px rgba(0, 0, 0, .5);
+    --sombra-3: 0 24px 48px -16px rgba(0, 0, 0, .7);
+    color-scheme: dark;
+  }
+}
+
+/* ------------------------------------------------------------------ base */
+* { box-sizing: border-box; }
+/* display de classe (flex/grid) ganharia do display:none do atributo hidden. */
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+#app { display: flex; flex-direction: column; height: 100vh; }
+::selection { background: color-mix(in srgb, var(--acento) 28%, transparent); }
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.svg { flex: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+button {
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--r1);
+  border: 1px solid var(--linha-forte);
+  background: var(--superficie);
+  color: var(--ink);
+  padding: 7px 13px;
+  font-weight: 500;
+  transition: background .15s, border-color .15s, color .15s, box-shadow .15s, transform .1s;
+}
+button:hover:not(:disabled) { background: var(--superficie-2); border-color: var(--ink-3); }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { opacity: .5; cursor: default; }
+button.primario { background: var(--acento); border-color: transparent; color: var(--acento-txt); box-shadow: var(--sombra-1); }
+button.primario:hover:not(:disabled) { background: var(--acento-forte); border-color: transparent; }
+button.perigo { color: var(--erro); border-color: color-mix(in srgb, var(--erro) 40%, var(--linha)); }
+button.plana { border-color: transparent; background: none; color: var(--ink-2); }
+button.plana:hover:not(:disabled) { background: var(--superficie-2); border-color: transparent; color: var(--ink); }
+
+/* Botão de ícone: alvo de 34px (o ícone tem 18px). */
+button.icone {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-color: transparent;
+  background: none;
+  color: var(--ink-2);
+  border-radius: 10px;
+}
+button.icone:hover:not(:disabled) { background: var(--superficie-2); border-color: transparent; color: var(--ink); }
+button.icone.pequeno { width: 26px; height: 26px; border-radius: 7px; }
+
+input, select, textarea {
+  font: inherit;
+  color: var(--ink);
+  background: var(--superficie);
+  border: 1px solid var(--linha-forte);
+  border-radius: var(--r1);
+  padding: 8px 10px;
+  width: 100%;
+}
+input[type="checkbox"], input[type="radio"] { width: auto; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--acento); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 22%, transparent); }
+input::placeholder, textarea::placeholder { color: var(--ink-3); }
+a { color: var(--acento); }
+
+/* Interruptor (caixa de seleção com cara de switch). */
+input.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 36px;
+  height: 21px;
+  padding: 0;
+  border-radius: var(--pilula);
+  background: var(--superficie-2);
+  border: 1px solid var(--linha-forte);
+  position: relative;
+  cursor: pointer;
+  transition: background .18s, border-color .18s;
+}
+input.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--superficie);
+  box-shadow: var(--sombra-1);
+  transition: transform .18s;
+}
+input.switch:checked { background: var(--acento); border-color: transparent; }
+input.switch:checked::after { transform: translateX(15px); background: #fff; }
+
+/* Rolagem discreta. */
+.conversa, .modal-corpo, .menu { scrollbar-width: thin; scrollbar-color: var(--linha-forte) transparent; overscroll-behavior: contain; }
+.conversa::-webkit-scrollbar, .modal-corpo::-webkit-scrollbar, .menu::-webkit-scrollbar { width: 9px; }
+.conversa::-webkit-scrollbar-thumb, .modal-corpo::-webkit-scrollbar-thumb, .menu::-webkit-scrollbar-thumb { background: var(--linha-forte); border: 3px solid transparent; background-clip: content-box; border-radius: var(--pilula); }
+
+/* ------------------------------------------------------------- cabeçalho */
+.topo {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e2) var(--e2) var(--e2) var(--e3);
+  background: color-mix(in srgb, var(--superficie) 85%, transparent);
+  backdrop-filter: blur(10px) saturate(1.4);
+  border-bottom: 1px solid var(--linha);
+}
+/* O ícone traz o próprio desenho e as próprias cores (é o robô do SEI Pro). */
+.logo { flex: none; width: 28px; height: 28px; }
+.marca { display: flex; flex-direction: column; margin-right: auto; min-width: 0; }
+.marca strong { font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; }
+.marca span { font-size: 10.5px; color: var(--ink-3); letter-spacing: .06em; text-transform: uppercase; }
+.custo {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  background: var(--superficie-2);
+  border-radius: var(--pilula);
+  padding: 3px 9px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.custo:empty { display: none; }
+
+/* Barra da aba conectada + selo de privacidade. */
+.barra { display: flex; align-items: center; gap: var(--e2); padding: 5px var(--e3); background: var(--superficie); border-bottom: 1px solid var(--linha); font-size: 11.5px; color: var(--ink-2); }
+.aba { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ponto { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--erro); box-shadow: 0 0 0 3px color-mix(in srgb, var(--erro) 20%, transparent); }
+.ponto.on { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 20%, transparent); }
+.selo-privacidade { flex: none; display: flex; align-items: center; gap: 4px; color: var(--ok); }
+
+/* ---------------------------------------------------------------- tarefas */
+.tarefas { background: var(--superficie); border-bottom: 1px solid var(--linha); padding: var(--e2) var(--e3); font-size: 12.5px; }
+.tarefas ul { margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.tarefas li { list-style: none; display: flex; align-items: baseline; gap: 7px; color: var(--ink-2); }
+.tarefas li::before { content: "\25CB"; font-size: 9px; color: var(--ink-3); }
+.tarefas li.fazendo { color: var(--ink); font-weight: 500; }
+.tarefas li.fazendo::before { content: "\25D0"; color: var(--acento); }
+.tarefas li.feita { text-decoration: line-through; }
+.tarefas li.feita::before { content: "\25CF"; color: var(--ok); }
+
+/* --------------------------------------------------------------- conversa */
+.conversa { flex: 1; overflow-y: auto; padding: var(--e4) var(--e3) var(--e2); display: flex; flex-direction: column; gap: var(--e3); }
+.msg { max-width: 100%; overflow-wrap: anywhere; }
+.msg.usuario {
+  align-self: flex-end;
+  max-width: 88%;
+  background: var(--acento);
+  color: var(--acento-txt);
+  padding: 9px 13px;
+  border-radius: var(--r3) var(--r3) var(--e1) var(--r3);
+  white-space: pre-wrap;
+  box-shadow: var(--sombra-1);
+}
+.msg.agente > :first-child { margin-top: 0; }
+.msg.agente > :last-child { margin-bottom: 0; }
+.msg.agente p { margin: 0 0 var(--e2); }
+.msg.agente ul, .msg.agente ol { margin: 0 0 var(--e2); padding-left: 20px; }
+.msg.agente li { margin-bottom: 3px; }
+.msg.agente strong { font-weight: 600; }
+.msg.agente code { background: var(--superficie-2); padding: 1px 5px; border-radius: 5px; font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.msg.agente h3 { font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; margin: var(--e3) 0 6px; }
+.msg.agente table { border-collapse: collapse; margin: var(--e1) 0 var(--e2); font-size: 12.5px; display: block; overflow-x: auto; }
+.msg.agente th, .msg.agente td { border: 1px solid var(--linha); padding: 4px 8px; text-align: left; }
+.msg.agente th { background: var(--superficie-2); font-weight: 600; }
+/* Tempo da rodada, no rodapé da resposta: informação de apoio, não conteúdo. */
+.msg.agente .tempo-resposta { display: block; text-align: right; font-size: 10.5px; color: var(--ink-3); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+.msg.aviso, .msg.erro {
+  font-size: 12.5px;
+  padding: 8px 11px;
+  border-radius: var(--r1);
+  display: flex;
+  gap: 7px;
+  border: 1px solid transparent;
+}
+.msg.aviso { color: var(--atencao); background: var(--atencao-bg); border-color: color-mix(in srgb, var(--atencao) 25%, transparent); }
+.msg.erro { color: var(--erro); background: var(--erro-bg); border-color: color-mix(in srgb, var(--erro) 25%, transparent); }
+
+/* Passo de ferramenta: pastilha com anel girando. */
+.tool {
+  align-self: flex-start;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--ink-2);
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--pilula);
+  padding: 4px 11px 4px 9px;
+}
+.tool::before {
+  content: "";
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--acento);
+  border-top-color: transparent;
+  animation: gira .8s linear infinite;
+}
+.tool.ok::before { animation: none; width: 8px; height: 8px; border: none; background: var(--ok); }
+.tool.falha::before { animation: none; width: 8px; height: 8px; border: none; background: var(--erro); }
+.tool.falha { color: var(--erro); border-color: color-mix(in srgb, var(--erro) 30%, transparent); }
+.tool .detalhe { color: var(--erro); }
+@keyframes gira { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .tool::before { animation-duration: 2s; }
+  button:active:not(:disabled) { transform: none; }
+}
+
+/* Indicador de trabalho em curso: a estrela gira e respira, e a palavra tem um
+   brilho passando por cima. Nenhum dos dois é essencial — com movimento
+   reduzido, sobra um pulso discreto e o texto normal. */
+.pensando { align-self: flex-start; display: flex; align-items: center; gap: var(--e2); font-size: 12.5px; color: var(--ink-2); padding: 2px 0; }
+.pensando .svg { color: var(--acento); animation: pensa 2.4s ease-in-out infinite; }
+.pensando .tempo { color: var(--ink-3); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.pensando .tempo:empty { display: none; }
+@keyframes pensa {
+  0%, 100% { transform: rotate(0deg) scale(.8); opacity: .7; }
+  50% { transform: rotate(180deg) scale(1.1); opacity: 1; }
+}
+@supports (-webkit-background-clip: text) {
+  .pensando .palavra {
+    background: linear-gradient(100deg, var(--ink-3) 25%, var(--ink) 45%, var(--ink) 55%, var(--ink-3) 75%);
+    background-size: 240% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: brilho 2.4s linear infinite;
+  }
+}
+@keyframes brilho {
+  from { background-position: 140% 0; }
+  to { background-position: -40% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pensando .svg { animation: pulso 2s ease-in-out infinite; }
+  .pensando .palavra { animation: none; -webkit-text-fill-color: currentColor; color: var(--ink-2); }
+  @keyframes pulso { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+}
+
+/* ---------------------------------------------------------------- cartões */
+.cartao { background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); box-shadow: var(--sombra-2); padding: var(--e3); }
+.cartao-topo { display: flex; align-items: center; gap: var(--e2); margin-bottom: var(--e2); }
+.cartao h4 { margin: 0; font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; }
+.badge { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: var(--r1); background: var(--acento-suave); color: var(--acento); }
+.cartao .sub { font-size: 12px; color: var(--ink-2); margin-bottom: var(--e2); }
+.cartao .acoes { display: flex; gap: var(--e2); flex-wrap: wrap; margin-top: var(--e3); }
+.cartao .acoes button { flex: 1 1 auto; }
+.cartao.plano { border-color: color-mix(in srgb, var(--acento) 45%, var(--linha)); }
+.cartao.consentimento { border-color: color-mix(in srgb, var(--atencao) 55%, var(--linha)); }
+.cartao.consentimento .badge { background: var(--atencao-bg); color: var(--atencao); }
+.passo { border-top: 1px solid var(--linha); padding: var(--e2) 0 var(--e1); }
+.passo:first-of-type { border-top: none; padding-top: 0; }
+.passo .titulo { font-weight: 600; font-size: 12.5px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.selo { font-size: 10.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; padding: 2px 7px; border-radius: var(--pilula); background: var(--acento-suave); color: var(--acento); }
+.selo.irrev { background: var(--erro-bg); color: var(--erro); }
+.previa { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+.previa td { border-top: 1px solid var(--linha); padding: 5px 4px; vertical-align: top; overflow-wrap: anywhere; }
+.previa tr:first-child td { border-top: none; }
+.previa td.alvo { font-weight: 600; white-space: nowrap; width: 1%; padding-right: var(--e2); font-variant-numeric: tabular-nums; }
+.previa .antes { color: var(--ink-3); text-decoration: line-through; }
+.previa .depois { color: var(--ok); background: var(--ok-bg); border-radius: 4px; padding: 0 4px; }
+.previa .erroItem { color: var(--erro); }
+.mais { font-size: 11.5px; color: var(--ink-3); margin-top: var(--e1); }
+.check { display: flex; gap: var(--e2); align-items: center; font-size: 12.5px; margin-top: var(--e3); padding: var(--e2) 10px; background: var(--erro-bg); border-radius: var(--r1); color: var(--ink); }
+.assinatura { display: flex; flex-direction: column; gap: 6px; margin-top: var(--e3); padding-top: var(--e3); border-top: 1px dashed var(--linha-forte); }
+.opcoes-pergunta { display: flex; flex-direction: column; gap: 6px; }
+.decidido { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); margin-top: var(--e3); padding-top: var(--e2); border-top: 1px solid var(--linha); }
+
+/* ----------------------------------------------------------- vazio/início */
+.vazio { margin: auto 0; padding: var(--e3) var(--e1) var(--e5); text-align: center; }
+.vazio .logo { width: 52px; height: 52px; margin: 0 auto var(--e3); display: block; }
+.vazio h2 { font-size: 18px; font-weight: 650; letter-spacing: -.02em; margin: 0 0 6px; }
+.vazio p { color: var(--ink-2); font-size: 12.5px; margin: 0 auto var(--e4); max-width: 34ch; }
+.sugestoes { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.sugestao { display: flex; align-items: center; justify-content: flex-start; text-align: left; gap: 10px; width: 100%; padding: 9px 11px; border-radius: var(--r2); border-color: var(--linha); background: var(--superficie); box-shadow: var(--sombra-1); }
+.sugestao:hover:not(:disabled) { border-color: color-mix(in srgb, var(--acento) 50%, var(--linha)); background: var(--superficie); box-shadow: var(--sombra-2); }
+.sugestao .badge { width: 24px; height: 24px; border-radius: 7px; }
+.sugestao b { font-weight: 600; font-size: 12.5px; display: block; }
+.sugestao small { color: var(--ink-3); font-size: 11.5px; font-weight: 400; }
+.nota { display: flex; gap: 7px; align-items: flex-start; text-align: left; font-size: 11.5px; color: var(--ink-2); background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); padding: 10px; margin-top: var(--e4); }
+.nota .svg { color: var(--ok); margin-top: 1px; }
+.nota.atencao .svg { color: var(--atencao); }
+
+/* ------------------------------------------------------------- composição */
+.rodape { position: relative; border-top: 1px solid var(--linha); background: var(--superficie); padding: var(--e2) var(--e3) var(--e3); }
+.anexo { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-2); background: var(--superficie-2); border-radius: var(--pilula); padding: 3px 4px 3px 11px; margin-bottom: 6px; width: fit-content; max-width: 100%; }
+.anexo span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.caixa {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--superficie);
+  border: 1px solid var(--linha-forte);
+  border-radius: var(--r3);
+  padding: var(--e2);
+  box-shadow: var(--sombra-1);
+  transition: border-color .15s, box-shadow .15s;
+}
+.caixa:focus-within { border-color: var(--acento); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 18%, transparent); }
+.caixa textarea {
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  resize: none;
+  min-height: 42px;
+  max-height: 180px;
+  line-height: 1.45;
+}
+.caixa textarea:focus { box-shadow: none; }
+.caixa-acoes { display: flex; align-items: center; gap: var(--e1); }
+/* Aviso permanente sob a caixa: o usuário decide, e responde, pelo que usar. */
+.aviso-ia { margin-top: 6px; text-align: center; font-size: 11px; color: var(--ink-3); }
+.caixa-acoes .espaco { margin-left: auto; font-size: 11px; color: var(--ink-3); padding-right: 2px; }
+button.enviar { width: 32px; height: 32px; padding: 0; border-radius: 50%; background: var(--acento); border-color: transparent; color: var(--acento-txt); }
+button.enviar:hover:not(:disabled) { background: var(--acento-forte); border-color: transparent; }
+button.enviar.parando { background: var(--erro); }
+
+/* Menu de sugestões, acima da caixa. */
+.menu {
+  position: absolute;
+  left: var(--e3);
+  right: var(--e3);
+  bottom: calc(100% - var(--e2));
+  z-index: 5;
+  max-height: 46vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e1);
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--r2);
+  box-shadow: var(--sombra-3);
+  padding: 6px;
+}
+.menu button { justify-content: flex-start; text-align: left; border-color: transparent; background: none; font-size: 12.5px; font-weight: 500; padding: 8px 10px; }
+.menu button:hover { background: var(--superficie-2); border-color: transparent; }
+
+/* Conversa guardada, aberta só para leitura. */
+.arquivada { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--ink-2); background: var(--superficie-2); border-radius: var(--r1); padding: 6px 10px; }
+.arquivada span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arquivada button { font-size: 11.5px; padding: 3px 8px; }
+
+/* Lista de conversas guardadas, no modal. */
+.conversas { display: flex; flex-direction: column; gap: 6px; }
+.conversas .linha { display: flex; align-items: center; gap: var(--e1); }
+.conversas .abrir { flex: 1; min-width: 0; display: block; text-align: left; padding: 8px 10px; background: var(--superficie); border-color: var(--linha); }
+.conversas .abrir:hover { border-color: color-mix(in srgb, var(--acento) 50%, var(--linha)); }
+.conversas b { display: block; font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conversas small { display: block; color: var(--ink-3); font-size: 11px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ------------------------------------------------------------------ modal */
+dialog.modal {
+  width: min(460px, calc(100vw - var(--e5)));
+  max-height: calc(100vh - var(--e5));
+  padding: 0;
+  border: 1px solid var(--linha);
+  border-radius: var(--r3);
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: var(--sombra-3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(6px) scale(.98);
+  transition-property: opacity, transform, display, overlay;
+  transition-duration: .18s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+dialog.modal[open] { opacity: 1; transform: none; }
+@starting-style { dialog.modal[open] { opacity: 0; transform: translateY(6px) scale(.98); } }
+dialog.modal::backdrop { background: rgba(12, 16, 24, 0); backdrop-filter: blur(0px); transition: background .18s, backdrop-filter .18s, display .18s allow-discrete, overlay .18s allow-discrete; }
+dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filter: blur(2px); }
+@starting-style { dialog.modal[open]::backdrop { background: rgba(12, 16, 24, 0); backdrop-filter: blur(0px); } }
+@media (prefers-reduced-motion: reduce) {
+  dialog.modal { transform: none; transition-duration: .05s; }
+  @starting-style { dialog.modal[open] { transform: none; } }
+}
+.modal-topo { display: flex; align-items: center; gap: var(--e2); padding: var(--e3) var(--e2) var(--e3) var(--e4); background: var(--superficie); border-bottom: 1px solid var(--linha); }
+.modal-topo h2 { margin: 0 auto 0 0; font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.modal-corpo { padding: var(--e4); overflow-y: auto; display: flex; flex-direction: column; gap: var(--e4); }
+.modal-acoes { display: flex; align-items: center; gap: var(--e2); padding: var(--e3) var(--e4); background: var(--superficie); border-top: 1px solid var(--linha); }
+.modal-acoes .status { margin-right: auto; }
+.campo { display: flex; flex-direction: column; gap: 5px; }
+.campo > label { font-weight: 600; font-size: 12.5px; }
+.ajuda { font-size: 11.5px; color: var(--ink-2); }
+.ajuda code { background: var(--superficie-2); border-radius: 4px; padding: 0 4px; }
+.com-botao { display: flex; gap: 6px; align-items: center; }
+.linha-switch { display: flex; align-items: flex-start; gap: 10px; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); padding: 10px var(--e3); font-weight: 500; font-size: 12.5px; cursor: pointer; }
+.linha-switch small { display: block; font-weight: 400; color: var(--ink-2); font-size: 11.5px; margin-top: 2px; }
+.status { font-size: 12px; color: var(--ink-2); display: flex; align-items: center; gap: 5px; }
+.status.ok { color: var(--ok); }
+.status.erro { color: var(--erro); }
+
+/* Avançado: controle fino do modelo, fechado por padrão para não assustar quem não precisa. */
+.avancado { border: 1px solid var(--linha); border-radius: var(--r2); background: var(--superficie); }
+.avancado > summary {
+  cursor: pointer; padding: 10px var(--e3); font-weight: 600; font-size: 12.5px;
+  list-style: none; display: flex; align-items: center; gap: 7px;
+}
+.avancado > summary::-webkit-details-marker { display: none; }
+.avancado > summary::before {
+  content: ""; width: 7px; height: 7px; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2);
+  transform: rotate(-45deg); transition: transform .15s ease; margin-left: 2px;
+}
+.avancado[open] > summary::before { transform: rotate(45deg); }
+.avancado > summary:hover { color: var(--acento); }
+.avancado > .campo, .avancado > .com-botao { padding: 0 var(--e3) var(--e3); }
+.finos { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--e2); }
+.campo-fino { display: flex; flex-direction: column; gap: 3px; }
+.campo-fino > label { font-size: 11.5px; font-weight: 500; color: var(--ink-2); }
+.campo-fino small { font-size: 10.5px; color: var(--ink-3); line-height: 1.35; }
+.avancado textarea { resize: vertical; min-height: 68px; font: inherit; }
+
+/* Links dentro das ajudas do modal: abrem em outra aba, então precisam parecer link. */
+.ajuda a { color: var(--acento); text-decoration: underline; text-underline-offset: 2px; }
+.ajuda a:hover { text-decoration-thickness: 2px; }
+.com-botao select { flex: 1; min-width: 0; }
+
+/* Skills do usuário: lista compacta nas configurações. */
+.skills { display: flex; flex-direction: column; gap: 6px; }
+.skill { display: flex; align-items: center; gap: 8px; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); padding: 8px 10px; }
+.skill-texto { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.skill-texto strong { font-size: 12.5px; }
+.skill-texto code { font-size: 11px; background: var(--superficie-2); border-radius: 4px; padding: 1px 5px; color: var(--ink-2); }
+.skill-texto small { flex-basis: 100%; font-size: 11px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skill-texto small.origem { color: var(--ink-3); }
+.campo > textarea { resize: vertical; min-height: 120px; font: inherit; }
+
+/* No menu de skills (digitando "/"), o atalho vem antes do nome. */
+.menu button code { font-size: 11px; background: var(--superficie-2); border-radius: 4px; padding: 1px 5px; margin-right: 6px; color: var(--ink-2); }
+.menu button.focado { background: var(--superficie-2); }
+
+.skill-texto small.falha { color: var(--atencao); white-space: normal; }
+
+.skill.colecao { border-left: 3px solid var(--acento); }
+.etiqueta { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); background: var(--superficie-2); border-radius: 999px; padding: 2px 7px; }
+
+/* Desfazer: discreto, ao lado da ação, e só onde existe inversa de verdade. */
+.tool .desfazer { margin-left: auto; padding: 2px 8px; font-size: 11px; gap: 4px; color: var(--ink-2); }
+.tool .desfazer:hover:not(:disabled) { color: var(--acento); }
+.tool { display: flex; align-items: center; gap: 6px; }
+
+.skill.regra.bloquear { border-left: 3px solid var(--erro); }
+.skill.regra.avisar { border-left: 3px solid var(--atencao); }
+.campo > select[multiple] { font-size: 12px; padding: 4px; }
+
+.skill.lembranca .skill-texto span { font-size: 12.5px; }
+.skill.lembranca { border-left: 3px solid var(--ok); }
+
+.skill.rotina { border-left: 3px solid var(--acento); }
+.skill.rotina .skill-texto small:not(.origem) { white-space: normal; }
+
+/* Configuração em grupos: um aberto por vez, com o estado no cabeçalho. */
+.grupo { border: 1px solid var(--linha); border-radius: var(--r2); background: var(--superficie); }
+.grupo > summary {
+  cursor: pointer; padding: 11px var(--e3); list-style: none;
+  display: flex; flex-direction: column; gap: 2px; position: relative;
+}
+.grupo > summary::-webkit-details-marker { display: none; }
+.grupo > summary strong { font-size: 13px; }
+.grupo > summary small { font-size: 11.5px; color: var(--ink-2); }
+.grupo > summary::after {
+  content: ""; position: absolute; right: var(--e3); top: 18px;
+  width: 7px; height: 7px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3);
+  transform: rotate(45deg); transition: transform .15s ease;
+}
+.grupo[open] > summary::after { transform: rotate(-135deg); top: 21px; }
+.grupo[open] > summary { border-bottom: 1px solid var(--linha); background: var(--superficie-2); }
+.grupo > summary:hover strong { color: var(--acento); }
+.grupo-corpo { display: flex; flex-direction: column; gap: var(--e3); padding: var(--e3); }
+.rodape-modal { margin-top: var(--e2); }
+
+/* ---------------------------------------------------- Estúdio de Fluxo
+   A página do estúdio (html/fluxos.html) usa ESTA folha: os tokens, os botões,
+   os campos e o modal são os mesmos do painel. O que entra aqui é só o que a
+   tela cheia precisa e o painel não tem — o layout de duas colunas e o cartão
+   de etapa. Um segundo sistema de estilo só criaria dois lugares para corrigir
+   a mesma cor. */
+.estudio { flex: 1; min-height: 0; display: grid; grid-template-columns: 320px minmax(0, 1fr); }
+.estudio .lado { border-right: 1px solid var(--linha); background: var(--superficie); overflow-y: auto; padding: var(--e3); display: flex; flex-direction: column; gap: 6px; }
+.estudio .lado h3 { margin: 0 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 600; }
+.estudio .obra { overflow-y: auto; padding: var(--e4) var(--e4) var(--e5); }
+.obra-caixa { max-width: 840px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--e4); }
+.obra-caixa h2 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -.02em; }
+/* Sair do editor sem precisar abrir outro fluxo. `align-self` porque a
+   obra-caixa e flex-column: sem isso o botao estica na largura toda. */
+.obra-caixa .voltar-lista { align-self: flex-start; margin-bottom: calc(var(--e4) * -1 + 2px); padding-left: 0; opacity: .85; }
+.obra-caixa .voltar-lista:hover { opacity: 1; }
+.item-fluxo { display: flex; align-items: center; gap: 8px; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); padding: 8px 10px; text-align: left; width: 100%; }
+.item-fluxo:hover:not(:disabled) { border-color: color-mix(in srgb, var(--acento) 50%, var(--linha)); }
+.item-fluxo.atual { border-color: var(--acento); background: var(--acento-suave); }
+/* `display: block`: o botao herda `inline-flex` da regra base, e ai o nome e o
+   resumo ficariam lado a lado, cada um espremido na metade da largura. */
+.item-fluxo .corpo { flex: 1; min-width: 0; display: block; padding: 2px 4px; text-align: left; }
+.item-fluxo b { display: block; font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-fluxo small { display: block; font-size: 11px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-fluxo.desligado b, .item-fluxo.desligado small { color: var(--ink-3); }
+.etapa-cartao { background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); box-shadow: var(--sombra-1); }
+.etapa-topo { display: flex; align-items: center; gap: 6px; padding: 8px 10px; }
+.etapa-topo .ordem { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--acento-suave); color: var(--acento); font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.etapa-topo .nome { flex: 1; min-width: 0; font-weight: 600; font-size: 13px; }
+.etapa-corpo { display: flex; flex-direction: column; gap: var(--e3); padding: 0 10px 10px; border-top: 1px solid var(--linha); padding-top: var(--e3); }
+.dupla { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--e3); }
+.pendencias { display: flex; flex-direction: column; gap: 4px; margin: 0; padding-left: 18px; font-size: 12px; color: var(--erro); }
+.acoes-obra { display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; }
+.acoes-obra .espaco { margin-right: auto; }
+/* Em tela estreita (a janela pode ser dividida ao lado do SEI) as duas colunas
+   viram uma: a lista some para o editor caber. */
+@media (max-width: 880px) {
+  .estudio { grid-template-columns: minmax(0, 1fr); }
+  .estudio .lado { border-right: none; border-bottom: 1px solid var(--linha); max-height: 32vh; }
+}
+
+/* Cartão de sugestão do Estúdio de Fluxo, acima da conversa. */
+.aviso-fluxo { padding: var(--e3) var(--e3) 0; }
+.cartao.fluxo { border-color: color-mix(in srgb, var(--atencao) 45%, var(--linha)); }
+.cartao.fluxo .badge { background: var(--atencao-bg); color: var(--atencao); }
+.cartao.fluxo .acoes button { flex: 0 1 auto; font-size: 11.5px; padding: 5px 9px; }
+.detalhes-fluxo { color: var(--ink-2); margin-top: var(--e2); }
+
+/* Conectores MCP: o que vai ser enviado, no cartão de autorização. */
+.args-externo { white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow: auto; font-size: 12px; background: var(--superficie-2); border: 1px solid var(--linha); border-radius: var(--r2); padding: 8px 10px; margin: 0; }
+.skill.conector .skill-texto { gap: 3px 8px; }
+.skill select { font-size: 11.5px; padding: 3px 6px; max-width: 46%; }
+
+/* Cartão de erro: copiar o diagnóstico e abrir os detalhes. */
+.msg.erro { position: relative; padding-right: 58px; }
+.erro-acoes { position: absolute; top: 6px; right: 6px; display: flex; gap: 2px; }
+.erro-acoes button.icone { width: 24px; height: 24px; border-radius: 6px; color: inherit; opacity: .65; }
+.erro-acoes button.icone:hover { opacity: 1; background: color-mix(in srgb, currentColor 12%, transparent); border-color: transparent; }
+.erro-acoes .gira .svg { transition: transform .15s ease; }
+.erro-acoes .gira.aberta .svg { transform: rotate(180deg); }
+.erro-detalhes { margin: 8px 0 0; padding: 8px 10px; border-radius: var(--r2); background: color-mix(in srgb, currentColor 8%, transparent); font-size: 11px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow: auto; }

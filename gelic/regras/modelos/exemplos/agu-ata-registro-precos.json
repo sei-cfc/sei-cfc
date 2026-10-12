@@ -1,0 +1,51 @@
+{
+ "regime": "14133",
+ "processo": {"valor": "12345670000000.000000/2026-00", "nota": "cabeçalho dos autos"},
+ "ata": {
+  "numero": "3",
+  "ano": "2026",
+  "prorrogavel": true,
+  "renova_quantitativo": true,
+  "vias": "2",
+  "vias_extenso": "duas"
+ },
+ "nomeacao": {
+  "portaria": "0/2026",
+  "data": "2 de janeiro de 2026",
+  "dou": "5 de janeiro de 2026",
+  "matricula": "0000"
+ },
+ "contratacao_direta": false,
+ "certame": {
+  "numero": "90001",
+  "ano": "2026",
+  "publicacao_veiculo": "Diário Oficial da União",
+  "publicacao_data": "10/03/2026"
+ },
+ "objeto_contratacao": {"valor": "materiais de expediente", "sei": "1000020", "p": 5},
+ "tr": {"itens": "1 a 2", "anexo": "I"},
+ "exige_marca": true,
+ "exige_modelo": true,
+ "itens": [
+  {"item": "1", "razao_social": "Empresa Exemplo Comércio Ltda.", "cnpj": "00.000.000/0001-00", "endereco": "Rua Exemplo, nº 1, Brasília/DF, CEP 70000-000", "contato": "(61) 0000-0000, contato@exemplo.com.br", "representante": "Nome do Representante", "especificacao": "Papel A4, 75 g/m², resma com 500 folhas", "marca": "Marca Exemplo", "modelo": "Modelo A", "unidade": "resma", "quantidade_maxima": "1.000", "quantidade_minima": "100", "valor_unitario": "25,00", "prazo_garantia": "90 dias"},
+  {"item": "2", "razao_social": "Fornecedora Fictícia de Materiais S.A.", "cnpj": "11.111.111/0001-11", "endereco": "Avenida Modelo, nº 2, Goiânia/GO, CEP 74000-000", "contato": "(62) 0000-0000, vendas@ficticia.com.br", "representante": "Nome da Representante", "especificacao": "Caneta esferográfica azul, caixa com 50 unidades", "marca": "Marca Modelo", "modelo": "Modelo B", "unidade": "caixa", "quantidade_maxima": "200", "quantidade_minima": "20", "valor_unitario": "40,00", "prazo_garantia": "12 meses"}
+ ],
+ "participantes": [
+  {"item": "1", "orgao": "Conselho Regional de Contabilidade Exemplo (CRC-XX)", "unidade": "resma", "quantidade": "300"}
+ ],
+ "adesao": true,
+ "adjudicacao_por_grupo": true,
+ "cadastro_reserva": {
+  "precos_iguais": [
+   {"item": "1", "razao_social": "Reserva Um Papelaria Ltda.", "cnpj": "22.222.222/0001-22", "endereco": "Quadra Exemplo, nº 3, Brasília/DF, CEP 70000-001", "contato": "(61) 1111-1111, reserva1@exemplo.com.br", "representante": "Nome do Representante Reserva", "especificacao": "Papel A4, 75 g/m², resma com 500 folhas", "marca": "Marca Exemplo", "modelo": "Modelo A", "unidade": "resma", "quantidade_maxima": "1.000", "quantidade_minima": "100", "valor_unitario": "25,00", "prazo_garantia": "90 dias"}
+  ],
+  "proposta_original": [
+   {"item": "2", "razao_social": "Reserva Dois Suprimentos Ltda.", "cnpj": "33.333.333/0001-33", "endereco": "Rua Fictícia, nº 4, Anápolis/GO, CEP 75000-000", "contato": "(62) 2222-2222, reserva2@exemplo.com.br", "representante": "Nome da Representante Reserva", "especificacao": "Caneta esferográfica azul, caixa com 50 unidades", "marca": "Marca Modelo", "modelo": "Modelo C", "unidade": "caixa", "quantidade_maxima": "200", "quantidade_minima": "20", "valor_unitario": "42,50", "prazo_garantia": "12 meses"}
+  ]
+ },
+ "fornecedores": [
+  {"razao_social": "Empresa Exemplo Comércio Ltda.", "representante": "Nome do Representante", "funcao": "Sócio-Administrador"},
+  {"razao_social": "Fornecedora Fictícia de Materiais S.A.", "representante": "Nome da Representante", "funcao": "Diretora Comercial"}
+ ],
+ "local_data": "Brasília/DF, 20 de outubro de 2026."
+}

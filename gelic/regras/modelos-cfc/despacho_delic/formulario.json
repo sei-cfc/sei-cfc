@@ -1,0 +1,46 @@
+[
+ {
+  "id": "objeto",
+  "texto": "Objeto da contratação",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": "objeto",
+  "quando_aparece": null
+ },
+ {
+  "id": "fundamento_contratacao",
+  "texto": "Fundamento da contratação",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Ex.: \"dispensa de licitação, nos termos do artigo 75, XV, da Lei 14.133/2021\".",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "documentos_encaminhados",
+  "texto": "Documentos encaminhados",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Um documento por linha.",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "signatario_cargo",
+  "texto": "Cargo de quem assina o despacho",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ }
+]

@@ -1,0 +1,13 @@
+# Formulário do modelo Termos de cientificação — Gera CFC, Quick 261003-k9t.
+#
+# "pessoas_termo" (nome/matrícula/papel por extenso/apto) não é uma pergunta aqui — é derivado
+# em `apps.gera.documentos.respostas.contexto_documento` a partir de `cadastro["pessoas"]`
+# (D-14, cadastrado em "Dados da contratação") + da resposta "pessoas_sem_treinamento" abaixo.
+
+- id: pessoas_sem_treinamento
+  texto: "Pessoas que necessitam de treinamento para a atribuição conferida"
+  tipo: texto_longo
+  obrigatoria: false
+  nota: "Um nome por linha, EXATAMENTE como está em \"Dados da contratação\" (equipe de planejamento/gestores/fiscais). Em branco, todos saem marcados aptos."
+  check_list_id: null
+  le_do_cadastro: null

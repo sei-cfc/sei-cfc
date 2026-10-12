@@ -1,0 +1,2474 @@
+// `isNewEditor` historicamente diferenciava o layout visual "novo" (Infra).
+// No SEI 5 o window.CKEDITOR coexiste com o CK5 (nao eh mais um sinal seguro),
+// entao checamos primeiro o marcador DOM do CKEditor 5.
+const isNewEditor = !!document.querySelector('.ck-editor__editable_inline') || (typeof CKEDITOR === 'undefined');
+var 
+    frmEditor = isNewEditor ? $('.infra-editor__editor-completo') : $('#frmEditor'),
+    idEditor,
+    oEditor, 
+    imgEditor, 
+    bookmark,
+    txaEditor = (frmEditor.length) ? 'div[id^=cke_txaEditor_]' : 'div#cke_txaConteudo',
+    editorTitle = (frmEditor.length) ? 'iframe[title*="txaEditor_"]' : 'iframe[title*="txaConteudo"]',
+    iframeEditor,
+    autoSaveEditor,
+    langs,
+    wsDialogHtml,
+    CKWebSpeechHandler;
+
+    txaEditor = isNewEditor ? '.infra-editor__editor-completo' : txaEditor;
+
+
+var loadOnKeyEditor = false;
+var CKWebSpeech = false;
+
+var autoSaveInterval = (checkConfigValue('salvamentoautomatico')) ? getConfigValue('salvamentoautomatico') : 5;
+var isIntervalInProgress = false;
+var isSeiSlim = (localStorage.getItem('seiSlim')) ? true : false;
+var isDarkMode = (localStorage.getItem('darkModePro')) ? true : false;
+var qualidadeImagens = (checkConfigValue('qualidadeimagens')) ? getConfigValue('qualidadeimagens') : 60;
+    qualidadeImagens = (qualidadeImagens > 100) ? 100 : qualidadeImagens;
+    qualidadeImagens = (qualidadeImagens < 0) ? 0 : qualidadeImagens;
+
+function setParamEditor(this_) {
+    if (!isNewEditor) {
+        idEditor = $(this_).closest('div.cke').attr('id').replace('cke_', '');
+        oEditor = CKEDITOR.instances[idEditor];
+        iframeEditor = (frmEditor.length) ? getIframeEditorPro(idEditor).contents() : $(txaEditor).find('iframe[title*="txaConteudo"]').contents();
+        $('#idEditor').val(idEditor);
+    }
+}
+// Iframe wysiwyg de uma instancia CK4. O title do iframe so traz o nome da instancia no SEI 3.x
+// ("Editor de Rich Text, txaEditor_NNN"); no SEI 4.1 com secoes o title e o nome da secao
+// ("Cabecalho", "Corpo do Texto"...) e 'iframe[title*="txaEditor_NNN"]' nao casa nada.
+// Busca no container da propria instancia (editor.container); o seletor por title fica como fallback.
+// Nao usar $('#cke_<nome>'): com a barra compartilhada do SEI 4.1 (sharedspace) ha dois elementos com
+// esse id, e o primeiro e a barra em #divComandos, sem o iframe.
+function getIframeEditorPro(nome) {
+    var editor = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances) ? CKEDITOR.instances[nome] : null;
+    var iframe = (editor && editor.container && editor.container.$) ? $(editor.container.$).find('iframe.cke_wysiwyg_frame') : $();
+    return iframe.length ? iframe.first() : $('iframe[title*="'+nome+'"]');
+}
+// Todos os iframes wysiwyg dos editores CK4 da pagina: o editorTitle (que no SEI 3.x ja casa todos)
+// mais os iframes de cada container de instancia (SEI 4.1 com secoes). O add() nao duplica.
+function getIframesEditorPro() {
+    var iframes = $(editorTitle);
+    $(txaEditor).each(function(){
+        iframes = iframes.add($(this).find('iframe.cke_wysiwyg_frame'));
+    });
+    return iframes;
+}
+// Secao CK4 que recebe o conteudo dos fluxos automaticos (Gerar certidao, Criar documento comparado,
+// Criar documento da IA). Devolve {editor, iframe} ou null.
+// SEI 3.x: o title do primeiro iframe editavel traz o nome da instancia ("Editor de Rich Text, txaEditor_NNN")
+// e ele segue sendo o escolhido, como antes.
+// SEI 4.1 com secoes (e CK4 do SEI 5): o title e o nome da secao e nao leva o nome da instancia. A instancia
+// sai do documento do iframe, e a preferida e a secao "Corpo do Texto": a primeira editavel pode ser outra
+// (no SEI SP, "Processo e Interessado"). Sem secao com esse nome, fica a primeira editavel, como no SEI 3.x.
+function getEditorAutomaticoPro() {
+    if (typeof CKEDITOR === 'undefined' || !CKEDITOR.instances) return null;
+    var editaveis = $('iframe').filter(function(){ return $(this).contents().find('body').attr('contenteditable') == 'true' });
+    if (!editaveis.length) return null;
+    var titlePrimeiro = editaveis.eq(0).attr('title') || '';
+    if (titlePrimeiro.indexOf(',') !== -1) {
+        var nomeTitle = titlePrimeiro.split(',')[1].trim();
+        if (CKEDITOR.instances[nomeTitle]) return { editor: CKEDITOR.instances[nomeTitle], iframe: editaveis.eq(0) };
+    }
+    var candidatos = [];
+    editaveis.each(function(){
+        var editor = getEditorCheckboxSEI(this.contentDocument);
+        if (editor && !editor.readOnly) candidatos.push({ editor: editor, iframe: $(this) });
+    });
+    for (var i = 0; i < candidatos.length; i++) {
+        if (/corpo/i.test(candidatos[i].editor.title || candidatos[i].iframe.attr('title') || '')) return candidatos[i];
+    }
+    return candidatos.length ? candidatos[0] : null;
+}
+function htmlButton(status) {
+   
+    var classStatus = ( status == 'disable' ) ? 'cke_button_disabled' : '';
+    var icon16baseImport = URL_SPRO + 'icons/menu/import.png';
+    var icon16baseTable = URL_SPRO + 'icons/menu/table.png';
+    var icon16baseLegis = URL_SPRO + 'icons/menu/legis.png';
+    var icon16baseCapLetter = URL_SPRO + 'icons/menu/capletter.png';
+    var icon16baseCitaDocumento = URL_SPRO + 'icons/menu/citacao.png';
+    var icon16baseNotaRodape = URL_SPRO + 'icons/menu/notarodape.png';
+    var icon16baseSumario = URL_SPRO + 'icons/menu/sumario.png';
+    var icon16baseDadosProcesso = URL_SPRO + 'icons/menu/dadosprocesso.png';
+    var icon16baseTinyUrl = URL_SPRO + 'icons/menu/tinyurl.png';
+	var icon16baseQrCode = URL_SPRO + 'icons/menu/qrcode.png';
+	var icon16basePageBreak = URL_SPRO + 'icons/menu/pagebreak.png';
+	var icon16baseSessionBreak = URL_SPRO + 'icons/menu/sessionbreak.png';
+    var icon16baseLatex = URL_SPRO + 'icons/menu/latex.png';
+    var icon16baseQuickTable = URL_SPRO + 'icons/menu/quicktable.png';
+    var icon16baseFonteSizeUp = URL_SPRO + 'icons/menu/fontsizeup.png';
+    var icon16baseFonteSizeDown = URL_SPRO + 'icons/menu/fontsizedown.png';
+    var icon16baseCopyStyle = URL_SPRO + 'icons/menu/copystyle.png';
+    var icon16baseAlignCenter = URL_SPRO + 'icons/menu/aligncenter.png';
+    var icon16baseAlignRight = URL_SPRO + 'icons/menu/alignright.png';
+    var icon16baseAlignLeft = URL_SPRO + 'icons/menu/alignleft.png';
+    var icon16baseAlignJustify = URL_SPRO + 'icons/menu/alignjustify.png';
+    var icon16baseDocPublico = URL_SPRO + 'icons/menu/docpublico.png';
+    var icon16baseWatermark = URL_SPRO + 'icons/menu/watermark.png';
+    var icon16baseImagePage = URL_SPRO + 'icons/menu/imagepage.png';
+    var icon16baseMarkSigilo = URL_SPRO + 'icons/menu/marksigilo.png';
+    var icon16baseBoxSigilo = URL_SPRO + 'icons/menu/boxsigilo.png';
+    var icon16baseAutoSave = URL_SPRO + 'icons/menu/autosave.png';
+    var icon16baseSEILegis = URL_SPRO + 'icons/menu/seilegis.png';
+    var icon16baseBatchImgQuality = URL_SPRO + 'icons/menu/batchimgquality.png';
+    var icon16baseInsertCheckboxQuality = URL_SPRO + 'icons/menu/insertcheckbox.png';
+    var icon16baseOpenAI = URL_SPRO + 'icons/menu/openai.png';
+    var icon16baseRefInterna = URL_SPRO + 'icons/menu/refinterna.png';
+    var icon16baseReview = URL_SPRO + 'icons/menu/review.png';
+    var icon16baseCtrReview = URL_SPRO + 'icons/menu/ctrreview.png';
+    var icon16baseNewStyle = URL_SPRO + 'icons/menu/newstyle.png';
+/* 
+    
+ */
+    const htmlButtonTable = 
+        '<div class="divQuickTable" style="display:none;"></div>' +
+        htmlButtonPro(
+            'getQuickTableButtom',
+            'quicktable',
+            'Tabela R\u00E1pida',
+            isNewEditor ? 'fab fa-bolt rosaColor' : icon16baseQuickTable
+        ) +
+        htmlButtonPro(
+            'getTablestylesButtom',
+            'tablestyles',
+            'Adicionar estilo \u00E0 tabela',
+            isNewEditor ? 'fab fa-paint-brush rosaColor' : icon16baseTable
+        );
+    
+    const htmlButtonAfterImage = 
+        htmlButtonPro(
+            'getBatchImgQualityButtom',
+            'batch_quality_pro',
+            'Reduzir qualidade das imagens',
+            isNewEditor ? 'fab fa-compress azulColor' : icon16baseBatchImgQuality
+        ) +
+        htmlButtonPro(
+            'getInsertCheckboxButtom',
+            'insert_checkbox_pro',
+            'Inserir caixa de sele\u00E7\u00E3o',
+            isNewEditor ? 'fab fa-check-square azulColor' : icon16baseInsertCheckboxQuality
+        );
+    
+    const htmlButtonBeforeCut = 
+        htmlButtonPro(
+            'getCopyStyleButtom',
+            'copy_style_pro',
+            'Copiar formata\u00E7\u00E3o',
+            isNewEditor ? 'fab fa-brush rosaColor' : icon16baseCopyStyle
+        );
+    
+    const htmlButtonBeforeList = 
+        '<div class="divAlignText" style="display:none;">' +
+            htmlButtonPro(
+                'getAlignLeftButtom',
+                'align_left_pro',
+                'Alinhar texto \u00E0 esquerda',
+                isNewEditor ? 'fab fa-align-left roxoColor' : icon16baseAlignLeft
+            ) +
+            htmlButtonPro(
+                'getAlignCenterButtom',
+                'align_center_pro',
+                'Alinhar texto ao centro',
+                isNewEditor ? 'fab fa-align-center roxoColor' : icon16baseAlignCenter
+            ) +
+            htmlButtonPro(
+                'getAlignRightButtom',
+                'align_right_pro',
+                'Alinhar texto \u00E0 direita',
+                isNewEditor ? 'fab fa-align-right roxoColor' : icon16baseAlignRight
+            ) +
+            htmlButtonPro(
+                'getAlignJustifyButtom',
+                'align_justify_pro',
+                'Alinhar texto justificadamente',
+                isNewEditor ? 'fab fa-align-justify roxoColor' : icon16baseAlignJustify
+            ) +
+        '</div>' +
+        htmlButtonPro(
+            'getAlignButtom',
+            'align_pro',
+            'Alinhar texto',
+            isNewEditor ? 'fab fa-align-left roxoColor' : icon16baseAlignCenter
+        );
+
+    const htmlButtonAfterLetters = 
+        htmlButtonPro(
+            'getCapLetterButtom', 
+            'capletter_pro', 
+            'Primeira Letra Mai\u00FAscula (Exceto artigos e preposi\u00E7\u00F5es)', 
+            isNewEditor ? 'fab fa-font-case cianoColor' : icon16baseCapLetter
+        ) +
+        htmlButtonPro(
+            'getFontSizeUpButtom', 
+            'fontsize_up_pro', 
+            'Aumentar tamanho da fonte', 
+            isNewEditor ? 'fab fa-sort-alpha-up cianoColor' : icon16baseFonteSizeUp
+        ) +
+        htmlButtonPro(
+            'getFontSizeDownButtom', 
+            'fontsize_down_pro', 
+            'Diminuir tamanho da fonte', 
+            isNewEditor ? 'fab fa-sort-alpha-down cianoColor' : icon16baseFonteSizeDown
+        );
+
+    // So no CK5: no CK4 o acionamento fica dentro do proprio dialogo nativo de link
+    // do SEI (ver montarAtalhoLoteNoDialogoPro), que e onde o usuario ja esta.
+    const htmlButtonLinkSeiLote = isNewEditor
+        ? htmlButtonPro(
+            'getLinkSeiLoteButtom',
+            'linkseilote_pro',
+            'Converter os n\u00FAmeros de documentos e processos do texto em links',
+            'fab fa-magic azulColor'
+          )
+        : '';
+
+    const htmlButtonAfterSave = htmlButtonPro(
+        'getAutoSaveButtom',
+        'autosave',
+        `Salvamento autom\u00E1tico (${autoSaveInterval} ${autoSaveInterval === 1 ? 'minuto' : 'minutos'})`,
+        isNewEditor ? '' : icon16baseAutoSave
+    );
+
+    const htmlButton = 
+        (restrictConfigValue('ferramentasia') ? 
+            htmlButtonPro(
+                'getPlataformAIButtom',
+                'openai',
+                'Agente de intelig\u00EAncia artificial',
+                isNewEditor ? 'fab fa-robot roxoColor' : icon16baseOpenAI
+            ) : '') +
+        htmlButtonPro(
+            'importDocButtom',
+            'externalfile',
+            'Inserir conte\u00FAdo externo',
+            isNewEditor ? 'fab fa-upload vermelhoColor' : icon16baseImport
+        ) +
+        htmlButtonPro(
+            'getLinkLegisButtom',
+            'linklegis',
+            'Adicionar link de legisla\u00E7\u00E3o',
+            isNewEditor ? 'fab fa-balance-scale-right verdeColor' : icon16baseLegis
+        ) +
+        (frmEditor.length ? 
+            htmlButtonPro(
+                'getCitacaoDocumentoButtom',
+                'citacaodoc',
+                'Inserir refer\u00EAncia de documento do processo',
+                isNewEditor ? 'fab fa-folder-tree amareloColor' : icon16baseCitaDocumento
+            ) : '') +
+        htmlButtonPro(
+            'getNotaRodapeButtom',
+            'notarodape',
+            'Inserir nota de rodap\u00E9',
+            isNewEditor ? 'fab fa-comment-alt-dots cianoColor' : icon16baseNotaRodape
+        ) +
+        htmlButtonPro(
+            'getRefInternaButtom',
+            'refinterna',
+            'Inserir refer\u00EAncia interna',
+            isNewEditor ? 'fab fa-retweet cianoColor' : icon16baseRefInterna
+        ) +
+        htmlButtonPro(
+            'getSumarioButtom',
+            'sumario',
+            'Inserir sum\u00E1rio',
+            isNewEditor ? 'fab fa-list-alt roxoColor' : icon16baseSumario
+        ) +
+        (frmEditor.length == 0 ? '' : 
+            htmlButtonPro(
+                'getDadosProcessoButtom',
+                'dadosprocesso',
+                'Inserir dados do processo',
+                isNewEditor ? 'fab fa-book-spells rosaColor' : icon16baseDadosProcesso
+            )
+        ) +
+        htmlButtonPro(
+            'getTinyUrlButtom',
+            'tinyurl',
+            'Gerar link curto do TinyURL',
+            isNewEditor ? 'fab fa-compress-arrows-alt azulColor' : icon16baseTinyUrl
+        ) +
+        htmlButtonPro(
+            'getQrCodeButtom',
+            'qrcode',
+            'Gerar C\u00F3digo QR',
+            isNewEditor ? 'fab fa-qrcode rosaColor' : icon16baseQrCode
+        ) +
+        htmlButtonPro(
+            'getPageBreakButtom',
+            'pagebreak',
+            'Inserir Quebra de P\u00E1gina',
+            isNewEditor ? 'fab fa-page-break azulColor' : icon16basePageBreak,
+            '', 
+            isSeiSlim ? '' : '!important'
+        ) +
+        htmlButtonPro(
+            'getSessionBreakButtom',
+            'sessionbreak',
+            'Inserir Quebra de Se\u00E7\u00E3o',
+            isNewEditor ? 'fab fa-page-break verdeColor' : icon16baseSessionBreak
+        ) +
+        htmlButtonPro(
+            'getLatexButtom',
+            'latex',
+            'Inserir Equa\u00E7\u00E3o',
+            isNewEditor ? 'fab fa-sigma vermelhoColor' : icon16baseLatex
+        ) +
+        htmlButtonPro(
+            'getProcessoPublicoButton',
+            'processopublico',
+            'Adicionar Link de Documento P\u00FAblico',
+            isNewEditor ? 'fab fa-globe-americas azulColor' : icon16baseDocPublico
+        ) +
+        htmlButtonPro(
+            'getMinutaWatermarkButton',
+            'watermark',
+            'Adicionar Marca D\'\u00E1gua de MINUTA/MODELO',
+            isNewEditor ? 'fab fa-layer-plus verdeColor' : icon16baseWatermark
+        ) +
+        htmlButtonPro(
+            'pageImageBackgroundButtom',
+            'pageimagebackground',
+            'Adicionar Image de Fundo e Configura\u00E7\u00F5es de P\u00E1gina para Impress\u00E3o',
+            isNewEditor ? 'fab fa-print roxoColor' : icon16baseImagePage
+        );
+
+    const htmlButtonReview = checkConfigValue('revisaotexto') ? 
+        htmlButtonPro(
+            'getReviewButton',
+            'review',
+            'Ativar revis\u00E3o de texto',
+            isNewEditor ? 'fab fa-user-edit azulColor' : icon16baseReview
+        ) + 
+        htmlButtonPro(
+            'getCtrReviewButton',
+            'ctr_review',
+            'Gerenciar revis\u00F5es de texto',
+            isNewEditor ? 'fab fa-comments azulColor' : icon16baseCtrReview
+        ) : '';
+    
+    const htmlButtonDitado = checkConfigValue('ditado') ? 
+        htmlButtonPro(
+            'getDitadoButton',
+            'ditado',
+            'Ativar ditado de texto',
+            isNewEditor ? 'fab fa-microphone-alt rosaColor' : URL_SPRO + 'icons/editor/webspeech.png'
+        ) + 
+        htmlButtonPro(
+            'getCtrDitadoButton',
+            'ctr_ditado',
+            'Gerenciar configura\u00E7\u00F5es do ditado',
+            isNewEditor ? 'fab fa-cogs rosaColor' : URL_SPRO + 'icons/editor/webspeech-settings.png'
+        ) : '';
+    
+    const htmlButtonNewStyle = isNewSEI ? 
+        htmlButtonPro(
+            'getNewStyleButton',
+            'newstyle',
+            'Ativar estilo avan\u00E7ado',
+            isNewEditor ? 'fab fa-palette azulColor' : icon16baseNewStyle,
+            '', 
+            localStorage.getItem('seiSlim_editor') ? 'cke_button_on' : 'cke_button_off'
+        ) : '';
+    
+    const htmlButtonSigilo = 
+        htmlButtonPro(
+            'getMarkSigiloButton',
+            'mark_sigilo_pro',
+            'Adicionar / Remover marca de sigilo no texto',
+            isNewEditor ? 'fab fa-lock-open-alt azulColor' : icon16baseMarkSigilo
+        ) +
+        htmlButtonPro(
+            'getBoxSigiloButton',
+            'boxsigilo',
+            'Gerenciar marcas de sigilo do documento',
+            isNewEditor ? 'fab fa-user-unlock azulColor' : icon16baseBoxSigilo
+        );
+    
+    const htmlButtonLegis = 
+        htmlButtonPro(
+            'getLegisButtom',
+            'legis',
+            'Enumerar norma',
+            isNewEditor ? 'fab fa-pi azulColor' : icon16baseSEILegis
+        ) +
+        htmlButtonPro(
+            'helpLegisButtom',
+            'legis_help',
+            'Ajuda',
+            isNewEditor ? 'fab fa-info-circle azulColor' : window.location.origin+'/sei/editor/ck/skins/moonocolor/icons.png',
+            isNewEditor ? '' : ';background-position: 0 -168px;',
+            ''
+        );
+    const blockHtmlButton = isNewEditor
+        ? htmlButton
+        : `<span class="cke_iconPro cke_toolgroup ${classStatus}" role="presentation">${htmlButton}</span>`;
+
+    const htmlNewBlock = isNewEditor 
+        ? htmlButtonSigilo+htmlButtonReview+htmlButtonLegis+htmlButtonDitado+htmlButtonNewStyle
+        : `
+            <span class="cke_iconPro cke_toolgroup ${classStatus}" role="presentation">
+            ${htmlButtonSigilo}
+            ${htmlButtonReview}
+            ${htmlButtonLegis}
+            ${htmlButtonDitado}
+            ${htmlButtonNewStyle}
+            </span>
+        `;
+
+    return {
+        default: blockHtmlButton, 
+        tables: htmlButtonTable, 
+        beforeCut: htmlButtonBeforeCut, 
+        afterletters: htmlButtonAfterLetters, 
+        beforeList: htmlButtonBeforeList, 
+        afterSave: htmlButtonAfterSave, 
+        newBlock: htmlNewBlock,
+        afterImage: htmlButtonAfterImage,
+        linkSeiLote: htmlButtonLinkSeiLote
+    };
+}
+function addButton(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    setTimeout(function(){ 
+        if (isNewEditor) {
+            // frmEditor e lido quando este script carrega. Na primeira abertura do documento (logo depois de
+            // cria-lo) o editor CK5 ainda nao tinha montado o .infra-editor__editor-completo e o botao "Inserir
+            // dados do processo" (e o de referencia de documento) nao entrava na barra. Aqui a barra ja existe.
+            if (!frmEditor.length) frmEditor = $('.infra-editor__editor-completo');
+            // CSS do SEI Pro no conteudo (cursor da caixa de selecao, marca de sigilo, paragrafo bloqueado...):
+            // no CK4 vai para o documento de cada iframe; no CK5 o conteudo e editado na propria pagina.
+            addStyleConteudoCK5Pro();
+            var items = $('.ck.ck-toolbar__items');
+            // Fallback: quando o seletor de refer\u00EAncia n\u00E3o existe (comum entre builds
+            // do CK5 customizadas), caimos no append ao container principal.
+            var insertAfterOrAppend = function(selector, html) {
+                var ref = $(selector);
+                if (ref.length) ref.first().after(html); else items.first().append(html);
+            };
+            items.first().append(htmlButton('').default);
+            insertAfterOrAppend('button[data-cke-tooltip-text="Inserir tabela"]', htmlButton('').tables);
+            insertAfterOrAppend('button[data-cke-tooltip-text="Lista numerada"]', htmlButton('').beforeList);
+            insertAfterOrAppend('span.ck-file-dialog-button', htmlButton('').afterImage);
+            // O grupo afterletters (Primeira Letra Maiuscula, Aumentar e Diminuir fonte) so estava
+            // no ramo CK4, ancorado no botao "minuscula": no SEI 5 esses tres botoes simplesmente
+            // nunca entravam na barra. A ancora equivalente no CK5 e "Transformar o texto em
+            // MAIUSCULO ou minusculo".
+            insertAfterOrAppend('button[data-cke-tooltip-text^="Transformar o texto"]', htmlButton('').afterletters);
+            insertAfterOrAppend('button[data-cke-tooltip-text^="Inserir link ou converter"]', htmlButton('').linkSeiLote);
+            items.first().append(htmlButton('').newBlock);
+            setClickButtons();
+            initFunctions();
+        } else {
+            if ( $(txaEditor).length && !$('.cke_buttonPro').length ) {
+                    if ( !$('#idEditor').length ) { $(isNewEditor ? 'body' : '#divComandos').append('<input style="display:none" type="hidden" id="idEditor">'); }
+                        $(txaEditor).each(function(index){ 
+                            var idEditor = $(this).attr('id').replace('cke_', '');
+                            if ( getIframeEditorPro(idEditor).contents().find('body').attr('contenteditable') == 'true' ) {
+                                $(this).find('span.cke_toolbox').append(htmlButton('').default);
+                                $(this).find('span.cke_toolgroup .cke_button__table').before(htmlButton('').tables);
+                                $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('').afterletters);
+                                $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('').beforeCut);
+                                $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('').beforeList);
+                                $(this).find('span.cke_toolgroup .cke_button__base64image').after(htmlButton('').afterImage);
+                                // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('').afterSave);
+                                $(this).find('span.cke_toolbox').append(htmlButton('').newBlock);
+                                insertFontIcon('head',getIframeEditorPro(idEditor).contents());
+                            } else {
+                                $(this).find('span.cke_toolbox').append(htmlButton('disable').default);
+                                $(this).find('span.cke_toolgroup .cke_button__table').before(htmlButton('disable').tables);
+                                $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('disable').afterletters);
+                                $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('disable').beforeCut);
+                                $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('disable').beforeList);
+                                $(this).find('span.cke_toolgroup .cke_button__base64image').after(htmlButton('disable').afterImage);
+                                // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('disable').afterSave);
+                                $(this).find('span.cke_toolbox').append(htmlButton('disable').newBlock);
+                            }
+                        });
+                    setClickButtons();
+                    initFunctions();
+                    addStyleIframes(); 
+            } else {
+                addButton(TimeOut - 100);
+                console.log('addButton Reload => '+TimeOut);
+            }
+        }
+    }, 500);
+}
+const htmlButtonPro = (classClick, cke_class, title, icon, extraStyle = '', important = '') => {
+    const htmlButton = isNewEditor
+    ? `
+        <button class="ck ck-button ck-off cke_iconPro cke_buttonPro ${classClick}" type="button" style="${extraStyle} ${important}" aria-labelledby="ck-editor__aria-label_${classClick}" tabindex="-1" aria-pressed="false" data-cke-tooltip-text="${title}" data-cke-tooltip-position="s">
+            <i class="${icon}"></i>
+            <span class="ck ck-button__label" id="ck-editor__aria-label_${classClick}">${title}</span>
+        </button>
+    `
+    : `
+        <a class="${classClick} cke_iconPro cke_button cke_buttonPro cke_button_off" href="#" title="${title}" hidefocus="true">
+            <span class="cke_button_icon cke_button__${cke_class}_icon" style="background: url('${icon}') ${extraStyle} ${important}">&nbsp;</span>
+            <span class="cke_button_label" aria-hidden="false">${title}</span>
+        </a>`;
+    return htmlButton;
+};
+const setClickButtons = () => {
+    $('.getTablestylesButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { getSyleSelectedTable(this) } });
+    $('.getQuickTableButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { getQuickTable(this) } });
+    $('.importDocButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { importDocPro(this) } });
+    $('.getLinkLegisButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getLegisSEI(this) } });
+    $('.getCapLetterButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { convertFirstLetter(this) } });
+    $('.getFontSizeUpButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'up') } });
+    $('.getFontSizeDownButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'down') } });
+    $('.getCopyStyleButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setCopyStyle(this) } });
+    $('.getLinkSeiLoteButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { converterNumerosSeiEmLotePro(this) } });
+    $('.getAlignButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { openAlignText(this) } });
+    $('.getAlignLeftButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'left') } });
+    $('.getAlignCenterButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'center') } });
+    $('.getAlignRightButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'right') } });
+    $('.getAlignJustifyButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'justify') } });
+    $('.getCitacaoDocumentoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getCitacaoDocumento(this) } });
+    $('.getNotaRodapeButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getNotaRodape(this) } });
+    $('.getRefInternaButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getRefInterna(this) } });
+    if (restrictConfigValue('ferramentasia')) $('.getPlataformAIButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { window.top.postMessage({ __seiProAgente: 'abrir' }, '*'); } });
+    $('.getSumarioButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSumarioDocumento(this) } });
+    $('.getDadosProcessoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getDadosEditor(this) } });
+    $('.getTinyUrlButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTinyUrl(this) } });
+    $('.getQrCodeButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getQrCode(this) } });
+    $('.getPageBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getPageBreak(this) } });
+    $('.getSessionBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSessionBreak(this) } });
+    $('.getLatexButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogLatex(this) } });
+    $('.getBatchImgQualityButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogBatchImgQuality(this) } });
+    $('.getInsertCheckboxButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getInsertCheckboxButtom(this) } });
+    $('.getProcessoPublicoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogProcessoPublicoPro(this) } });
+    $('.getMinutaWatermarkButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMinutaWatermark(this) } });
+    $('.pageImageBackgroundButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { pageImageBackground(this) } });
+    $('.getMarkSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMarkSigilo(this) } });
+    $('.getBoxSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxSigilo(this) } });
+    $('.getReviewButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxReview(this) } });
+    $('.getCtrReviewButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxCtrReview(this) } });
+    $('.getDitadoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxDitado(this) } });
+    $('.getCtrDitadoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxCtrDitado(this) } });
+    $('.getNewStyleButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxStyleEditor(this) } });
+    // $('.getAutoSaveButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getAutoSave(this) } });
+    $('.getLegisButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { initLegis(this) } });
+    // O botao nasceu como <a href=".../pages/LEGISTICA.html" target="_blank">; o htmlButtonPro gera href="#", entao a ajuda abre por aqui.
+    $('.helpLegisButtom').on('click',function(e) { e.preventDefault(); window.open((typeof URLPAGES_SPRO !== 'undefined' && URLPAGES_SPRO ? URLPAGES_SPRO : 'https://seipro.app')+'/pages/LEGISTICA.html', '_blank'); });
+    // $('.getUploadImgBase64Buttom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogUploadImgBase64(this) } });
+    $('.cke_combo_button').on('click',function() { setDarkModeCkePanel(); });
+}
+function removeDataCkeSavedImg() {
+    getIframesEditorPro().each(function(){
+        var iframe = $(this).contents();
+        if ( iframe.find('body').attr('contenteditable') == 'true' ) {
+            iframe.find('img').removeAttr('data-cke-saved-src');
+        }
+    });
+}
+function addStyleIframes(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    setTimeout(function(){
+        $('div[id*="cke_txaEditor_"] a.cke_button').each(function(){
+            var title = $(this).attr('title');
+                title = (typeof title !== 'undefined') ? title.replace(/["']/g, "") : '';
+            if (typeof title !== 'undefined' && title != '') {  
+                $(this).attr('onmouseover', 'return infraTooltipMostrar(\''+title+'\')').attr('onmouseout', 'return infraTooltipOcultar()').removeAttr('title');
+            }
+        });
+        var iframesEditor = getIframesEditorPro();
+        if ( iframesEditor.eq(0).contents().find('head').find('style[data-style="seipro"]').length == 0 ) {
+            iframesEditor.each(function(){
+                var iframe = $(this).contents();
+                addStyleIframeSEIPro(iframe);
+                // Eventos de edicao (dicas de link/revisao, teclas) so no corpo editavel. As secoes somente
+                // leitura do SEI 4.1 (Cabecalho, Titulo) nunca receberam esses eventos: sem instancia com
+                // foco, o mousedown ali quebrava em setOnKeyEditor. No SEI 3.x o editorTitle segue igual.
+                if ( $(this).is(editorTitle) || iframe.find('body').attr('contenteditable') == 'true' ) setOnBodyActs(iframe);
+            });
+            setCKEDITOR_instances();
+            $('head').append("<style type='text/css' data-style='seipro'> "
+                            +"  .divAlignText { display:none; background-image: -webkit-linear-gradient(top,#fff,#e4e4e4); position: absolute; display: initial; margin-top: 25px; box-shadow: 0 0 3px rgba(0,0,0,.15); border-radius: 3px; border: 1px solid #b6b6b6; }"
+                            +"  .divQuickTable { display:none; position: absolute; background: #f1f1f1; display: initial; margin-top: 25px; box-shadow: 0 0 3px rgba(0,0,0,.15); border-radius: 3px; border: 1px solid #b6b6b6; }"
+                            +"  .divQuickTable td { height: 15px; width: 15px; border: 1px solid #ccc; background: #fff; }"
+                            +"  .divQuickTable .quickTableInfo { text-align: center; padding: 5px; color: #777; }"
+                            +"  .divQuickTable .td_hover { background: #72bae2; }"
+                            +"</style>");
+            
+        } else {
+            addStyleIframes(TimeOut - 100);
+            console.log('addStyleIframes Reload => '+TimeOut);
+        }
+    }, 500);
+}
+// CSS do SEI Pro no conteudo do documento. escuro: inclui a cor de texto do modo escuro (so no documento
+// isolado do iframe do CK4; no CK5 o conteudo divide a pagina com a interface do editor).
+function cssConteudoSEIPro(escuro) {
+    return '<style type="text/css" data-style="seipro"> \n'
+                                    +(escuro ? '   * { color: #fbfbfe; } \n' : '')
+                                    +'   span.checkboxSEI {cursor: pointer;} \n'
+                                    +'   p .ancoraSei { background: #e4e4e4; } \n'
+                                    +'   html.dark-mode body[contenteditable="false"], \n'
+                                    +'   html.dark-mode p.Texto_Fundo_Cinza_Maiusculas_Negrito, \n'
+                                    +'   html.dark-mode p.Texto_Fundo_Cinza_Negrito, \n'
+                                    +'   html.dark-mode p .ancoraSei, \n'
+                                    +'   html.dark-mode p.Item_Nivel1 { \n'
+                                    +'       background-color: #e5e5e566 !important;  \n'
+                                    +'   } \n'
+                                    +'   html.dark-mode .dark-mode-color-black, \n'
+                                    +'   html.dark-mode .dark-mode-color-black * { \n'
+                                    +'       color: #000 !important;  \n'
+                                    +'   } \n'
+                                    +'   html.dark-mode .dark-mode-color-white, \n'
+                                    +'   html.dark-mode .dark-mode-color-white * { \n'
+                                    +'       color: #fff !important;  \n'
+                                    +'   } \n'
+                                    +'   .dot-flashing,.dot-flashing::after,.dot-flashing::before{width:7px;height:7px;background-color:#4285f4;color:#4285f4}.dot-flashing{position:relative;border-radius:50%;animation:1s linear .5s infinite alternate dot-flashing}.dot-flashing::after,.dot-flashing::before{content:"";display:inline-block;position:absolute;top:0}.dot-flashing::before{left:-13px;border-radius:5px;animation:1s infinite alternate dot-flashing}.dot-flashing::after{left:13px;border-radius:50%;animation:1s 1s infinite alternate dot-flashing}@keyframes dot-flashing{0%{background-color:#4285f4}100%,50%{background-color:rgba(152,128,255,.2)}} \n'
+                                    +'   p[contenteditable="false"] { background-color: #f3f3f3; position: relative; } \n'
+                                    +'   p[contenteditable="false"]::after { content: "\\f023"; font-family: "Font Awesome 5 Pro"; right: 0; position: absolute; color: #747474; opacity: 0.5;} \n'
+                                    +'   a.anchorRefInternaPro { cursor: pointer; } \n'
+                                    +'   p .legis { background: #f1f1f1; } \n'
+                                    +'   p .error { background-color: #ffd2d2; } \n'
+                                    +'   p .alert { cursor: pointer; background: #fffbc9; border-left: 3px solid #ffe52a; padding-left: 4px; } '
+                                    +'   span.tooltips { position: absolute; text-align: left; background: #fffbc9; text-indent: 0; border-left: 3px solid #ffe52a; margin: -46px 0px 0px -7px; width: 500px; font-size: 10pt; padding: 5px; color: #636363; height: 36px; }'
+                                    +'   span.tooltips .ignoretext { background: #ecdc89; padding: 3px 5px; margin: 3px; font-size: 8pt; text-transform: uppercase; border-radius: 5px; float: right; }'
+                                    +'   span.sigiloSEI { background-color: #ececec; border-bottom: 2px solid #d79d23; } \n'
+                                    +'   span.sigiloSEI::before { content: "\\f023"; font-family: "Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'"; color: #d79d23; margin: 0 5px; font-size: 80%; font-weight: 600; } \n'
+                                    +'   html.dark-mode .pageBreakPro, html.dark-mode .sessionBreakPro { background: #6f7071; height: 15px; } \n'
+                                    +'   .pageBreakPro, .sessionBreakPro { background: #f1f1f1; height: 15px; } \n'
+                                    +'   .pageBreakPro::before, .sessionBreakPro::before { border-bottom: 2px dashed #bfbfbf; display: block; content: \'\'; height: 7px; } \n'
+                                    +'   .pageBreakPro::after, .sessionBreakPro::after { content: \'\u21B3 Quebra de p\u00E1gina\'; font-family: Calibri; text-align: center; display: block; margin-top: -10px; color: #585858; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; font-size: 10pt; font-style: italic; } \n'
+                                    +'   .sessionBreakPro::after { content: \'\u21B3 Quebra de se\u00E7\u00E3o\' !important; } \n'
+                                    +'   .linkDisplayPro, .reviewDisplayPro { max-width: 90% !important; user-select: none; position: absolute; display: inline-block; padding: 8px; box-shadow: 0 1px 3px 1px rgba(60,64,67,.35); background: #fff; border-color: #dadce0; border-radius: 8px; margin-top: 16px; text-align: left; text-indent: initial; font-size: 12pt; text-transform: initial; font-weight: initial; letter-spacing: initial; text-decoration: initial; white-space: nowrap; } \n'
+                                    +'   .linkDisplayPro a, .reviewDisplayPro a { padding: 0 8px; cursor: pointer; text-decoration: underline; color:#1155cc; } \n'
+                                    +'   .linkDisplayPro strong.title-linktip { width: calc(100% - 160px); display: inline-flex; overflow: hidden; } \n'
+                                    +'   .linkDisplayPro ul { margin: 0;padding: 0;max-height: 207px;overflow-y: scroll; } \n'
+                                    +'   .linkDisplayPro li { padding: 5px; cursor:pointer; } \n'
+                                    +'   .linkDisplayPro li.highlighted, .linkDisplayPro li:hover { background-color: #3875d7; background-image: linear-gradient(#3875d7 20%, #2a62bc 90%); color: #ffffff; } \n'
+                                    +'   html.dark-mode .linkDisplayPro, html.dark-mode .reviewDisplayPro { background-color:#3D3D3D !important; } \n'
+                                    +'   html.dark-mode .linkDisplayPro a, html.dark-mode .reviewDisplayPro a { color:#fbfbfe !important; } \n'
+                                    +'   span.reviewSeiPro[data-comment][data-review="delete"]:before { content: "\\f075";font-family: \'Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'\';color: #e9af68;font-size: 80%;font-weight: bold;margin: -8px 0px 0 -13px;position: absolute;transform: scale(-1, 1);} \n'
+                                    +'   span.reviewSeiPro[data-comment][data-review="add"]:before { content: "\\f075";font-family: \'Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'\';color: #e9af68;font-size: 80%;font-weight: bold;margin: -8px 0px 0 -13px;position: absolute;transform: scale(-1, 1);} \n'
+                                    +'   html.dark-mode .cke_copyformatting_active { cursor: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIiA/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZlcnNpb249IjEuMSIgd2lkdGg9IjEzLjY0MDMyODc0MzE5OTIzNCIgaGVpZ2h0PSIxNi4xMjAwMDAwMDAwMDAwMDUiIHZpZXdCb3g9IjMxNC42Njk2NzEyNTY4MDA3NyAzMTEuOTQgMTMuNjQwMzI4NzQzMTk5MjM0IDE2LjEyMDAwMDAwMDAwMDAwNSIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxkZXNjPkNyZWF0ZWQgd2l0aCBGYWJyaWMuanMgNC42LjA8L2Rlc2M+CjxkZWZzPgo8L2RlZnM+CjxnIHRyYW5zZm9ybT0ibWF0cml4KDAuMDYgMCAwIDAuMDYgMzI0LjU3IDMyMCkiIGlkPSJ3MGQwNHhBNjhSaG1qYldBZWQyTmgiICA+CjxwYXRoIHN0eWxlPSJzdHJva2U6IG5vbmU7IHN0cm9rZS13aWR0aDogMTsgc3Ryb2tlLWRhc2hhcnJheTogbm9uZTsgc3Ryb2tlLWxpbmVjYXA6IGJ1dHQ7IHN0cm9rZS1kYXNob2Zmc2V0OiAwOyBzdHJva2UtbGluZWpvaW46IG1pdGVyOyBzdHJva2UtbWl0ZXJsaW1pdDogNDsgZmlsbDogcmdiKDI1NSwyNTUsMjU1KTsgZmlsbC1ydWxlOiBldmVub2RkOyBvcGFjaXR5OiAxOyIgdmVjdG9yLWVmZmVjdD0ibm9uLXNjYWxpbmctc3Ryb2tlIiAgdHJhbnNmb3JtPSIgdHJhbnNsYXRlKC0xNTEsIC0xMjYpIiBkPSJNIDE3MCAxNCBMIDIwMC4wMDc1MzcgMTQgQyAyMDIuNzY5MDU3IDE0IDIwNSAxMS43NjM2NDkzIDIwNSA5LjAwNDk3MDkyIEwgMjA1IDQuOTk1MDI5MDggQyAyMDUgMi4yMzM4MjIxMiAyMDIuNzY0Nzk4IDAgMjAwLjAwNzUzNyAwIEwgMTAxLjk5MjQ2MyAwIEMgOTkuMjMwOTQzMSAwIDk3IDIuMjM2MzUwNjkgOTcgNC45OTUwMjkwOCBMIDk3IDkuMDA0OTcwOTIgQyA5NyAxMS43NjYxNzc5IDk5LjIzNTIwMTcgMTQgMTAxLjk5MjQ2MyAxNCBMIDEzMyAxNCBMIDEzMyAyMzggTCAxMDEuOTkyNDYzIDIzOCBDIDk5LjIzMDk0MzEgMjM4IDk3IDI0MC4yMzYzNTEgOTcgMjQyLjk5NTAyOSBMIDk3IDI0Ny4wMDQ5NzEgQyA5NyAyNDkuNzY2MTc4IDk5LjIzNTIwMTcgMjUyIDEwMS45OTI0NjMgMjUyIEwgMjAwLjAwNzUzNyAyNTIgQyAyMDIuNzY5MDU3IDI1MiAyMDUgMjQ5Ljc2MzY0OSAyMDUgMjQ3LjAwNDk3MSBMIDIwNSAyNDIuOTk1MDI5IEMgMjA1IDI0MC4yMzM4MjIgMjAyLjc2NDc5OCAyMzggMjAwLjAwNzUzNyAyMzggTCAxNzAgMjM4IEwgMTcwIDE0IFoiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgLz4KPC9nPgo8ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLjA2IDAgMCAwLjA2IDMxOCAzMTkuNDgpIiBpZD0iNjlfbUZlWUc0MzlsTGM2X3FqUHlhIiAgPgo8cGF0aCBzdHlsZT0ic3Ryb2tlOiBub25lOyBzdHJva2Utd2lkdGg6IDE7IHN0cm9rZS1kYXNoYXJyYXk6IG5vbmU7IHN0cm9rZS1saW5lY2FwOiBidXR0OyBzdHJva2UtZGFzaG9mZnNldDogMDsgc3Ryb2tlLWxpbmVqb2luOiBtaXRlcjsgc3Ryb2tlLW1pdGVybGltaXQ6IDQ7IGZpbGw6IHJnYigyNTUsMjU1LDI1NSk7IGZpbGwtcnVsZTogZXZlbm9kZDsgb3BhY2l0eTogMTsiIHZlY3Rvci1lZmZlY3Q9Im5vbi1zY2FsaW5nLXN0cm9rZSIgIHRyYW5zZm9ybT0iIHRyYW5zbGF0ZSgtNDcuNTcsIC0xMTcuNzgpIiBkPSJNIDY1IDIyMi4yODA4MjkgQyA2MC42MTMxMTc2IDIyMi4yODA4MjkgNTYuMzc0MjE2MiAyMjIuMjgwODI4IDUyLjk5OTk5OTUgMjIyLjI4MDgyOCBMIDUzIDE3MCBMIDQyIDE3MCBMIDQyIDIyMi41NjA1OTMgQyAzOC42MTMwMjQ2IDIyMi41NjA1OTMgMzQuMzc2MzMwOCAyMjIuNTYwNTkzIDMwLjAwMDAwMDUgMjIyLjU2MDU5NCBMIDMwIDE3MCBMIDE5IDE3MCBMIDE5IDIyMi41NjA1OTUgQyAxNi4zMjQ4NjUgMjIyLjU2MDU5NSAxMy44NDYzMzY5IDIyMi41NjA1OTUgMTEuNzYxMjcyNSAyMjIuNTYwNTk2IEMgLTAuMzY5NTg2NDM4IDIyMi41NjA1OTkgMS4yODM4MTc0NiAyMTEuNTA5MzEzIDEuMjgzODE3NDYgMjExLjUwOTMxMyBDIDEuMjgzODE3NDYgMjExLjUwOTMxMyAwLjM4OTY4OTk0NCAxNzcuNzU2IDAuMzk2NTcxMjc3IDE1OCBMIDk0Ljc0MDgyMzIgMTU4IEMgOTQuNzM5MjczNiAxNzcuNzkzMDg5IDkzLjg1MzUzOTYgMjExLjIyOTU0OCA5My44NTM1Mzk2IDIxMS4yMjk1NDggQyA5My44NTM1Mzk2IDIxMS4yMjk1NDggOTUuNTA2OTQzNSAyMjIuMjgwODM0IDgzLjM3NjA4NDUgMjIyLjI4MDgzMSBDIDgxLjI1NTM3ODIgMjIyLjI4MDgzIDc4LjcyNzY0MTUgMjIyLjI4MDgzIDc2LjAwMDAwMDIgMjIyLjI4MDgzIEwgNzYgMTcwIEwgNjUgMTcwIEwgNjUgMjIyLjI4MDgyOSBaIE0gMC41NzQ1MzQwMzYgMTQ3IEMgMC41Nzk3NjgzODcgMTQ2Ljg5NjE0OSAwLjU4NTEzMTYzOCAxNDYuNzk0NzU1IDAuNTkwNjI1NTE0IDE0Ni42OTU4NjYgQyAxLjI4MzgxNzQ4IDEzNC4yMTg0MDkgLTAuNzk3MTEyMjg2IDEyMi40MzQxNDYgMTYuODc5MjgxNiAxMTYuMTk1NDIyIEMgMzQuNTU1Njc1NSAxMDkuOTU2Njk4IDI4LjY2NjI1MzYgMTA3LjUzMDUyMiAzMC4zOTc4NzkyIDk1Ljc0NjI1NzYgQyAzMi4xMjk1MDQ4IDgzLjk2MTk5MyAyNS44OTIxMjk4IDc4LjA2OTg2MyAyNS44OTIxMzE1IDQ0Ljc5NjY0OTYgQyAyNS44OTIxMzMgMTcuOTYwNzIwNiAzOC41MTY5NDY3IDEzLjkyMjAxNzMgNDUuNTIyMDkzOSAxMy4zNjM3NjE3IEMgNDUuNjA4OTgxNCAxMy4xMzQwNzI3IDQ1LjcwMDI1MDYgMTMuMDE2NDM5MSA0NS43OTYwNjMxIDEzLjAxNjQzOTEgQyA0OS44MzcyMDU2IDEzLjAxNjQzODkgNjkuMjQ1MjIzNyAxMS4yNDM2NzEzIDY5LjI0NTIyNTUgNDQuNTE2ODg0NyBDIDY5LjI0NTIyNzMgNzcuNzkwMDk4MiA2My4wMDc4NTIzIDgzLjY4MjIyODEgNjQuNzM5NDc3OCA5NS40NjY0OTI4IEMgNjYuNDcxMTAzNCAxMDcuMjUwNzU3IDYwLjU4MTY4MTUgMTA5LjY3NjkzMyA3OC4yNTgwNzU0IDExNS45MTU2NTcgQyA5NS45MzQ0NjkzIDEyMi4xNTQzODEgOTMuODUzNTM5NSAxMzMuOTM4NjQ0IDk0LjU0NjczMTUgMTQ2LjQxNjEwMSBDIDk0LjU1NzA1ODYgMTQ2LjYwMTk4OSA5NC41NjY5MjQyIDE0Ni43OTY3MjQgOTQuNTc2MzM5NyAxNDcgTCAwLjU3NDUzNDAzNiAxNDcgWiBNIDQ3LjUgNDEgQyA1Mi4xOTQ0MjA0IDQxIDU2IDM3LjE5NDQyMDQgNTYgMzIuNSBDIDU2IDI3LjgwNTU3OTYgNTIuMTk0NDIwNCAyNCA0Ny41IDI0IEMgNDIuODA1NTc5NiAyNCAzOSAyNy44MDU1Nzk2IDM5IDMyLjUgQyAzOSAzNy4xOTQ0MjA0IDQyLjgwNTU3OTYgNDEgNDcuNSA0MSBaIiBzdHJva2UtbGluZWNhcD0icm91bmQiIC8+CjwvZz4KPC9zdmc+") 12 1, auto !important; } \n'
+                                    +'   .cke_copyformatting_active { cursor: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDIwNSAyNTIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+Y3Vyc29yPC90aXRsZT4KICAgIDxkZXNjPjwvZGVzYz4KICAgIDxkZWZzPjwvZGVmcz4KICAgIDxnIGlkPSJQYWdlLTQiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJBcnRib2FyZC0xIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNDkuMDAwMDAwLCAtMi4wMDAwMDApIiBmaWxsPSIjMDAwMDAwIj4KICAgICAgICAgICAgPGcgaWQ9ImN1cnNvciIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDkuMDAwMDAwLCAyLjAwMDAwMCkiPgogICAgICAgICAgICAgICAgPHBhdGggZD0iTTE3MCwxNCBMMjAwLjAwNzUzNywxNCBDMjAyLjc2OTA1NywxNCAyMDUsMTEuNzYzNjQ5MyAyMDUsOS4wMDQ5NzA5MiBMMjA1LDQuOTk1MDI5MDggQzIwNSwyLjIzMzgyMjEyIDIwMi43NjQ3OTgsMCAyMDAuMDA3NTM3LDAgTDEwMS45OTI0NjMsMCBDOTkuMjMwOTQzMSwwIDk3LDIuMjM2MzUwNjkgOTcsNC45OTUwMjkwOCBMOTcsOS4wMDQ5NzA5MiBDOTcsMTEuNzY2MTc3OSA5OS4yMzUyMDE3LDE0IDEwMS45OTI0NjMsMTQgTDEzMywxNCBMMTMzLDIzOCBMMTAxLjk5MjQ2MywyMzggQzk5LjIzMDk0MzEsMjM4IDk3LDI0MC4yMzYzNTEgOTcsMjQyLjk5NTAyOSBMOTcsMjQ3LjAwNDk3MSBDOTcsMjQ5Ljc2NjE3OCA5OS4yMzUyMDE3LDI1MiAxMDEuOTkyNDYzLDI1MiBMMjAwLjAwNzUzNywyNTIgQzIwMi43NjkwNTcsMjUyIDIwNSwyNDkuNzYzNjQ5IDIwNSwyNDcuMDA0OTcxIEwyMDUsMjQyLjk5NTAyOSBDMjA1LDI0MC4yMzM4MjIgMjAyLjc2NDc5OCwyMzggMjAwLjAwNzUzNywyMzggTDE3MCwyMzggTDE3MCwxNCBaIiBpZD0iQ29tYmluZWQtU2hhcGUiPjwvcGF0aD4KICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik02NSwyMjIuMjgwODI5IEM2MC42MTMxMTc2LDIyMi4yODA4MjkgNTYuMzc0MjE2MiwyMjIuMjgwODI4IDUyLjk5OTk5OTUsMjIyLjI4MDgyOCBMNTMsMTcwIEw0MiwxNzAgTDQyLDIyMi41NjA1OTMgQzM4LjYxMzAyNDYsMjIyLjU2MDU5MyAzNC4zNzYzMzA4LDIyMi41NjA1OTMgMzAuMDAwMDAwNSwyMjIuNTYwNTk0IEwzMCwxNzAgTDE5LDE3MCBMMTksMjIyLjU2MDU5NSBDMTYuMzI0ODY1LDIyMi41NjA1OTUgMTMuODQ2MzM2OSwyMjIuNTYwNTk1IDExLjc2MTI3MjUsMjIyLjU2MDU5NiBDLTAuMzY5NTg2NDM4LDIyMi41NjA1OTkgMS4yODM4MTc0NiwyMTEuNTA5MzEzIDEuMjgzODE3NDYsMjExLjUwOTMxMyBDMS4yODM4MTc0NiwyMTEuNTA5MzEzIDAuMzg5Njg5OTQ0LDE3Ny43NTYgMC4zOTY1NzEyNzcsMTU4IEw5NC43NDA4MjMyLDE1OCBDOTQuNzM5MjczNiwxNzcuNzkzMDg5IDkzLjg1MzUzOTYsMjExLjIyOTU0OCA5My44NTM1Mzk2LDIxMS4yMjk1NDggQzkzLjg1MzUzOTYsMjExLjIyOTU0OCA5NS41MDY5NDM1LDIyMi4yODA4MzQgODMuMzc2MDg0NSwyMjIuMjgwODMxIEM4MS4yNTUzNzgyLDIyMi4yODA4MyA3OC43Mjc2NDE1LDIyMi4yODA4MyA3Ni4wMDAwMDAyLDIyMi4yODA4MyBMNzYsMTcwIEw2NSwxNzAgTDY1LDIyMi4yODA4MjkgWiBNMC41NzQ1MzQwMzYsMTQ3IEMwLjU3OTc2ODM4NywxNDYuODk2MTQ5IDAuNTg1MTMxNjM4LDE0Ni43OTQ3NTUgMC41OTA2MjU1MTQsMTQ2LjY5NTg2NiBDMS4yODM4MTc0OCwxMzQuMjE4NDA5IC0wLjc5NzExMjI4NiwxMjIuNDM0MTQ2IDE2Ljg3OTI4MTYsMTE2LjE5NTQyMiBDMzQuNTU1Njc1NSwxMDkuOTU2Njk4IDI4LjY2NjI1MzYsMTA3LjUzMDUyMiAzMC4zOTc4NzkyLDk1Ljc0NjI1NzYgQzMyLjEyOTUwNDgsODMuOTYxOTkzIDI1Ljg5MjEyOTgsNzguMDY5ODYzIDI1Ljg5MjEzMTUsNDQuNzk2NjQ5NiBDMjUuODkyMTMzLDE3Ljk2MDcyMDYgMzguNTE2OTQ2NywxMy45MjIwMTczIDQ1LjUyMjA5MzksMTMuMzYzNzYxNyBDNDUuNjA4OTgxNCwxMy4xMzQwNzI3IDQ1LjcwMDI1MDYsMTMuMDE2NDM5MSA0NS43OTYwNjMxLDEzLjAxNjQzOTEgQzQ5LjgzNzIwNTYsMTMuMDE2NDM4OSA2OS4yNDUyMjM3LDExLjI0MzY3MTMgNjkuMjQ1MjI1NSw0NC41MTY4ODQ3IEM2OS4yNDUyMjczLDc3Ljc5MDA5ODIgNjMuMDA3ODUyMyw4My42ODIyMjgxIDY0LjczOTQ3NzgsOTUuNDY2NDkyOCBDNjYuNDcxMTAzNCwxMDcuMjUwNzU3IDYwLjU4MTY4MTUsMTA5LjY3NjkzMyA3OC4yNTgwNzU0LDExNS45MTU2NTcgQzk1LjkzNDQ2OTMsMTIyLjE1NDM4MSA5My44NTM1Mzk1LDEzMy45Mzg2NDQgOTQuNTQ2NzMxNSwxNDYuNDE2MTAxIEM5NC41NTcwNTg2LDE0Ni42MDE5ODkgOTQuNTY2OTI0MiwxNDYuNzk2NzI0IDk0LjU3NjMzOTcsMTQ3IEwwLjU3NDUzNDAzNiwxNDcgWiBNNDcuNSw0MSBDNTIuMTk0NDIwNCw0MSA1NiwzNy4xOTQ0MjA0IDU2LDMyLjUgQzU2LDI3LjgwNTU3OTYgNTIuMTk0NDIwNCwyNCA0Ny41LDI0IEM0Mi44MDU1Nzk2LDI0IDM5LDI3LjgwNTU3OTYgMzksMzIuNSBDMzksMzcuMTk0NDIwNCA0Mi44MDU1Nzk2LDQxIDQ3LjUsNDEgWiIgaWQ9IkNvbWJpbmVkLVNoYXBlIj48L3BhdGg+CiAgICAgICAgICAgIDwvZz4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=") 12 1, auto !important; } \n'
+                                    +'</style>\n';
+}
+// CK5 (SEI 5): uma vez por pagina, no head do proprio documento do editor.
+function addStyleConteudoCK5Pro() {
+    if ( $('head').find('style[data-style="seipro"]').length == 0 ) {
+        $('head').append(cssConteudoSEIPro(false));
+    }
+}
+// CSS do SEI Pro no documento de um iframe do editor CK4 (uma vez por documento: o <style data-style="seipro"> marca).
+// Chamado no boot por addStyleIframes e, depois, pelo contentDom de cada instancia (setStyleInstanceSEI).
+function addStyleIframeSEIPro(iframe) {
+    if ( iframe.find('head').find('style[data-style="seipro"]').length == 0 ) {
+        iframe.find('head').append(cssConteudoSEIPro(localStorage.getItem('darkModePro')));
+        if (localStorage.getItem('darkModePro')) {
+            iframe.find('html').addClass('dark-mode');
+            // As classes dark-mode-color-* so tem efeito no modo escuro (regras html.dark-mode acima).
+            // Mudar o corpo depois do carregamento deixa a instancia suja (checkDirty): o SEI habilitava
+            // o Salvar e avisava de alteracao nao salva num documento intocado com celula colorida.
+            var editorIframe = getEditorCheckboxSEI(iframe[0]);
+            var estavaSujo = editorIframe ? editorIframe.checkDirty() : true;
+            repareBgTableColor(iframe);
+            if (!estavaSujo) editorIframe.resetDirty();
+        }
+        repairBugChrome116(iframe);
+        setActionCheckbox(iframe);
+    }
+}
+// setData e o modo Codigo-Fonte recriam o documento do iframe e levam junto o CSS do SEI Pro e a fonte de
+// icones (sem eles somem o cursor da caixa de selecao, a quebra de pagina, a tarja de sigilo...). O contentDom
+// da instancia injeta de novo no documento novo. Uma vez por instancia, como setCheckboxInstanceSEI.
+function setStyleInstanceSEI(editor) {
+    if (!editor || editor.seiProStyleContentDom || typeof editor.on !== 'function') return;
+    editor.seiProStyleContentDom = true;
+    editor.on('contentDom', function() {
+        if (!editor.document || !editor.document.$ || editor.document.$ === document) return;
+        var iframe = $(editor.document.$);
+        addStyleIframeSEIPro(iframe);
+        if ( iframe.find('body').attr('contenteditable') == 'true' ) insertFontIcon('head', iframe);
+    });
+}
+// Caixa de selecao (CK4). Um unico handler delegado no <body> do iframe: cobre as caixas
+// inseridas depois do boot e nao empilha um .on('click') por caixa a cada mousedown.
+// setData e o modo Codigo-Fonte recriam o documento do iframe (e levam os listeners junto);
+// o contentDom da instancia religa.
+function setActionCheckbox(iframe) {
+    iframe.find('body').off('click.checkboxSEI').on('click.checkboxSEI', '.checkboxSEI', function(){
+        toggleCheckboxSEI(this);
+    });
+    setCheckboxInstanceSEI(getEditorCheckboxSEI(iframe[0]));
+}
+// Liga a caixa de selecao numa instancia CK4, uma vez so. Chamado por setCKEDITOR_instances,
+// que roda no boot de todo editor CK4: nao depende do title do iframe (no SEI 4.1 com secoes os
+// titles sao os nomes das secoes e o editorTitle de addStyleIframes nao casa nada) nem da opcao
+// editarimagens (initDropImages/setOnBodyActs).
+// So editor em iframe (wysiwygarea): editor inline/divarea usa o documento da propria pagina.
+function setCheckboxInstanceSEI(editor) {
+    if (!editor || editor.seiProCheckboxContentDom || typeof editor.on !== 'function') return;
+    editor.seiProCheckboxContentDom = true;
+    var ligar = function() {
+        if (editor.document && editor.document.$ && editor.document.$ !== document) setActionCheckbox($(editor.document.$));
+    };
+    editor.on('contentDom', ligar);
+    ligar();
+}
+function getEditorCheckboxSEI(doc) {
+    if (typeof CKEDITOR === 'undefined' || !doc) return null;
+    for (var id in CKEDITOR.instances) {
+        var editor = CKEDITOR.instances[id];
+        if (editor.document && editor.document.$ === doc) return editor;
+    }
+    return null;
+}
+// Troca so o caractere da caixa. Antes o html() inteiro era substituido e sumia o texto do item
+// que tivesse entrado no span (documentos antigos seguem com o texto la dentro).
+function toggleCheckboxSEI(el) {
+    var editor = getEditorCheckboxSEI(el.ownerDocument) || oEditor;
+    if (editor && editor.readOnly) return;
+    var marcar = !$(el).hasClass('checked');
+    var caixa = marcar ? '\u2611' : '\u2610';
+    if (editor) editor.fire('saveSnapshot');
+    var walker = el.ownerDocument.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+    var no, trocou = false;
+    while ((no = walker.nextNode())) {
+        if (/[\u2610\u2611]/.test(no.nodeValue)) {
+            no.nodeValue = no.nodeValue.replace(/[\u2610\u2611]/, caixa);
+            trocou = true;
+            break;
+        }
+    }
+    if (!trocou) el.insertBefore(el.ownerDocument.createTextNode(caixa), el.firstChild);
+    $(el).toggleClass('checked', marcar);
+    if (editor) editor.fire('saveSnapshot');
+}
+// getInsertCheckboxButtom() foi extraido para js/modules/editor/checkbox.js
+// (carregado antes deste monolito via SeiProEditorAdapter.loadModules).
+function repairBugChrome116(iframe) {
+    if (!!window.chrome) {
+        iframe.find('p').each(function(){
+            var className = $(this).attr('class');
+            if (typeof className !== 'undefined') {
+                $(this).attr('class','_'+className);
+                $(this).attr('class',className);
+            }
+        });
+    }
+}
+// Idempotente (namespace proprio + off antes do on): addStyleIframes e initDropImages ligam no mesmo corpo.
+// Antes a duplicata era evitada pelo .unbind() geral de initDropImages, que levava junto os handlers dos
+// outros recursos (o click.checkboxSEI da caixa de selecao).
+function setOnBodyActs(iframe) {
+    iframe.find('body').off('.bodyActsPro').on('mousedown.bodyActsPro', function(e) {
+        if ( typeof e.target.href !== 'undefined' && e.target.href.indexOf('http')  !== -1 && checkConfigValue('editarlinks')) { 
+            showLinkTips(e.target, iframe);
+        } else if ($(e.target).closest('span').hasClass('reviewSeiPro') && checkConfigValue('revisaotexto')) { 
+            showReviewTips(e.target, iframe);
+        } else {
+            hideLinkTips(iframe);
+            hideReviewTips(iframe);
+        }
+        removeDataCkeSavedImg();
+        hideQuickTable();
+        setActionCheckbox(iframe);
+        setTimeout(() => {
+            setOnKeyEditor();
+        }, 1000);
+    }).on('mouseup.bodyActsPro', function(e) {
+        initCKEDITOR_SEIPRO(e);
+    }).on('blur.bodyActsPro', function(e) {
+        hideLinkTips(iframe);
+        hideReviewTips(iframe);
+        hideQuickTable();
+        removeCopyStyle();
+        closeAlignText();
+    });
+}
+function initCKEDITOR_SEIPRO(e, TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof oEditor !== 'undefined') { 
+        applyCopyStyle();
+        activeIconsSelectedText();
+        closeAlignText();
+    } else {
+        if (TimeOut == 9000) {
+            var force = CKEDITOR.instances[$(e.currentTarget).attr('data-editor')];
+            setCKEDITOR_instances(force || false);
+        }
+        setTimeout(function(){ 
+            initCKEDITOR_SEIPRO(e, TimeOut - 100); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initCKEDITOR_SEIPRO'); 
+        }, 500);
+    }
+}
+function setDarkModeCkePanel() {
+    var iframeCkePanel = $('iframe.cke_panel_frame').contents();
+    if (localStorage.getItem('darkModePro') && iframeCkePanel.find('style[data-style="seipro"]').length == 0) {
+    iframeCkePanel.find('head').append('<style type="text/css" data-style="seipro">\n'+
+        '  body { background-color: #202123 !important; }\n'+
+        '  .cke_panel_block * { background: #202123; border: none !important; color: #fff; box-shadow: none !important; text-shadow: none !important;}\n'+
+        '  .cke_panel_block a[onclick*="Fundo"] p { background-color: #6f7071; }\n'+
+        '  .cke_panel_block a:hover, .cke_panel_block a:hover p { background-color: #017fff !important; }\n'+
+        '  .cke_panel_block .cke_selected *  { background: transparent; color: #202123 !important; }\n'+
+        '</style>');
+    }
+}
+function repareBgTableColor(iframe) {
+    iframe.find('span[style*="background-color"],tr[style*="background-color"],td[style*="background-color"]').each(function(){
+        setBgTableColor(this);
+    });
+}
+function setBgTableColor(this_) {
+    var bgColor = $(this_).css('background-color');
+    if (typeof bgColor !== 'undefined' && bgColor !== null) {
+        var brightness = getBrightnessColor(rgbToHexString(bgColor));
+        var textColour = (brightness > 125) ? 'black' : 'white';
+        $(this_).addClass('dark-mode-color-'+textColour);
+    }
+}
+
+// =========================================================================
+// Limpeza de conteudo para o validador do SEI 5
+//
+// O SEI 5 recusa "Documento possui conteudo nao permitido" quando o HTML traz
+// residuos de editor (wrapper/atributos do CKEditor, marcadores {cke_protected})
+// ou de extensoes do navegador (Dark Reader, servicos de copia), alem de cores
+// em rgb()/rgba() \u2014 o SEI 5 so aceita hexadecimal. Esta rotina remove esse lixo
+// e converte as cores. Roda automaticamente na colagem e na saida de dados
+// (ver registrarLimpezaAutomaticaPro) e tambem pode ser chamada sob demanda
+// via limparEditorPro().
+// =========================================================================
+
+// Listas de lixo (ATRIBUTOS_LIXO_PRO, PREFIXOS_ATRIBUTO_LIXO_PRO, PREFIXOS_CLASSE_LIXO_PRO e
+// ATRIBUTOS_PRESERVADOS_CK4_PRO) -> js/modules/editor/auto-cleanup.js, fonte unica. Nao
+// redeclarar aqui: este arquivo carrega depois dos modulos e sobrescreveria as do modulo.
+
+// Heuristica barata: so vale a pena parsear/limpar se houver indicio de lixo.
+// precisaLimparEditorPro() -> js/modules/editor/ (extraido para modulo)
+
+// Converte todo rgb()/rgba() de uma string para #rrggbb (reusa o rgbToHex global).
+// rgbParaHexPro() -> js/modules/editor/ (extraido para modulo)
+
+// Limpa, in-place, um no raiz (Element ou Document) e todos os descendentes.
+// limparRaizEditorPro() -> js/modules/editor/ (extraido para modulo)
+
+// Versao string: recebe HTML, devolve HTML limpo (desembrulhando o <body>).
+// limparHtmlEditorPro() -> js/modules/editor/ (extraido para modulo)
+
+// Aplica a limpeza a uma instancia do CKEditor (getData -> limpa -> setData).
+// Retorna true se algo mudou; reabilita o botao Salvar nesse caso.
+// limparEditorPro() -> js/modules/editor/ (extraido para modulo)
+
+// Registra a limpeza AUTOMATICA na instancia: na colagem e em toda saida de
+// dados (getData) \u2014 que e o que o SEI serializa ao salvar. Idempotente.
+// registrarLimpezaAutomaticaPro() -> js/modules/editor/ (extraido para modulo)
+
+function extrairTextoComNumeracao(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const paragrafos = doc.querySelectorAll('p');
+    const resultado = [];
+
+    const counters = {
+        'item-n1': 0,
+        'item-n2': 0,
+        'item-n3': 0,
+        'item-n4': 0,
+        'paragrafo-n1': 0,
+        'paragrafo-n2': 0,
+        'paragrafo-n3': 0,
+        'paragrafo-n4': 0,
+        'romano_maiusculo': 0,
+        'letra_minuscula': 0,
+    };
+
+    const toRoman = (num) => {
+        const romans = ['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];
+        const values = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+        let result = '', i = 0;
+        while (num > 0) {
+            while (num >= values[i]) {
+                result += romans[i];
+                num -= values[i];
+            }
+            i++;
+        }
+        return result;
+    };
+
+    const toLetter = (num) => {
+        let result = '', n = num;
+        while (n > 0) {
+            n--;
+            result = String.fromCharCode(97 + (n % 26)) + result;
+            n = Math.floor(n / 26);
+        }
+        return result;
+    };
+
+    paragrafos.forEach(p => {
+        const cls = p.className;
+        let prefixo = '';
+
+        if (cls.includes('Item_Nivel1')) {
+            counters['item-n1']++;
+            counters['item-n2'] = counters['item-n3'] = counters['item-n4'] = 0;
+            prefixo = `${counters['item-n1']}.`;
+
+        } else if (cls.includes('Item_Nivel2')) {
+            counters['item-n2']++;
+            counters['item-n3'] = counters['item-n4'] = 0;
+            prefixo = `${counters['item-n1']}.${counters['item-n2']}.`;
+
+        } else if (cls.includes('Item_Nivel3')) {
+            counters['item-n3']++;
+            counters['item-n4'] = 0;
+            prefixo = `${counters['item-n1']}.${counters['item-n2']}.${counters['item-n3']}.`;
+
+        } else if (cls.includes('Item_Nivel4')) {
+            counters['item-n4']++;
+            prefixo = `${counters['item-n1']}.${counters['item-n2']}.${counters['item-n3']}.${counters['item-n4']}.`;
+
+        } else if (cls.includes('Paragrafo_Numerado_Nivel1')) {
+            counters['paragrafo-n1']++;
+            counters['paragrafo-n2'] = counters['paragrafo-n3'] = counters['paragrafo-n4'] = 0;
+            prefixo = `${counters['paragrafo-n1']}.`;
+
+        } else if (cls.includes('Paragrafo_Numerado_Nivel2')) {
+            counters['paragrafo-n2']++;
+            counters['paragrafo-n3'] = counters['paragrafo-n4'] = 0;
+            prefixo = `${counters['paragrafo-n1']}.${counters['paragrafo-n2']}.`;
+
+        } else if (cls.includes('Paragrafo_Numerado_Nivel3')) {
+            counters['paragrafo-n3']++;
+            counters['paragrafo-n4'] = 0;
+            prefixo = `${counters['paragrafo-n1']}.${counters['paragrafo-n2']}.${counters['paragrafo-n3']}.`;
+
+        } else if (cls.includes('Paragrafo_Numerado_Nivel4')) {
+            counters['paragrafo-n4']++;
+            prefixo = `${counters['paragrafo-n1']}.${counters['paragrafo-n2']}.${counters['paragrafo-n3']}.${counters['paragrafo-n4']}.`;
+
+        } else if (cls.includes('Item_Inciso_Romano')) {
+            counters['romano_maiusculo']++;
+            counters['letra_minuscula'] = 0;
+            prefixo = `${toRoman(counters['romano_maiusculo'])} -`;
+
+        } else if (cls.includes('Item_Alinea_Letra')) {
+            counters['letra_minuscula']++;
+            prefixo = `${toLetter(counters['letra_minuscula'])})`;
+        }
+
+        const texto = p.textContent.trim();
+        resultado.push(prefixo ? `${prefixo} ${texto}` : texto);
+    });
+
+    return resultado.join('\n');
+}
+function getAllTextEditor(extract_number = false) {
+    let textEditor = '';
+
+    for (var id in CKEDITOR.instances) {
+        textEditor += extract_number 
+            ? extrairTextoComNumeracao(CKEDITOR.instances[id].getData())
+            : $('<div>').html(CKEDITOR.instances[id].getData()).text();
+    }
+return textEditor
+}
+function getSelectedHtmlFromCKEditor() {
+    const selection = oEditor.getSelection();
+    const range = selection && selection.getRanges()[0];
+
+    if (range) {
+        const fragment = range.clone().cloneContents();
+        const container = new CKEDITOR.dom.element('div');
+        container.append(fragment);
+        return container.getHtml();
+    }
+
+    return '';
+}
+function setCKEDITOR_instances(force = false) {
+    for(var id in CKEDITOR.instances) {
+        CKEDITOR.instances[id].setKeystroke(CKEDITOR.ALT + 48 /*0*/, false); // desabilita o popup de acessibilidade, que impede acessar o caractere \u00BA no mac (option+0)
+        registrarLimpezaAutomaticaPro(CKEDITOR.instances[id]); // limpeza automatica de conteudo nao permitido (SEI 5)
+        setCheckboxInstanceSEI(CKEDITOR.instances[id]); // marcar/desmarcar caixa de selecao (idempotente)
+        setStyleInstanceSEI(CKEDITOR.instances[id]); // CSS do SEI Pro de volta apos setData/Codigo-Fonte (idempotente)
+        if (typeof registrarSaidaSigiloCK4Pro === 'function') registrarSaidaSigiloCK4Pro(CKEDITOR.instances[id]); // tarja: o texto original nao vai para o HTML gravado (idempotente)
+        CKEDITOR.instances[id].on('focus', function(e) {
+            setCKEDITOR_SEIPRO(e);
+        });
+    }
+    if (force) {
+        setCKEDITOR_SEIPRO({editor: force});
+    }
+}
+function setCKEDITOR_SEIPRO(e) {
+    // Fill some global var here
+    idEditor = e.editor.name;
+    oEditor = CKEDITOR.instances[idEditor];
+    iframeEditor = (frmEditor.length) ? getIframeEditorPro(idEditor).contents() : $(txaEditor);
+    $('#idEditor').val(idEditor);
+    if ( iframeEditor.find('body').attr('contenteditable') == 'true' || frmEditor.length == 0) {
+        $('#cke_'+idEditor).find('.cke_iconPro').removeClass('cke_button_disabled');
+    }
+    if (checkConfigValue('editarimagens')) editImgPro(oEditor);
+    loadResizeImg();
+    insertFontIcon('head',getIframeEditorPro(idEditor).contents());
+    if (checkConfigValue('teclasatalho')) stylesEditorKeystroke();
+    instanceDitadoPro(oEditor);
+    checkHostLimitIcons();
+}
+function checkHostLimitIcons() {
+    if (checkHostLimit()) {
+        var elemEditor = $('#cke_'+idEditor);
+            elemEditor.find('.getCitacaoDocumentoButtom').addClass('cke_button_disabled');
+            elemEditor.find('.getDadosProcessoButtom').addClass('cke_button_disabled');
+    }
+}
+// Adiciona salvamento automatico
+function checkAutoSave() {
+    if (getOptionsPro('autoSaveEditor')) {
+        // $('.getAutoSaveButtom').trigger('click');
+    }
+}
+function getAutoSave(this_) {
+    /*
+    setParamEditor(this_);
+
+    if ($('#cke_'+idEditor).find('.getAutoSaveButtom').hasClass('cke_button_on')) {
+        $('#cke_'+idEditor).find('.getAutoSaveButtom').addClass('cke_button_off').removeClass('cke_button_on');
+        clearInterval(autoSaveEditor);
+        removeOptionsPro('autoSaveEditor');
+    } else {
+        clearInterval(autoSaveEditor);
+        autoSaveEditor = setInterval(function () {
+            if (isIntervalInProgress) return false;
+                isIntervalInProgress = true;
+            if (!$('#cke_'+idEditor).find('.cke_button.cke_button__save').hasClass('cke_button_disabled')) {
+                console.log('setAutoSave');
+                oEditor = CKEDITOR.instances[idEditor];
+                if (typeof oEditor !== 'undefined') {
+                    var $form = oEditor.element.$.form;
+                    if ($form) $form.submit();
+                }
+            }
+            isIntervalInProgress = false;
+        },autoSaveInterval * 1000 * 60);
+        $('#cke_'+idEditor).find('.getAutoSaveButtom').addClass('cke_button_on').removeClass('cke_button_off');
+        setOptionsPro('autoSaveEditor', true);
+    }
+    */
+}
+// Adiciona quebra de pagina
+// getPageBreak() -> js/modules/editor/page-break.js
+// getSessionBreak() -> js/modules/editor/session-break.js
+// (extraidos; carregados antes deste monolito via loadModules)
+function setNextElemEditor(element, callback = false) {
+    var editorIfm = $('iframe[title*="'+idEditor+'"]');
+    var selWin = editorIfm[0].contentWindow.getSelection();
+    var selEnd = $(selWin.anchorNode.parentNode);
+    
+    if (typeof callback === 'function') callback(element);
+    if (selEnd[0] != element[0]) setNextElemEditor(element.next(), callback);
+}
+// Altera o alinhamento do texto
+// setAlignText() -> js/modules/editor/ (extraido para modulo)
+// openAlignText() -> js/modules/editor/ (extraido para modulo)
+// closeAlignText() -> js/modules/editor/ (extraido para modulo)
+
+// Modifica o tamanho da fonte
+// changeFontSize() -> js/modules/editor/ (extraido para modulo)
+// Adiciona/Remove marca de sigilo
+// getMarkSigilo() -> js/modules/editor/ (extraido para modulo)
+// getTarjaSigilo() -> js/modules/editor/ (extraido para modulo)
+// getBoxSigilo() -> js/modules/editor/ (extraido para modulo)
+// actionsMarkSigilo() -> js/modules/editor/ (extraido para modulo)
+// rodapeSigiloMark() -> js/modules/editor/ (extraido para modulo)
+// htmlTabSigiloResult() -> js/modules/editor/ (extraido para modulo)
+// getDialogSigilo() -> js/modules/editor/ (extraido para modulo)
+function setChosenInCke(multiple = false, max_width = '500px') {
+    var minWidth = multiple ? '450px' : '200px';
+    if (verifyConfigValue('substituiselecao')) {
+        if (multiple) $('select.cke_dialog_ui_input_select').attr('multiple','multiple');
+        $('div.cke_dialog_ui_input_select').css({'position':'absolute', 'max-width': max_width, 'min-width': minWidth});
+        $('span.cke_dialog_ui_labeled_content').css({'height':'27px', 'display': 'flex'});
+        $('select.cke_dialog_ui_input_select').each(function(){
+            if ($('#'+$(this).attr('id')+'_chosen').length == 0) { 
+                initChosenReplace(multiple ? 'box_multiple' : 'box_init',this);
+            } else {
+                $(this).chosen("destroy").chosen({
+                    placeholder_text_single: ' ',
+                    no_results_text: 'Nenhum resultado encontrado',
+                    normalize_search_text: function(text) {
+                        return removeAcentos(text.toLowerCase());
+                    }
+                });
+            }
+        });
+        setTimeout(function(){ 
+            $('.cke_dialog_ui_labeled_content .chosen-container-single').css({'max-width': max_width, 'min-width': minWidth});
+            if (multiple) {
+                $('.cke_dialog_ui_labeled_content .chosen-container-multi').css('width', '-webkit-fill-available');
+                $('.cke_dialog_ui_labeled_content .chosen-container-multi .chosen-choices').css({'max-height': '90px', 'overflow-y': 'auto'});
+            }
+        }, 800);
+    }
+}
+function hasSelection(editor) {
+    // CK5 (SEI 5): nao existe editor.getSelection() -- o botao de marca/tarja de sigilo quebrava com
+    // "editor.getSelection is not a function". A selecao e a do model.
+    if (editor && editor.model) return !editor.model.document.selection.isCollapsed;
+    var sel = editor.getSelection();
+    var ranges = sel.getRanges();
+    for (var i = 0, len = ranges.length; i < len; ++i) {
+        if (!ranges[i].collapsed) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Aplica estilo a selecao
+function getElementStyleSelected(element) {
+    var fontSize = (parseFloat(element.css('font-size')) == 16 && (element.closest('sub').length || element.closest('sup').length)) ? false : parseFloat(element.css('font-size'));
+    var color = (element.css('color') == 'rgb(0, 0, 0)') ? false : element.css('color');
+    var backgroundColor = (element.css('background-color') == 'rgba(0, 0, 0, 0)') ? false : element.css('background-color');
+    var bold = (element.closest('strong').length) ? true : false;
+    var underline = (element.closest('u').length) ? true : false;
+    var italic = (element.closest('em').length) ? true : false;
+    var strike = (element.closest('s').length) ? true : false;
+    var subscript = (element.closest('sub').length) ? true : false;
+    var superscript = (element.closest('sup').length) ? true : false;
+    return {fontSize: fontSize, color: color, backgroundColor: backgroundColor, bold: bold, underline: underline, italic: italic, strike: strike, subscript: subscript, superscript: superscript}
+}
+// setCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// actionCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// getCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// applyCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// removeCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// menuCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// menuBlockEdition() -> js/modules/editor/ (extraido para modulo)
+function stylesEditorKeystroke() {
+    if (getOptionsPro('stylesEditor')) {
+        $.each(getOptionsPro('stylesEditor'), function(i, v){
+            oEditor.addCommand(v, {
+                exec: function( editor ) {
+                    var select = editor.getSelection().getStartElement();
+                    var element = $(select.$);
+                    if (element.is('p')) {
+                        element.attr('class',v);
+                    } 
+                }
+            });
+            if (i < 36) {
+                var key = (i <= 9) ? 48+i : 55+i;
+                    if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_1') {
+                        oEditor.setKeystroke(CKEDITOR.CTRL + CKEDITOR.ALT + CKEDITOR.SHIFT + key, v);
+                    } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_2') {
+                        oEditor.setKeystroke(CKEDITOR.CTRL + CKEDITOR.SHIFT + key, v);
+                    } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_3') {
+                        oEditor.setKeystroke(CKEDITOR.CTRL + CKEDITOR.ALT + key, v);
+                    } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_4') {
+                        oEditor.setKeystroke(CKEDITOR.ALT + CKEDITOR.SHIFT + key, v);
+                    } else {
+                        oEditor.setKeystroke(CKEDITOR.CTRL + CKEDITOR.ALT + CKEDITOR.SHIFT + key, v);
+                    }
+            }
+        });
+        if (getOptionsPro('stylesEditor')) {
+            $('a.cke_combo_button[href*="Estilos de Format"]').on('click',function(){
+                var ckePanel = $('iframe[class="cke_panel_frame"]').contents();
+                var style = '<style type="text/css" data-style="seipro-styleeditor">'+
+                            '   .cke_panel_listItem a p {'+
+                            '       overflow: hidden;'+
+                            '   }'+
+                            '   .cke_panel_listItem a {'+
+                            '       padding-right: 160px;'+
+                            '       position: relative;'+
+                            '   }'+
+                            '   sup {'+
+                            '       position: absolute;'+
+                            '       right: 10px;'+
+                            '       font-family: monospace;'+
+                            '       background: #ccc;'+
+                            '       padding: 3px 5px;'+
+                            '       border-radius: 5px;'+
+                            '       opacity: 0.5;'+
+                            '       top: calc(50% - 10px);'+
+                            '   }'+
+                            '</style>';
+                if (ckePanel.find('style[data-style="seipro-styleeditor"]').length == 0) {
+                    ckePanel.find('head').append(style);
+                }
+                    ckePanel.find('sup').remove();
+                    var isMac = navigator.platform.toUpperCase().indexOf('MAC') !== -1 ? true : false;
+                    $.each(getOptionsPro('stylesEditor'), function(i, v){
+                        if (i < 36) {
+                            var key = (i <= 9) ? 48+i : 55+i;
+                            var combinacaoteclas = isMac ? 'CMD + OPTION + SHIFT' : 'CTRL + ALT + SHIFT';
+                            if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_1') {
+                                combinacaoteclas = isMac ? 'CMD + OPTION + SHIFT' : 'CTRL + ALT + SHIFT';
+                            } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_2') {
+                                combinacaoteclas = isMac ? 'CMD + SHIFT' : 'CTRL + SHIFT';
+                            } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_3') {
+                                combinacaoteclas = isMac ? 'CMD + OPTION' : 'CTRL + ALT';
+                            } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_4') {
+                                combinacaoteclas = isMac ? 'OPTION + SHIFT' : 'ALT + SHIFT';
+                            }
+                            ckePanel.find('li.cke_panel_listItem a[title="'+v+'"]').prepend('<sup>'+combinacaoteclas+' + <strong>'+String.fromCharCode(key)+'</strong></sup>');
+                        }
+                    });
+            });
+        }
+    }
+}
+function editImgPro( editor ) {
+    // SEI 5 (CK5): nao ha editor.contextMenu. Formatar/Editar Imagem entram no botao direito (menu do
+    // adapter) e na barra da imagem, ambos em js/modules/editor/image-editor.js.
+    if ( editor && !editor.contextMenu && editor.model ) {
+        if (typeof menuImagemCK5Pro === 'function' && !editor.__seiProMenuImagem) { editor.__seiProMenuImagem = true; menuImagemCK5Pro(editor); }
+        return;
+    }
+    if ( editor.contextMenu && !delayCrash && typeof editor.getMenuItem('ImageEditorPro') === 'undefined') {
+
+        delayCrash = true;
+        setTimeout(function(){ delayCrash = false }, 300);
+
+        editor.removeMenuItem('image');
+
+        editor.addMenuGroup( 'base64imageGroup', 30);
+        editor.addMenuItem( 'base64imageItem', {
+            label: 'Formatar Imagem',
+            icon: URL_SPRO+'icons/editor/formatarimagem.png',
+            command: 'base64imageDialog',
+            group: 'base64imageGroup'
+        });
+        editor.contextMenu.addListener( function( element ) {
+            if (element && element.getName() === "img") {
+                editor.getSelection().selectElement(element);
+                return { base64imageItem: CKEDITOR.TRISTATE_ON };
+            }
+            return null;
+        });
+        editor.addCommand( 'base64imageDialog', {
+            exec: function( editor ) {
+                openDialogUploadImgBase64(editor);
+            }
+        });
+
+        editor.addMenuItem( 'ImageEditorPro', {
+            label: 'Editar Imagem',
+            icon: URL_SPRO+'icons/editor/editarimagem.png',
+            command: 'ImageEditorPro',
+            group: 'base64imageGroup'
+        });
+        editor.contextMenu.addListener( function( element ) {
+            if (element && element.getName() === "img") {
+                editor.getSelection().selectElement(element);
+                return { ImageEditorPro: CKEDITOR.TRISTATE_ON };
+            }
+            return null;
+        });
+        editor.addCommand( 'ImageEditorPro', {
+            exec: function( editor ) {
+                openImageEditorPro(editor);
+            }
+        });
+
+        editor.on("doubleclick", function(evt){
+            if(evt.data.element && !evt.data.element.isReadOnly() && evt.data.element.getName() === "img") {
+                evt.data.dialog = 'base64imageDialog';
+                editor.getSelection().selectElement(evt.data.element);
+            }
+        });
+    }
+}
+
+// Adiciona tabela rapida
+// hideQuickTable() -> js/modules/editor/ (extraido para modulo)
+// quickTableOver() -> js/modules/editor/ (extraido para modulo)
+// getQuickTable() -> js/modules/editor/ (extraido para modulo)
+
+// quickTableClick() -> js/modules/editor/ (extraido para modulo)
+
+//// Insere estilo clean a tabela selecionada do documento
+function detectSyleSelectedTable(editor) {
+    editor = editor || SeiProEditorAdapter.getInstance();
+    if (!editor) return $();
+    var el = SeiProEditorAdapter.getSelectionElement(editor);
+    return el ? $(el).closest('table') : $();
+}
+function activeIconsSelectedText() {
+    if ( detectSyleSelectedTable().length ) {
+        $('#cke_'+idEditor).find('.getTablestylesButtom').removeClass('cke_button_disabled');
+    } else {
+        $('#cke_'+idEditor).find('.getTablestylesButtom').addClass('cke_button_disabled');
+    }
+    if (hasSelection(oEditor)) {
+        $('#cke_'+idEditor).find('.getFontSizeUpButtom').removeClass('cke_button_disabled');
+        $('#cke_'+idEditor).find('.getFontSizeDownButtom').removeClass('cke_button_disabled');
+        $('#cke_'+idEditor).find('.getCapLetterButtom').removeClass('cke_button_disabled');
+    } else {
+        $('#cke_'+idEditor).find('.getFontSizeUpButtom').addClass('cke_button_disabled');
+        $('#cke_'+idEditor).find('.getFontSizeDownButtom').addClass('cke_button_disabled');
+        $('#cke_'+idEditor).find('.getCapLetterButtom').addClass('cke_button_disabled');
+    }
+}
+// getSyleSelectedTable() -> js/modules/editor/ (extraido para modulo)
+// changeColorTable() -> js/modules/editor/ (extraido para modulo)
+// Mantido por compat com initFunctions(); di\u00E1logo jQuery UI em openDialogSyleTable().
+// getDialogSyleTable() -> js/modules/editor/ (extraido para modulo)
+
+// buildHtmlSyleTable() -> js/modules/editor/ (extraido para modulo)
+
+// openDialogSyleTable() -> js/modules/editor/ (extraido para modulo)
+// getSyleTable() -> js/modules/editor/ (extraido para modulo)
+// setSyleTable() -> js/modules/editor/ (extraido para modulo)
+
+//// INSERE LINK DE NORMAS
+// sendLegisSEI() -> js/modules/editor/ (extraido para modulo)
+// insertLegisSEI() -> js/modules/editor/ (extraido para modulo)
+// getLegisSEI() -> js/modules/editor/ (extraido para modulo)
+// getSearchLegisMore() -> js/modules/editor/ (extraido para modulo)
+// getSearchLegis() -> js/modules/editor/ (extraido para modulo)
+// getDialogLegisSEI() -> js/modules/editor/ (extraido para modulo)
+// convertFirstLetter() -> js/modules/editor/cap-letter.js (PORTADO p/ CK5)
+
+// getCitacaoDocumento() -> js/modules/editor/ (extraido para modulo)
+// getDialogCitacaoDocumento() -> js/modules/editor/ (extraido para modulo)
+// insertCitacaoDocumento() -> js/modules/editor/ (extraido para modulo)
+
+// INSERE NOTAS DE RODAPE
+// getNotaRodape() -> js/modules/editor/ (extraido para modulo)
+// Mantemos o nome antigo para compatibilidade com initFunctions() -- em CK4/CK5
+// o di\u00E1logo agora eh jQuery UI, registrado sob demanda ao clicar no bot\u00E3o.
+// getDialogNotaRodape() -> js/modules/editor/ (extraido para modulo)
+
+/**
+ * Abre o di\u00E1logo de inser\u00E7\u00E3o de nota de rodap\u00E9 (jQuery UI). Substitui o antigo
+ * CKEDITOR.dialog -- compat\u00EDvel com CK4 e CK5 via adapter.
+ */
+// openDialogNotaRodape() -> js/modules/editor/ (extraido para modulo)
+// removeNtRodape() -> js/modules/editor/ (extraido para modulo)
+// updateNrABNT() -> js/modules/editor/ (extraido para modulo)
+// insertNtRodape() -> js/modules/editor/ (extraido para modulo)
+// updateNtRodape() -> js/modules/editor/ (extraido para modulo)
+// reorderNtRodape funciona em CK4 (DOM iframe direto) e CK5 (transformBodyHtml,
+// que serializa para HTML, manipula via DOMParser e re-seta a root do corpo).
+// Aceita compat: assinatura antiga era reorderNtRodape(iframeEditor).
+// reorderNtRodape() -> js/modules/editor/ (extraido para modulo)
+function initAddButtonTarjaSigilo(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if ($('.getMarkSigiloButton').length) { 
+        addButtonTarjaSigilo()
+    } else {
+        setTimeout(function(){ 
+            initAddButtonTarjaSigilo(TimeOut - 100); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initAddButtonTarjaSigilo'); 
+        }, 500);
+    }
+}
+function addButtonTarjaSigilo() {
+    var icon16baseTarjaSigilo = URL_SPRO + 'icons/menu/tarjasigilo.png';
+    var htmlButtonAfterLetters =    '   <a class="getTarjaSigiloButton cke_iconPro cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar tarja de sigilo no texto" hidefocus="true">'+
+                                    '      <span class="cke_button_icon" style="background: url(\''+icon16baseTarjaSigilo+'\');">&nbsp;</span>'+
+                                    '      <span class="cke_button_label" aria-hidden="false">Adicionar tarja de sigilo no texto</span>'+
+                                    '   </a>';
+        $(txaEditor).each(function(index){ 
+            var idEditor = $(this).attr('id').replace('cke_', '');
+            if ( getIframeEditorPro(idEditor).contents().find('body').attr('contenteditable') == 'true' ) {
+                $(this).find('span.cke_toolgroup .getMarkSigiloButton').after(htmlButtonAfterLetters);
+            }
+        });
+        $('.getTarjaSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTarjaSigilo(this) } });
+}
+//No CK5 nao existe o form do editor: o salvamento e o proprio botao Salvar da barra
+//(mesmos seletores que o auto-cleanup ja usa para se enganchar). No CK4 segue o form.
+function submitEditorPro(editor) {
+    if (isCK5Pro()) {
+        $('.cke_button__save, button[data-cke-tooltip-text*="Salvar"], button[aria-label*="Salvar"], #divInfraBarraComandosSuperior button').first().trigger('click');
+        return;
+    }
+    var $form = editor && editor.element && editor.element.$ ? editor.element.$.form : false;
+    if ($form) $form.submit();
+}
+function isCK5Pro() {
+    return typeof SeiProEditorAdapter !== 'undefined' && SeiProEditorAdapter.version === 5;
+}
+function setDocCertidao() {
+    var dadosDocCertidao = sessionStorageRestorePro('dadosDocCertidao');
+    var nomeDocCertidao = sessionStorageRestorePro('nomeDocCertidao');
+    var param = getParamsUrlPro(window.location.href);
+    if (typeof param.acao_pro !== 'undefined' && param.acao_pro == 'set_certidao' && dadosDocCertidao && nomeDocCertidao) {
+        if (!isCK5Pro()) setCKEDITOR_instances(); //CK4 puro: no CK5 lanca e abortaria a funcao
+        initAddButtonTarjaSigilo();
+        var modeloHtml =    '<p class="Texto_Centralizado_Maiusculas_Negrito">CERTID\u00C3O</p>'+
+                            '<p class="Texto_Centralizado_Maiusculas_Negrito">C\u00D3PIA DE DOCUMENTO OFICIAL COM RESTRI\u00C7\u00C3O LEGAL DE PARTE(S) SOB SIGILO<br><br></p>'+
+                            '<p class="Texto_Alinhado_Esquerda">Em observ\u00E2ncia \u00E0 <a class="ancoraSei legisSeiPro" data-norma="Lei12527" data-normafull="Lei n\u00BA 12.527, de 18 de novembro de 2011" data-index="0" data-cke-saved-href="http://www.planalto.gov.br/ccivil_03/_Ato2011-2014/2011/Lei/L12527.htm" href="http://www.planalto.gov.br/ccivil_03/_Ato2011-2014/2011/Lei/L12527.htm" target="_blank" data-reflinkpro="HdNxK8xI">Lei n\u00BA 12.527, de 18 de novembro de 2011</a>, que estabelece, em seu artigo 7\u00BA, \u00A72\u00BA, que:</p>'+
+                            '<p class="Citacao">Art. 7\u00BA O acesso \u00E0 informa\u00E7\u00E3o de que trata esta Lei compreende, entre outros, os direitos de obter:<br></p>'+
+                            '<p class="Citacao">(...)</p>'+
+                            '<p class="Citacao">\u00A72\u00BA Quando n\u00E3o for autorizado acesso integral \u00E0 informa\u00E7\u00E3o, por ser ela parcialmente sigilosa, \u00E9 assegurado o acesso \u00E0 parte n\u00E3o sigilosa por meio de certid\u00E3o, extrato ou c\u00F3pia com oculta\u00E7\u00E3o da parte sob sigilo.</p>'+
+                            '<p class="Citacao">(...)</p>'+
+                            '<p class="Texto_Alinhado_Esquerda">Como servidor(a) p\u00FAblico(a) em exerc\u00EDcio, aponho minha assinatura e confiro f\u00E9 p\u00FAblica ao documento abaixo, confirmando que esta vers\u00E3o se trata de c\u00F3pia fiel da documenta\u00E7\u00E3o original, havendo sido ocultadas (tarjadas) exclusivamente as informa\u00E7\u00F5es protegidas por sigilo legal, assegurando a fidelidade da informa\u00E7\u00E3o p\u00FAblica. Assim, esta vers\u00E3o passa a coexistir com o documento integral criado com o amparo da citada Lei.</p>'+
+                            '<p class="Texto_Alinhado_Esquerda"><br></p>'+
+                            '<table border="0" cellspacing="1" cellpadding="1" style="border-collapse:collapse;border-color: rgb(206 206 206);margin-left:auto;margin-right:auto;width:100%;">'+
+                            '   <tbody>'+
+                            '       <tr>'+
+                            '           <td style="background-color: rgb(238, 238, 238);">'+
+                            '               <p class="Texto_Centralizado" id="">In\u00EDcio do(a) '+nomeDocCertidao+'</p>'+
+                            '           </td>'+
+                            '       </tr>'+
+                            '       <tr>'+
+                            '           <td contenteditable="false">'+
+                            '               <p class="Tabela_Texto_Alinhado_Esquerda"><br></p>'+
+                            '               '+dadosDocCertidao+
+                            '               <p class="Tabela_Texto_Alinhado_Esquerda"><br></p>'+
+                            '           </td>'+
+                            '       </tr>'+
+                            '       <tr>'+
+                            '           <td style="background-color: rgb(238, 238, 238);">'+
+                            '               <p class="Texto_Centralizado">Fim do(a) '+nomeDocCertidao+'<br></p>'+
+                            '           </td>'+
+                            '       </tr>'+
+                            '   </tbody>'+
+                            '</table>'+
+                            '<p class="Texto_Alinhado_Esquerda"><br></p>';
+                            
+            if (isCK5Pro()) {
+                var editorCK5 = SeiProEditorAdapter.getInstance();
+                if (editorCK5) {
+                    SeiProEditorAdapter.focus(editorCK5);
+                    //transformBodyHtml e o equivalente fiel ao iframe.find('body').html() do CK4
+                    //e precisa ficar FORA de withEdit (o CK5 proibe mutar o DOM dentro do model.change).
+                    SeiProEditorAdapter.transformBodyHtml(editorCK5, function () { return modeloHtml; });
+                    setTimeout(function () {
+                        trycatch(function () { actionsMarkSigilo(null, 'apply', false, false, editorCK5) }, false);
+                        trycatch(function () { enableButtonSavePro() }, false); //CK4 puro, tolera falhar no CK5
+                        trycatch(function () { submitEditorPro(editorCK5) }, false);
+                        sessionStorageRemovePro('dadosDocCertidao');
+                        sessionStorageRemovePro('nomeDocCertidao');
+                    }, 0);
+                }
+            } else {
+            var alvoCertidao = getEditorAutomaticoPro();
+            if (alvoCertidao) {
+                var iframe = alvoCertidao.iframe.contents();
+                var idEditor = alvoCertidao.editor.name;
+                $('#idEditor').val(idEditor);
+                oEditor = alvoCertidao.editor;
+                oEditor.focus();
+                oEditor.fire('saveSnapshot');
+                iframe.find('body').html(modeloHtml);
+                // Tarja na secao que recebeu a certidao. Sem o editor, o actionsMarkSigilo do modulo usa a
+                // primeira instancia (no SEI 4.1, o Cabecalho somente leitura) e a certidao seria salva
+                // com o trecho sigiloso a mostra.
+                actionsMarkSigilo(undefined, 'apply', false, false, oEditor);
+                enableButtonSavePro();
+
+                submitEditorPro(oEditor);
+
+                sessionStorageRemovePro('dadosDocCertidao');
+                sessionStorageRemovePro('nomeDocCertidao');
+            }
+            }
+        /*
+        var maxIframeHeight = {value: 0, index: -1}
+        $('iframe.cke_wysiwyg_frame').each(function(index){
+            if ( $(this).contents().find('body').attr('contenteditable') == 'true' ) {
+                var height = $(this).height();
+                if (height > maxIframeHeight.value) { 
+                    maxIframeHeight = {value: height, index: index};
+                }
+            }
+        });
+        if (maxIframeHeight.index != -1) {
+            var elemIframe = $('iframe').eq(maxIframeHeight.index);
+            var iframe = elemIframe.contents();
+            if (elemIframe.attr('title').indexOf(',') !== -1) {
+                var idEditor = elemIframe.attr('title').split(',')[1].trim();
+                $('#idEditor').val(idEditor);
+                oEditor = CKEDITOR.instances[idEditor];
+                if (typeof oEditor !== 'undefined') {
+                    oEditor.focus();
+                    oEditor.fire('saveSnapshot');
+                    iframe.find('body').html(modeloHtml);
+                    actionsMarkSigilo(undefined, 'apply');
+                    enableButtonSavePro();
+                    
+                    var $form = oEditor.element.$.form;
+                    if ($form) $form.submit();
+
+                    sessionStorageRemovePro('dadosDocCertidao');
+                    sessionStorageRemovePro('nomeDocCertidao');
+                }
+            }
+        }
+        */
+    }
+}
+function setDocAutomatico() {
+    var dadosDocAutomatico = sessionStorageRestorePro('dadosDocAutomatico');
+    var nomeDocAutomatico = sessionStorageRestorePro('nomeDocAutomatico');
+    var param = getParamsUrlPro(window.location.href);
+    if (typeof param.acao_pro !== 'undefined' && param.acao_pro == 'set_automatico' && dadosDocAutomatico && nomeDocAutomatico) {
+        if (!isCK5Pro()) setCKEDITOR_instances(); //CK4 puro: no CK5 lanca e abortaria a funcao
+        initAddButtonTarjaSigilo();
+        if (isCK5Pro()) {
+            var editorCK5 = SeiProEditorAdapter.getInstance();
+            if (editorCK5) {
+                SeiProEditorAdapter.focus(editorCK5);
+                SeiProEditorAdapter.transformBodyHtml(editorCK5, function () { return dadosDocAutomatico });
+                sessionStorageRemovePro('dadosDocAutomatico');
+                sessionStorageRemovePro('nomeDocAutomatico');
+                setTimeout(function () {
+                    trycatch(function () { actionsMarkSigilo(null, 'apply', false, false, editorCK5) }, false);
+                    trycatch(function () { enableButtonSavePro() }, false); //CK4 puro, tolera falhar no CK5
+                    trycatch(function () { submitEditorPro(editorCK5) }, false);
+                }, 1500);
+            }
+            return;
+        }
+        var alvoAutomatico = getEditorAutomaticoPro();
+        if (alvoAutomatico) {
+            var iframe = alvoAutomatico.iframe.contents();
+            var idEditor = alvoAutomatico.editor.name;
+            $('#idEditor').val(idEditor);
+            oEditor = alvoAutomatico.editor;
+            oEditor.focus();
+            oEditor.fire('saveSnapshot');
+            iframe.find('body').html(dadosDocAutomatico);
+            // Tarja na secao que recebeu o conteudo (ver setDocCertidao).
+            actionsMarkSigilo(undefined, 'apply', false, false, oEditor);
+
+            sessionStorageRemovePro('dadosDocAutomatico');
+            sessionStorageRemovePro('nomeDocAutomatico');
+
+            setTimeout(function(){ 
+                enableButtonSavePro();
+                
+                submitEditorPro(oEditor);
+            }, 1500);
+        }
+    }
+}
+// Texto dos paragrafos em que os campos dinamicos (#campo) sao procurados. Ignora <style> e
+// <script>: a Configuracao de impressao (imagem de fundo) grava um <style> dentro do <p>, e as
+// cores do CSS (#e4e4e4) eram contadas como campos -- e a substituicao tirava o # delas,
+// quebrando o CSS. Mesma fonte para o contador do dialogo (modules/editor/dados-processo.js)
+// e para replaceDadosEditor, que assim sempre concordam. ##campo## e do Documentos em Lote e
+// nao casa com getHashTagsPro. O rodape "#_contem_N_marcas_sigilo" da tarja de sigilo (sigilo.js) nao e campo:
+// o '_' cabe na classe [+-\u00A7] do getHashTagsPro e a substituicao trocava "#_contem" por um campo vazio.
+function textoCamposDinamicosPro(paragrafos) {
+    return $(paragrafos).not('.sigiloSEI_sigilo_mark').map(function(){
+        var copia = $(this).clone();
+        copia.find('style, script').remove();
+        return copia.text().replace(/\u00A0/gm, " ");
+    }).get().join(' ');
+}
+// Troca a 1a ocorrencia de regex (nao global) no HTML de um paragrafo, fora de <style>/<script>.
+function substituirCampoDinamicoPro(html, regex, substituto) {
+    var blocos = /<(style|script)\b[\s\S]*?<\/\1\s*>/gi, saida = '', inicio = 0, feito = false, m;
+    var trecho = function (t) {
+        return feito ? t : t.replace(regex, function(){ feito = true; return substituto(); });
+    };
+    while ((m = blocos.exec(html))) {
+        saida += trecho(html.slice(inicio, m.index)) + m[0];
+        inicio = blocos.lastIndex;
+    }
+    return saida + trecho(html.slice(inicio));
+}
+// CK5 (SEI 5): o link de protocolo do editor e <a class="ancora_sei" id="lnkSeiNNN">numero</a> (plugin LinkProtocoloSei,
+// cujo upcast so reconhece a classe ancora_sei). O formato do CK4 que camposDinamicosProcesso/arrayDadosEditor montam
+// (span[data-cke-linksei] > a.ancoraSei) perdia o link no model e ficava so o numero. No CK4 nada muda.
+function converterLinksProtocoloCK5Pro(raiz) {
+    if (!raiz || typeof raiz.querySelectorAll !== 'function') return;
+    Array.prototype.forEach.call(raiz.querySelectorAll('a.ancoraSei[id^="lnkSei"]'), function (a) {
+        a.setAttribute('class', 'ancora_sei');
+        var span = a.parentNode;
+        if (span && span.nodeName === 'SPAN' && span.hasAttribute('data-cke-linksei') && span.childNodes.length === 1) {
+            span.parentNode.insertBefore(a, span);
+            span.parentNode.removeChild(span);
+        }
+    });
+}
+function htmlLinksProtocoloEditorPro(html, ed) {
+    if (!ed || !ed.model || typeof html !== 'string' || html.indexOf('lnkSei') === -1) return html;
+    var tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    converterLinksProtocoloCK5Pro(tpl.content);
+    return tpl.innerHTML;
+}
+// Caminho da selecao do model (raiz + path) e volta para a mesma posicao, limitada ao que existe depois da troca.
+function caminhoSelecaoCK5Pro(ed) {
+    try {
+        var pos = ed.model.document.selection.getFirstPosition();
+        return (pos && pos.root && pos.root.rootName) ? {rootName: pos.root.rootName, path: pos.path.slice()} : null;
+    } catch (e) { return null; }
+}
+function restaurarCaminhoSelecaoCK5Pro(ed, caminho) {
+    if (!ed || !ed.model || !caminho || !caminho.path || !caminho.path.length) return;
+    try {
+        var raiz = ed.model.document.getRoot(caminho.rootName);
+        if (!raiz) return;
+        var el = raiz, i = 0;
+        for (; i < caminho.path.length - 1; i++) {
+            var filho = (el.childCount > caminho.path[i]) ? el.getChild(caminho.path[i]) : null;
+            if (!filho || !filho.is('element')) break;
+            el = filho;
+        }
+        var offset = (i === caminho.path.length - 1) ? Math.min(caminho.path[i], el.maxOffset) : el.maxOffset;
+        ed.model.change(function (writer) {
+            writer.setSelection(writer.createPositionAt(el, offset));
+        });
+    } catch (e) {}
+}
+function replaceDadosEditor(this_) {
+    // iframeEditor/oEditor sao globais que setParamEditor preenche no clique dos
+    // botoes CK4 da barra. O dialogo de Dados do Processo deixou de passar por
+    // setParamEditor quando virou modulo (js/modules/editor/dados-processo.js),
+    // entao aqui eles podem estar indefinidos -- e a funcao quebrava logo na
+    // primeira linha. Resolve o corpo pelo adapter, que vale para CK4 e CK5.
+    var ed = (typeof oEditor !== 'undefined' && oEditor) ? oEditor : SeiProEditorAdapter.getInstance(this_);
+    var corpoEditor = (typeof iframeEditor !== 'undefined' && iframeEditor && iframeEditor.length)
+        ? iframeEditor
+        : $(SeiProEditorAdapter.getBodyContainer(ed) || []);
+
+    var arrayTags = uniqPro(getHashTagsPro(textoCamposDinamicosPro(corpoEditor.find('p'))));
+    var delimitLine = false;
+    var prop = dadosProcessoPro.propProcesso;
+    var docs = dadosProcessoPro.listDocumentos;
+
+    var dadosProcesso = camposDinamicosProcesso(arrayTags);
+    var dadosTags = [];
+        $.each(prop.txaTagsObservacoes, function (index, valueTag) {
+            if (valueTag.unidade != siglaUnidadeAtual) {
+                $.each(valueTag.tags, function (i, v) {
+                    var isRegex = new RegExp(v.value, 'i').test(undefined);
+                    dadosProcesso[v.name] = '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(v.value)+'</span>';
+                    dadosTags.push(v.name);
+                });
+            }
+        });
+        $.each(prop.txaTagsObservacoes, function (index, valueTag) {
+            if (valueTag.unidade == siglaUnidadeAtual) {
+                $.each(valueTag.tags, function (i, v) {
+                    dadosProcesso[v.name] = '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(v.value)+'</span>';
+                    dadosTags.push(v.name);
+                });
+            }
+        });
+    
+    var count = 0;
+    var count_error = 0;
+    if (ed) { SeiProEditorAdapter.focus(ed); SeiProEditorAdapter.fire(ed, 'saveSnapshot'); }
+    var substituirCampos = function (corpo) {
+    $.each(arrayTags, function (i, value) {
+        var _value = value;
+        var underline = (value.indexOf('_') !== -1 && $.inArray(_value, dadosTags) === -1) ? '_'+value.split('_')[1] : '';
+            value = (value.indexOf('_') !== -1) ? value.split('_')[0] : value;
+            value = ($.inArray(_value, dadosTags) !== -1) ? _value : value;
+        var hashTag = (value.indexOf('+') !== -1) ? '#'+(value.replace('+', '\\+')) : '#'+value;
+        var hashSpan = '<span class="ancoraSei hashField" data-hash="'+value+'">#'+value+'</span>';
+        var fieldSpan = (typeof dadosProcesso[value] !== 'undefined' && dadosProcesso[value] !== null) ? dadosProcesso[value] : hashSpan;
+            fieldSpan = (value.indexOf('+') !== -1 || value.indexOf('-') !== -1 || (hasNumber(value) && $.inArray(_value, dadosTags) === -1) ) ? sumTagValue(value): fieldSpan;
+        // Campo sem valor fica marcado com o hashSpan e entra na contagem dos NAO substituidos (count_error);
+        // antes somava tambem nos substituidos ("4 substituidos, 1 nao substituido" para 4 campos).
+        var substituido = (fieldSpan !== hashSpan);
+            fieldSpan = fieldSpan+'&nbsp;';
+            corpo.find('p').not('.sigiloSEI_sigilo_mark').each(function(){
+                var htmlAtual = $(this).html();
+                var htmlNovo = substituirCampoDinamicoPro(htmlAtual, new RegExp(hashTag+underline, "i"), function(){ if (substituido) count++; return fieldSpan });
+                if (htmlNovo !== htmlAtual) $(this).html(htmlNovo);
+            });
+        console.log(arrayTags, value, hashTag+underline, fieldSpan, dadosProcesso);
+    });
+        count_error = corpo.find('.hashField').length;
+    };
+    if (ed && ed.model) {
+        // CK5 (SEI 5): o DOM do editable e so a vista -- o html() nos paragrafos nao entrava no model, o
+        // documento continuava com os #campos e o dialogo anunciava a substituicao. A troca e feita no HTML
+        // do Corpo do Texto e volta pelo model (transformBodyHtml).
+        // O data.set do transformBodyHtml leva a selecao para o inicio do Corpo: guarda o caminho para voltar perto.
+        var selecaoAntes = caminhoSelecaoCK5Pro(ed);
+        SeiProEditorAdapter.transformBodyHtml(ed, function (html) {
+            var doc = new DOMParser().parseFromString('<!doctype html><html><body>' + html + '</body></html>', 'text/html');
+            var corpo = $(doc.body);
+            corpo.find('span.hashField').each(function () { $(this).after($(this).html()).remove(); });
+            substituirCampos(corpo);
+            converterLinksProtocoloCK5Pro(doc.body);
+            return doc.body.innerHTML;
+        });
+        restaurarCaminhoSelecaoCK5Pro(ed, selecaoAntes);
+    } else {
+        // corpoEditor e o <body> (via adapter) ou o document do iframe (via
+        // iframeEditor); find() alcanca os descendentes nos dois casos.
+        var tagField = corpoEditor.find('span.hashField');
+        if (tagField.length) { tagField.after(tagField.html()).remove() }
+        substituirCampos(corpoEditor);
+    }
+    if (ed) SeiProEditorAdapter.fire(ed, 'saveSnapshot');
+        count_error = (count_error == 0) ? '' : '  <i class="fas fa-exclamation-triangle laranjaColor"></i> '+count_error+' '+(count_error==1 ? 'campo din\u00E2mico n\u00E3o substitu\u00EDdo' : 'campos n\u00E3o din\u00E2micos substitu\u00EDdos')+'.';
+    var resultDiv = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
+                    '  <i class="fas fa-check-circle verdeColor"></i> '+count+' '+(count==1 ? 'campo din\u00E2mico substitu\u00EDdo' : 'campos din\u00E2micos substitu\u00EDdos')+' com sucesso!<br>'+count_error+
+                    '</label>';
+    $('#tabReplaceTag_result').show().html(resultDiv);
+}
+function arrayDadosEditor() {
+        setMomentPtBr();
+    var listaDadosEditor = [['']];
+    var prop = dadosProcessoPro.propProcesso;
+    var processo = (typeof prop !== 'undefined' && typeof prop.txtProtocoloExibir === 'undefined') ? prop.hdnProtocoloFormatado : prop.txtProtocoloExibir;
+    var dataGeracao = (typeof prop.txtDtaGeracaoExibir === 'undefined') ? prop.hdnDtaGeracao : prop.txtDtaGeracaoExibir;
+    // Rotulos e valores sao HTML (o valor e inserido com insertHtml; o rotulo vira texto de <option>/<li>): o texto do
+    // SEI entra escapado (ver textoParaHtmlPro).
+    var htmlProcesso = '<span contenteditable="false" data-cke-linksei="1" style="text-indent:0px;"><a id="lnkSei'+textoParaHtmlPro(prop.hdnIdProcedimento)+'" class="ancoraSei" style="text-indent:0px;">'+textoParaHtmlPro(processo)+'</a></span>';
+        listaDadosEditor.push(['Processo: '+textoParaHtmlPro(processo),htmlProcesso]);
+        listaDadosEditor.push(['Data de Autua\u00E7\u00E3o: '+textoParaHtmlPro(dataGeracao),textoParaHtmlPro(dataGeracao)]);
+        listaDadosEditor.push(['Tipo: '+textoParaHtmlPro(prop.hdnNomeTipoProcedimento),textoParaHtmlPro(prop.hdnNomeTipoProcedimento)]);
+        listaDadosEditor.push(['Especifica\u00E7\u00E3o: '+textoParaHtmlPro(prop.txtDescricao),textoParaHtmlPro(prop.txtDescricao)]);
+    
+    var acesso = (typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == 0) ? 'P\u00FAblico' : null;
+        acesso = (acesso !== null && prop.rdoNivelAcesso == 1) ? 'Restrito' : acesso;
+        acesso = (acesso !== null && prop.rdoNivelAcesso == 2) ? 'Sigiloso' : acesso;
+        listaDadosEditor.push(['N\u00EDvel de Acesso: '+acesso,acesso]);
+    
+        $.each(prop.selInteressadosProcedimento, function (index, value) {
+            listaDadosEditor.push(['Interessado: '+textoParaHtmlPro(value),textoParaHtmlPro(value)]);
+        });
+        $.each(prop.selAssuntos_select, function (index, value) {
+			var valueAssunto = ( value.length > 100 ) ? value.replace(/^(.{100}[^\s]*).*/, "$1")+'...' : value;
+            listaDadosEditor.push(['Assunto: '+textoParaHtmlPro(valueAssunto),textoParaHtmlPro(value)]);
+        });
+        $.each(prop.txaObservacoes, function (index, value) {
+			var valueObs = ( value.observacao.length > 100 ) ? value.observacao.replace(/^(.{100}[^\s]*).*/, "$1")+'...' : value.observacao;
+            listaDadosEditor.push(['Observa\u00E7\u00E3o ('+textoParaHtmlPro(value.unidade)+'): '+textoParaHtmlPro(valueObs),textoParaHtmlPro(value.observacao)]);
+        });
+        listaDadosEditor.push(['Hoje: '+moment().format('LL'),moment().format('LL')]);
+        listaDadosEditor.push(['Ano: '+moment().format('Y'),moment().format('Y')]);
+        listaDadosEditor.push(['QRCode do Processo',getQRProcesso()]);
+        $.each(prop.txaTagsObservacoes, function (index, valueTag) {
+            $.each(valueTag.tags, function (i, v) {
+                var vObs = ( v.value.length > 100 ) ? v.value.replace(/^(.{100}[^\s]*).*/, "$1")+'...' : v.value;
+                listaDadosEditor.push(['Personalizado ('+textoParaHtmlPro(valueTag.unidade)+') #'+textoParaHtmlPro(v.name)+': '+textoParaHtmlPro(vObs),textoParaHtmlPro(v.value)]);
+            });
+        });
+        if (typeof dadosProcessoPro.listAtribuicaoProcesso !== 'undefined') {
+            $.each(dadosProcessoPro.listAtribuicaoProcesso, function (index, value) {
+                listaDadosEditor.push(['Respons\u00E1vel: '+textoParaHtmlPro(value.name),textoParaHtmlPro(value.name)]);
+            });
+        }
+    return listaDadosEditor;
+}
+// getDadosEditor() -> js/modules/editor/ (extraido para modulo)
+// getDialogDadosEditor() -> js/modules/editor/ (extraido para modulo)
+// removeDynamicField() -> js/modules/editor/ (extraido para modulo)
+// editDynamicField() -> js/modules/editor/ (extraido para modulo)
+// newDynamicField() -> js/modules/editor/ (extraido para modulo)
+// updateDynamicField() -> js/modules/editor/ (extraido para modulo)
+// getDialogDadosEditor_htmlListTag() -> js/modules/editor/ (extraido para modulo)
+// insertDadosEditor() -> js/modules/editor/ (extraido para modulo)
+// getSumarioDocumento() -> js/modules/editor/ (extraido para modulo)
+// getListStylesDocumento() -> js/modules/editor/ (extraido para modulo)
+// updateSelectDialog() -> js/modules/editor/ (extraido para modulo)
+// getDialogSumarioDocumento() -> js/modules/editor/ (extraido para modulo)
+// getDialogSumarioDocumento_() -> js/modules/editor/ (extraido para modulo)
+// insertSumarioDocumento() -> js/modules/editor/ (extraido para modulo)
+
+// GERA LINK CURTO
+// getTinyUrl() -> js/modules/editor/ (extraido para modulo)
+function ajaxTinyUrl(url_Tiny, alias_Tiny, mode) {
+	var url = "https://tinyurl.com/api-create.php";
+	var data = ( alias_Tiny != '' ) ? { url: url_Tiny, alias: alias_Tiny } : { url: url_Tiny };	
+	$.ajax({
+		type: "GET",
+		url: url,
+		data: data,
+		success: function(dataUrl, textStatus, xhr){
+			console.log(xhr.status);
+            if (  dataUrl != '' && xhr.status == 200 ) {
+				if ( mode == 'insert' ) {
+					var htmlUrl = '<a href="'+dataUrl+'" class="ancoraSei" target="_blank">'+dataUrl+'</a>';
+                        var ed = SeiProEditorAdapter.getInstance();
+                        if (ed) {
+                            SeiProEditorAdapter.withEdit(ed, function () { SeiProEditorAdapter.insertHtml(ed, htmlUrl); });
+                        }
+				} else if ( mode == 'setinput' ) {
+					setInputTinyUrl(dataUrl);
+				}
+            }
+		},
+		complete: function(xhr, textStatus) {
+			if ( xhr.status == 400 ) {
+				alertaBoxPro('Error', 'exclamation-triangle', 'Erro: Nenhuma link gerado');
+			} else if ( xhr.status == 422 ) {
+				alertaBoxPro('Error', 'exclamation-triangle', 'Erro: O nome personalizado j\u00E1 existe. Insira outro.');
+			}
+		}
+	});
+}
+
+// GERA QR CODE
+// getQrCode() -> js/modules/editor/ (extraido para modulo)
+// Mantido por compatibilidade com initFunctions(); di\u00E1logo jQuery UI
+// constru\u00EDdo on-demand em openDialogQrCode().
+// getDialogQrCode() -> js/modules/editor/ (extraido para modulo)
+
+/**
+ * Abre o di\u00E1logo de gera\u00E7\u00E3o de QR Code (jQuery UI). Reaproveita todo o
+ * painel de op\u00E7\u00F5es avan\u00E7adas (#qrCodeLab) e as fun\u00E7\u00F5es auxiliares
+ * updateQrCode()/toggleOptionsQR()/resetOptionsQR().
+ */
+// openDialogQrCode() -> js/modules/editor/ (extraido para modulo)
+
+// buildHtmlQrCodeLab() -> js/modules/editor/ (extraido para modulo)
+// resetOptionsQR() -> js/modules/editor/ (extraido para modulo)
+// toggleOptionsQR() -> js/modules/editor/ (extraido para modulo)
+// tipQrCodeUrl() -> js/modules/editor/ (extraido para modulo)
+// setInputTinyUrl() -> js/modules/editor/ (extraido para modulo)
+// convertTinyURL() -> js/modules/editor/ (extraido para modulo)
+// updateQrCode() -> js/modules/editor/ (extraido para modulo)
+// setQrCode() -> js/modules/editor/ (extraido para modulo)
+// Chamado no boot e a cada focus (setCKEDITOR_SEIPRO): initResizeImg e idempotente por instancia.
+// O iframe sai do container da instancia (getIframeEditorPro): no SEI 4.1 com secoes o title e o nome da secao.
+// Com a barra compartilhada do 4.1 o txaEditor casa dois elementos por instancia (barra e container).
+function loadResizeImg() {
+	$(txaEditor).each(function(index){
+		var idEditor_ = $(this).attr('id').replace('cke_', '');
+		var iframe_ = getIframeEditorPro(idEditor_).contents();
+		if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
+			var oEditor_ = CKEDITOR.instances[idEditor_];
+				initResizeImg(oEditor_);
+				loadCSSResize(iframe_);
+		}
+	});
+}
+// Os dois dialogos nativos abaixo liam a global oEditor, preenchida por setParamEditor -- chamada
+// que sumiu de varios caminhos no port para o CK5. Com oEditor vazio (ReferenceError) ou apontando
+// para outra secao do documento, o texto selecionado nao chegava ao campo do dialogo. Agora o
+// editor vem do proprio dialogo (this.getParentEditor(), passado por updateDialogDefinitionPro),
+// e o nome da instancia continua aceito por compatibilidade.
+function resolveEditorDialogoPro(ref) {
+    if (ref && typeof ref.getSelection === 'function') return ref;
+    if (typeof ref === 'string' && typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances[ref]) {
+        return CKEDITOR.instances[ref];
+    }
+    try {
+        var atual = (typeof CKEDITOR !== 'undefined' && CKEDITOR.dialog) ? CKEDITOR.dialog.getCurrent() : null;
+        if (atual && typeof atual.getParentEditor === 'function') return atual.getParentEditor();
+    } catch (e) {}
+    return (typeof SeiProEditorAdapter !== 'undefined') ? SeiProEditorAdapter.getInstance() : null;
+}
+//// Insere o texto selecionado no documento no campo 'Texto vis\u00EDvel' do janela de propriedades do link
+function insertTextTotLink(idEditor) {
+    var ed = resolveEditorDialogoPro(idEditor);
+    if (!ed) return;
+    var selectTxt = SeiProEditorAdapter.getSelectedText(ed);
+    if ( isValidHttpUrl(selectTxt) ) {
+        var link = '<a href="'+selectTxt+'" target="_blank">'+selectTxt+'</a>';
+            CKEDITOR.dialog.getCurrent().hide();
+            SeiProEditorAdapter.insertHtml(ed, link);
+    } else {
+        setTimeout(function(){ 
+            if ( typeof selectTxt !== 'undefined' && selectTxt != '' ) { 
+                CKEDITOR.dialog.getCurrent().getContentElement('general', 'contents').setValue(selectTxt);
+            }
+        }, 100);
+    }
+}
+//// Insere o texto selecionado no documento no campo 'Protocolo' do janela de adicionar protocolo SEI
+function insertProtocoloOnBox(idEditor) {
+    var ed = resolveEditorDialogoPro(idEditor);
+    if (!ed) return;
+    var selectTxt = SeiProEditorAdapter.getSelectedText(ed);
+    setTimeout(function(){ 
+        if ( typeof selectTxt !== 'undefined' && selectTxt != '' ) { 
+            var dlg = CKEDITOR.dialog.getCurrent();
+            if (!dlg) return;
+            var campo = dlg.getContentElement('general', 'protocolo');
+            if (!campo) return;
+            campo.setValue(selectTxt);
+            var ok = dlg.getButton('ok');
+            var elOk = ok ? document.getElementById(ok.domId) : null;
+            if (elOk) elOk.click();
+        }
+    }, 100);
+}
+
+// openLinkPro() -> js/modules/editor/ (extraido para modulo)
+// removeLinkPro() -> js/modules/editor/ (extraido para modulo)
+// copyLinkPro() -> js/modules/editor/ (extraido para modulo)
+// editLinkPro() -> js/modules/editor/ (extraido para modulo)
+// Mantido por compatibilidade com initFunctions(); di\u00E1logo agora eh jQuery UI
+// constru\u00EDdo on-demand em openDialogLinkPro().
+// getDialogLinkPro() -> js/modules/editor/ (extraido para modulo)
+
+/**
+ * Abre o di\u00E1logo de edi\u00E7\u00E3o de link (jQuery UI). Substitui o CKEDITOR.dialog
+ * 'editLinkPro'. Preenche os campos a partir do link em foco (a[data-reflinkpro]).
+ */
+// openDialogLinkPro() -> js/modules/editor/ (extraido para modulo)
+// openDialogBatchImgQuality() -> js/modules/editor/ (extraido para modulo)
+// Mantido por compat; dialogo em openDialogBatchImgQuality().
+// getDialogBatchImgQuality() -> js/modules/editor/ (extraido para modulo)
+// initDialogUploadImgBase64() -> js/modules/editor/ (extraido para modulo)
+// openDialogUploadImgBase64() -> js/modules/editor/ (extraido para modulo)
+// getDialogUploadImgBase64() -> js/modules/editor/ (extraido para modulo)
+// hideLinkTips() -> js/modules/editor/ (extraido para modulo)
+// showLinkTips() -> js/modules/editor/ (extraido para modulo)
+// openImageEditorPro() -> js/modules/editor/ (extraido para modulo)
+// initDialogImageEditorPro() -> js/modules/editor/ (extraido para modulo)
+// getDialogImageEditorPro() -> js/modules/editor/ (extraido para modulo)
+// pageImageBackground() -> js/modules/editor/ (extraido para modulo)
+// getDialogPageImageBackground() -> js/modules/editor/ (extraido para modulo)
+// getImagemBgOnEditor() -> js/modules/editor/ (extraido para modulo)
+// resetOptionsImgBg() -> js/modules/editor/ (extraido para modulo)
+// getPreviewImagePageBackground() -> js/modules/editor/ (extraido para modulo)
+// getImagePageBackground() -> js/modules/editor/ (extraido para modulo)
+// loadImagePageBackground() -> js/modules/editor/ (extraido para modulo)
+// templateImagePageBackground() -> js/modules/editor/ (extraido para modulo)
+// importDocPro() -> js/modules/editor/ (extraido para modulo)
+// getGoogleDocs() -> js/modules/editor/ (extraido para modulo)
+// getGoogleSheets() -> js/modules/editor/ (extraido para modulo)
+// handleFileImport() -> js/modules/editor/ (extraido para modulo)
+async function converterDocxParaHtml(inputFile) {
+    try {
+      const file = inputFile[0];
+      if (!file) throw new Error("Nenhum arquivo .docx selecionado.");
+  
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+  
+        var r = (!$('#replaceText').is(':checked')) 
+            ? true
+            : confirm("Deseja substituir o conte\u00FAdo atual pelo arquivo importado?");
+        if (r == true) { 
+            loadFileImportEditor(result.value);
+        }
+  
+      if (result.messages.length > 0) {
+        console.warn("Mensagens da convers\u00E3o:", result.messages);
+      }
+    } catch (erro) {
+      console.error("Erro ao converter .docx:", erro);
+    }
+}
+// loadFileImportHTML() -> js/modules/editor/ (extraido para modulo)
+// loadFileImportEditor() -> js/modules/editor/ (extraido para modulo)
+// wordToSEI() -> js/modules/editor/ (extraido para modulo)
+// Uma vez por instancia. O listener de paste fica no editable, que setData e o modo Codigo-Fonte recriam:
+// o contentDom liga de novo no editable novo.
+function initPasteImgToBase64(editor) {
+    if (!editor || editor.seiProPasteImg) return;
+    editor.seiProPasteImg = true;
+    if (editor.addFeature) {
+        editor.addFeature({
+            allowedContent: 'img[alt,id,!src]{width,height};'
+        });
+    }
+    var ligar = function() {
+        var editableElement = editor.editable ? editor.editable() : editor.document;
+        if (editableElement) editableElement.on("paste", onPastePro, null, {editor: editor});
+    };
+    if (typeof editor.on === 'function') {
+        editor.on('contentDom', ligar);
+        editor.on('paste', cancelarImagemColadaNativaPro, null, null, 0);
+    }
+    ligar();
+}
+// O CKEditor 4.17 (SEI 4.1 e CK4 do SEI 5) ja insere sozinho, sem compressao, o arquivo de imagem colado
+// (clipboard so com "Files"). Como onPastePro insere a imagem (comprimida conforme qualidadeimagens), a
+// insercao nativa e cancelada para nao duplicar. Prioridade 0: antes do listener nativo (prioridade 1).
+// No CK 4.5 (SEI 3.x) o dataTransfer nao tem isFileTransfer e nada muda.
+function cancelarImagemColadaNativaPro(evt) {
+    var data = evt.data;
+    if (!data || data.method != 'paste' || data.dataValue || !data.dataTransfer) return;
+    var dt = data.dataTransfer;
+    if (typeof dt.isFileTransfer !== 'function' || !dt.isFileTransfer() || typeof dt.getFilesCount !== 'function') return;
+    for (var i = 0; i < dt.getFilesCount(); i++) {
+        var file = dt.getFile(i);
+        if (file && /^image/.test(file.type || '')) {
+            evt.cancel();
+            return;
+        }
+    }
+}
+
+// Decide se a colagem e de imagem para o SEI Pro inserir (base64, comprimida conforme qualidadeimagens).
+// Regra do CKEditor 4.17 (dataTransfer.isFileTransfer): so "Files" no clipboard (print, arquivo de imagem).
+// Com HTML junto (celulas do Excel/Calc, trecho do Word) a imagem e so uma copia visual do trecho: quem cola e
+// o CK, e inserir a imagem duplicaria o conteudo. Excecao: "Copiar imagem" de um site traz o HTML de uma unica
+// <img> hospedada fora, que e trocada pela base64 (substituir = src dela). Vale tambem para src blob: (WhatsApp Web,
+// Teams web): esse endereco nao abre na origem do SEI e deixa de existir, e a imagem ficaria quebrada no documento.
+// Imagem do Word (src file:): o CK com pastetools (SEI 4.1) ja a converte pela RTF; o CK 4.5 (SEI 3.x) nao.
+function getImagemColadaPro(clipboardData) {
+    var tipos = Array.prototype.filter.call(clipboardData.types || [], function (t) { return t !== 'application/x-moz-file'; });
+    if (tipos.length === 1 && String(tipos[0]).toLowerCase() === 'files') return { substituir: false };
+    var html = '';
+    try { html = clipboardData.getData('text/html') || ''; } catch (e) {}
+    if (!html || typeof DOMParser === 'undefined') return false;
+    try {
+        var body = new DOMParser().parseFromString(html, 'text/html').body;
+        var imgs = body ? body.getElementsByTagName('img') : [];
+        if (imgs.length !== 1) return false;
+        if (body.textContent.replace(/[\s\u00A0\u200B\uFEFF]/g, '') !== '') return false;
+        if (body.querySelector('table, ul, ol, hr, iframe, object, embed, video, audio, svg, canvas')) return false;
+        var src = imgs[0].getAttribute('src') || '';
+        if (/^((https?:)?\/\/|blob:)/i.test(src)) return { substituir: src };
+        if (/^file:/i.test(src) && !(CKEDITOR.plugins && CKEDITOR.plugins.pastetools)) return { substituir: false };
+    } catch (e) {}
+    return false;
+}
+
+function onPastePro(event) {
+    var editor = event.listenerData && event.listenerData.editor;
+    var clipboardData = event.data.$.clipboardData;
+    if (!editor || !clipboardData || !clipboardData.items) return;
+    var item = null;
+    for (var i = 0; i < clipboardData.items.length; i++) {
+        var it = clipboardData.items[i];
+        if (it && it.kind === 'file' && /^image/.test(it.type || '')) { item = it; break; }
+    }
+    if (!item) return;
+    var colada = getImagemColadaPro(clipboardData);
+    if (colada) readImageAsBase64(item, editor, colada.substituir);
+}
+
+// srcSubstituir: so na colagem de "Copiar imagem" de um site, o src da imagem hospedada fora que o CK colou junto
+// e que a base64 substitui. No drop e no arquivo de imagem nao ha o que trocar (a remocao geral de img http do
+// paragrafo apagava imagem que ja estava la).
+// Remove do paragrafo da base64 a <img> colada pelo CK com esse src. Devolve se removeu alguma.
+function removerImagemSubstituidaPro(editor, element, srcSubstituir) {
+    var p = $(element.$).closest('p');
+    if (!p.length) {
+        var sel = editor.getSelection();
+        var inicio = sel && sel.getStartElement();
+        if (inicio) p = $(inicio.$).closest('p');
+    }
+    var imgs = p.find('img').not('.img-base64').filter(function () {
+        return this.getAttribute('src') === srcSubstituir || this.getAttribute('data-cke-saved-src') === srcSubstituir;
+    });
+    imgs.remove();
+    return imgs.length > 0;
+}
+function readImageAsBase64(item, editor, srcSubstituir) {
+    if (!item || typeof item.getAsFile !== 'function') {
+        return;
+    }
+    var file = item.getAsFile();
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (evt) {
+        var element = editor.document.createElement('img', {
+            attributes: {
+                src: evt.target.result,
+                class: 'img-base64'
+            }
+        });
+        
+        if (qualidadeImagens > 0) qualityImages(element.$, element.$);
+        // We use a timeout callback to prevent a bug where insertElement inserts at first caret position
+        setTimeout(function () {
+            editor.insertElement(element);
+            if (!srcSubstituir) return;
+            if (removerImagemSubstituidaPro(editor, element, srcSubstituir) || typeof editor.on !== 'function') return;
+            // A <img> do CK ainda nao entrou: na primeira colagem da pagina o pastefromword do SEI 4.1 cancela o paste,
+            // carrega os filtros pela rede e cola de novo. A troca fica para o afterPaste dessa colagem.
+            editor.on('afterPaste', function (evt) {
+                evt.removeListener();
+                removerImagemSubstituidaPro(editor, element, srcSubstituir);
+            });
+        }, 10);
+    };
+    reader.readAsDataURL(file);
+}
+// CK5 (SEI 5): a colagem nao passa pelo onPastePro (so CK4). "Copiar imagem" de um site, do WhatsApp Web ou do
+// Teams traz o HTML de uma unica <img> hospedada fora (http ou blob:) e o arquivo da imagem; o SEI 5 recusa a
+// imagem referenciada ("Nao sao permitidas imagens referenciadas") e nada entrava. Com o arquivo junto, cola o
+// arquivo pelo upload do proprio editor (base64, como a colagem de imagem pura), sem o endereco externo.
+// Mesma regra do CK4 (getImagemColadaPro): HTML com texto ou tabela (Excel, Word) segue com o editor, sem
+// a imagem, e a imagem pura (so "Files") ja vira base64 no upload nativo.
+function initPasteImgToBase64CK5(editor) {
+    if (!editor || !editor.editing || editor.seiProPasteImg) return;
+    editor.seiProPasteImg = true;
+    editor.editing.view.document.on('clipboardInput', function (evt, data) {
+        if (!data || !data.dataTransfer || (data.method && data.method !== 'paste')) return;
+        if (!editor.commands.get('uploadImage') || editor.isReadOnly) return;
+        var dt = data.dataTransfer;
+        var colada = getImagemColadaPro(dt._native || dt);
+        if (!colada || !colada.substituir) return;
+        var arquivos = Array.prototype.filter.call(dt.files || [], function (f) { return f && /^image\//.test(f.type || ''); });
+        if (!arquivos.length) return;
+        evt.stop();
+        editor.execute('uploadImage', { file: arquivos.slice(0, 1) });
+    }, { priority: 'high' });
+}
+function loadPasteImgToBase64() {
+	if (isNewEditor && window.SeiProEditorAdapter && SeiProEditorAdapter.version === 5) {
+		initPasteImgToBase64CK5(SeiProEditorAdapter.getInstance());
+		return;
+	}
+	$(txaEditor).each(function(index){
+		var idEditor_ = $(this).attr('id').replace('cke_', '');
+		var iframe_ = getIframeEditorPro(idEditor_).contents();
+		if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
+			var oEditor = CKEDITOR.instances[idEditor_];
+				initPasteImgToBase64(oEditor);
+		}
+	});
+}
+// updatePreviewLatex() -> js/modules/editor/ (extraido para modulo)
+// openDialogLatex() -> js/modules/editor/ (extraido para modulo)
+// getDialogLatex() -> js/modules/editor/ (extraido para modulo)
+// tableSorterPro() -> js/modules/editor/ (extraido para modulo)
+// initContextMenuPro() -> js/modules/editor/ (extraido para modulo)
+// INSERE FUNCAO ARRASTA E SOLTA PARA IMAGENS
+// Arrasto que comecou num editor CK (mover uma imagem do proprio documento): quem trata e o CK. O Chrome pode
+// anexar o arquivo da imagem arrastada, e sem esta checagem o SEI Pro inseria uma copia e o original ficava.
+// O CK marca o arrasto no dragstart (clipboard.dragData, com o id gravado no dataTransfer), no 4.5 e no 4.17.
+function isArrastoInternoCKPro(nativeEvent) {
+    try {
+        var clip = CKEDITOR.plugins.clipboard;
+        if (!clip || !clip.dragData || !clip.dragData.sourceEditor || typeof clip.dataTransfer !== 'function') return false;
+        var dt = new clip.dataTransfer(nativeEvent.dataTransfer);
+        return !!dt.id && dt.id == clip.dragData.id;
+    } catch (err) {
+        return false;
+    }
+}
+function initDropImages() {
+    if (checkConfigValue('editarimagens')) {
+        setTimeout(function () {
+            $('iframe.cke_wysiwyg_frame').each(function(index){
+                var iframe = $(this).contents();
+                // Instancia pelo documento do iframe: no SEI 4.1 com secoes o title e o nome da secao, e o
+                // title.split(',')[1] dava '' (CKEDITOR.instances[''] indefinido ao soltar a imagem).
+                var editorIframe = getEditorCheckboxSEI(iframe[0]);
+                var instanceIframe = $(this).attr('title');
+                    instanceIframe = editorIframe ? editorIframe.name : (typeof instanceIframe !== 'undefined' && instanceIframe && instanceIframe.split(',').length > 1) ? instanceIframe.split(',')[1].trim() : '';
+                if ( iframe.find('body').attr('contenteditable') == 'true' ) {
+                    // So os proprios handlers (namespace): o .unbind() geral tirava tambem o click.checkboxSEI.
+                    iframe.find('body').attr('data-editor', instanceIframe).off('.dropImagesPro').on('drop.dropImagesPro dragdrop.dropImagesPro',function(e){
+                        var items = e.originalEvent.dataTransfer.items;
+                        if (typeof items !== 'undefined' && !isArrastoInternoCKPro(e.originalEvent)) {
+                            var currentEditor = CKEDITOR.instances[$(e.currentTarget).data('editor')];
+                            if (typeof currentEditor !== 'undefined') {
+                                var imagens = [];
+                                for (var i = 0; i < items.length; i++) {
+                                    if (items[i].type.indexOf("image") !== -1) {
+                                        imagens.push(items[i]);
+                                    }
+                                }
+                                if (imagens.length) {
+                                    // O drop do CKEditor 4 so age sem defaultPrevented. Sem isto o CK 4.17 (SEI 4.1)
+                                    // inseria a mesma imagem de novo, sem compressao.
+                                    e.preventDefault();
+                                    // Insere onde a imagem foi solta, como o drop nativo, e nao onde estava o cursor.
+                                    try {
+                                        var rangeDrop = CKEDITOR.plugins.clipboard.getRangeAtDropPosition({ data: new CKEDITOR.dom.event(e.originalEvent) }, currentEditor);
+                                        if (rangeDrop) rangeDrop.select();
+                                    } catch (err) {}
+                                    for (var j = 0; j < imagens.length; j++) {
+                                        readImageAsBase64(imagens[j], currentEditor);
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    setOnBodyActs(iframe);
+                }
+            });
+        }, 1000);
+    }
+}
+function qualityImages( src, dst, quality, type) {
+    var tmp = new Image(),
+        canvas, context, cW, cH;
+
+        type = type || 'image/jpeg';
+        quality = quality || qualidadeImagens*0.01;
+
+        cW = src.naturalWidth;
+        cH = src.naturalHeight;
+
+        tmp.src = src.src;
+        tmp.onload = function() {
+            canvas = document.createElement( 'canvas' );
+
+            cW /= 2;
+            cH /= 2;
+
+            if ( cW < src.width ) cW = src.width;
+            if ( cH < src.height ) cH = src.height;
+
+            canvas.width = cW;
+            canvas.height = cH;
+            context = canvas.getContext( '2d' );
+            // JPEG nao tem transparencia: sem fundo, a area transparente de um PNG (logotipo, assinatura) saia preta.
+            if ( type !== 'image/png' ) {
+                context.fillStyle = '#fff';
+                context.fillRect( 0, 0, cW, cH );
+            }
+            context.drawImage( tmp, 0, 0, cW, cH );
+
+            dst.src = canvas.toDataURL( type, quality );
+
+            if ( cW <= src.width || cH <= src.height )
+                return;
+
+            tmp.src = dst.src;
+            setTimeout(() => { removeDataCkeSavedImg() }, 500);
+        }
+}
+// INSERE LINK DE DOCUMENTO PUBLICO
+// getCheckerProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// openDialogProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// getDadosIframeProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// checkDadosIframeProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// loadListaProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// getListaProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// getLinksProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// insertAutomaticMinutaWatermark() -> js/modules/editor/ (extraido para modulo)
+// insertMinutaWatermark() -> js/modules/editor/ (extraido para modulo)
+// getMinutaWatermark() -> js/modules/editor/ (extraido para modulo)
+function repairSaveButtonBug(loop = true) {
+    if ($('.cke_button.cke_button__save').hasClass('cke_button_off')) {
+        for (var i in CKEDITOR.instances) {
+            var edit = CKEDITOR.instances[i];
+            if (!edit.readOnly) {
+                edit.on('saveSnapshot', habilitaSalvar);
+                edit.on('key', habilitaSalvar);
+                edit.on('afterCommandExec', habilitaSalvar);
+                edit.on('tableResize', habilitaSalvar);
+            } else {
+                edit.document.$.body.style.background=readOnlyColor;
+            }
+        }
+        redimensionar();
+        console.log('reparSaveButtonBug');
+    }
+    if (loop) {
+        setTimeout(function(){ 
+            repairSaveButtonBug(false);
+        }, 3000);
+    }
+}
+
+// A ferramenta de IA antiga (ChatGPT/Gemini com chave do usuario, dialogo
+// proprio e modo "+gpt" no texto) foi REMOVIDA: quem faz esse trabalho agora e'
+// o Agente de IA, no painel lateral (agente-ia/). Ficaram aqui so os dois
+// trechos ainda usados por outras telas.
+
+    const getDialogNaoDisponivel = title => ({
+        title,
+        minWidth: 500,
+        minHeight: 80,
+        buttons: [],
+        contents: [
+            {
+                id: 'tab1',
+                label: 'Info',
+                elements: [
+                    {
+                        type: 'html',
+                        html: sanitizeHTML('<div style="padding: 20px;text-align: center;"><i class="fas fa-exclamation-triangle laranjaColor"></i> N\u00E3o dispon\u00EDvel para processos sigilosos</div>')
+                    }
+                ]
+            }
+        ]
+    });
+
+    // DI\u00C1LOGOS PRINCIPAIS DE CONSENTIMENTO E ENVIO DE PROMPT PARA A IA
+
+    const menuPlataformAI = (editor) => {
+        if (editor.contextMenu && typeof editor.getMenuItem('plataform_ai') === 'undefined') {
+            editor.addMenuGroup('openaiGroup', -10 * 3);
+            editor.addMenuItem('plataform_ai', {
+                label: 'Intelig\u00EAncia artificial',
+                icon: `${URL_SPRO}icons/editor/ferramentasia.png`,
+                command: 'plataform_ai',
+                group: 'openaiGroup'
+            });
+
+            // ADICIONA OP\u00C7\u00C3O AO MENU DE CONTEXTO SOMENTE SE HOUVER SELE\u00C7\u00C3O
+            editor.contextMenu.addListener((element) => {
+                if (hasSelection(editor)) {
+                    return { plataform_ai: CKEDITOR.TRISTATE_OFF };
+                }
+            });
+
+            // COMANDO PARA ABRIR O DI\u00C1LOGO DE IA
+            editor.addCommand('plataform_ai', {
+                exec: (editor) => {
+                    // Agente de IA: abre o painel (o agente le a selecao pelo editor_ler).
+                    window.top.postMessage({ __seiProAgente: 'abrir' }, '*');
+                }
+            });
+        }
+    };
+
+    // FUN\u00C7\u00C3O PARA ALTERAR OP\u00C7\u00D5ES DE IA INLINE
+
+function setOnKeyEditor() {
+    // A condicao trazia "&& !destroy", e a variavel destroy nunca existiu em lugar nenhum (veio da
+    // v1.3). O ReferenceError estourava a cada mousedown no corpo do editor e o listener de teclas
+    // nunca chegava a ser registrado -- no CK4 a escrita interativa (# e @) nao recebia tecla.
+    if (typeof oEditor === 'undefined' || !oEditor || typeof oEditor.on !== 'function') return;
+    if (!loadOnKeyEditor || loadOnKeyEditor != oEditor.name) {
+        oEditor.on('key', onKeyEditorPro);
+        loadOnKeyEditor = oEditor.name;
+    }
+}
+// Funcao nomeada, e nao anonima: o loadOnKeyEditor guarda so a ultima instancia, entao voltar a uma secao
+// (Corpo -> Processo -> Corpo) chamava on('key') de novo. O CKEditor 4 ignora o on() repetido com a mesma
+// funcao na mesma instancia, e os listeners de tecla deixam de se acumular.
+function onKeyEditorPro(evt) {
+    var self = this;
+    var event = evt;
+    var tratada = keyActionEditor(event, self);
+    setTimeout(function() {
+        if (!tratada) keyupActionEditor(event, self);
+    }, 10);
+}
+// Escrita interativa (# campos do processo, @ unidades): js/modules/editor/escrita-interativa.js.
+// No CK5 o modulo se liga sozinho ao plugin Mention do SEI 5; no CK4 recebe as teclas daqui.
+function keyupActionEditor(evt, self) {
+    if (typeof SeiProEscritaInterativa !== 'undefined') SeiProEscritaInterativa.ck4AoDigitar(oEditor);
+}
+// Retorna true quando a lista da escrita interativa consumiu a tecla (setas, Enter, Tab, Esc).
+function keyActionEditor(evt, self) {
+    if (typeof SeiProEscritaInterativa !== 'undefined' && SeiProEscritaInterativa.ck4Tecla(oEditor, evt.data.keyCode)) {
+        evt.cancel();
+        evt.stop();
+        return true;
+    }
+    return false;
+}
+function restoreIframeDisplayLink() {
+    if (typeof oEditor !== 'undefined' && typeof oEditor.name !== 'undefined') {
+        var elemBody = getIframeEditorPro(oEditor.name).contents().find('body');
+        var ckeContent = getIframeEditorPro(oEditor.name).closest('.cke_contents');
+        if (ckeContent.hasClass('resizeDisplayLink')) {
+            elemBody.css({'margin-bottom': '0'});
+            ckeContent.removeClass('resizeDisplayLink');
+        }
+    }
+}
+// INSERE REFERENCIA INTERNA
+// getRefInterna() -> js/modules/editor/ (extraido para modulo)
+// updateRefsInternas() -> js/modules/editor/ (extraido para modulo)
+// getNiveisParagrafos() -> js/modules/editor/ (extraido para modulo)
+function clickScroolToRef() {
+    $('iframe.cke_wysiwyg_frame').each(function(index){
+        var iframe_ = $(this).contents();
+        if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
+            iframe_.find('.anchorRefInternaPro').unbind().on('click', function(){
+                var _this = $(this);
+                var ref = _this.attr('href');
+                    ref = (typeof ref !== 'undefined') ? ref.replace('#','') : false;
+                if (ref) {
+                    var container = $('#divEditores');
+                    var element = iframe_.find('a[name="'+ref+'"]').closest('p');
+                    var position = element.offset().top + 270;
+                    container.animate({
+                        scrollTop: position
+                    });
+                }
+            });
+        }
+    });
+}
+
+// getCharOnCursor() -> js/modules/editor/ (extraido para modulo)
+// setStyleReview() -> js/modules/editor/ (extraido para modulo)
+// showReviewTips() -> js/modules/editor/ (extraido para modulo)
+// scroolToReview() -> js/modules/editor/ (extraido para modulo)
+// getHtmlReviewDisplayPro() -> js/modules/editor/ (extraido para modulo)
+// addCommentReviewPro() -> js/modules/editor/ (extraido para modulo)
+// removeReviewPro() -> js/modules/editor/ (extraido para modulo)
+// setRemoveReviewPro() -> js/modules/editor/ (extraido para modulo)
+// hideReviewTips() -> js/modules/editor/ (extraido para modulo)
+// getStyleReview() -> js/modules/editor/ (extraido para modulo)
+// setListElementsSelected() -> js/modules/editor/ (extraido para modulo)
+// setPositionCursor() -> js/modules/editor/ (extraido para modulo)
+// getBoxCtrReview() -> js/modules/editor/ (extraido para modulo)
+// contentDialogReview() -> js/modules/editor/ (extraido para modulo)
+// getDialogReview() -> js/modules/editor/ (extraido para modulo)
+// getBoxReview() -> js/modules/editor/ (extraido para modulo)
+// initStyleReview() -> js/modules/editor/ (extraido para modulo)
+
+// CKWebSpeech
+// CKWebSpeech is a speech recognition plugin to CKEditor, it type out voice ideas into CKEdtior, with support for 32 languages from 62 culture variants.
+// https://github.com/ultranaco/ckwebspeech
+
+// instanceDitadoPro() -> js/modules/editor/ (extraido para modulo)
+// getBoxDitado() -> js/modules/editor/ (extraido para modulo)
+// getBoxCtrDitado() -> js/modules/editor/ (extraido para modulo)
+// initDitadoPro() -> js/modules/editor/ (extraido para modulo)
+// getDialogDitado() -> js/modules/editor/ (extraido para modulo)
+// getBoxStyleEditor() -> js/modules/editor/ (extraido para modulo)
+// updateStyleEditor() -> js/modules/editor/ (extraido para modulo)
+function initFunctions() {
+    // Cada initializer eh envolvido para que uma falha (ex: CKEDITOR.dialog.add
+    // em CK5) nao interrompa as demais. Util durante a migracao para CK5, onde
+    // parte das funcoes ainda depende de APIs exclusivas do CK4.
+    // Erros previsiveis no CK5 (APIs ausentes como CKEDITOR.dialog, CKEDITOR.on
+    // ou replace de undefined em iframe) sao silenciados para reduzir ruido.
+    var isCK5 = typeof SeiProEditorAdapter !== 'undefined' && SeiProEditorAdapter.version === 5;
+    var knownMissingAPI = /reading 'add'|reading 'replace'|CKEDITOR\.on is not a function|CKEDITOR\.dom/;
+    var tryRun = function (fn, name) {
+        try { fn(); } catch (e) {
+            var msg = (e && e.message) ? e.message : String(e);
+            if (isCK5 && knownMissingAPI.test(msg)) return; // esperado: feature ainda depende de API CK4
+            if (typeof console !== 'undefined' && console.warn) {
+                console.warn('[SEIPro] ' + name + ' falhou:', msg);
+            }
+        }
+    };
+    tryRun(initContextMenuPro, 'initContextMenuPro');
+    tryRun(getDialogLegisSEI, 'getDialogLegisSEI');
+    tryRun(getDialogNotaRodape, 'getDialogNotaRodape');
+    tryRun(getDialogSyleTable, 'getDialogSyleTable');
+    tryRun(getDialogQrCode, 'getDialogQrCode');
+    tryRun(getDialogLinkPro, 'getDialogLinkPro');
+    tryRun(getDialogPageImageBackground, 'getDialogPageImageBackground');
+    tryRun(initDialogUploadImgBase64, 'initDialogUploadImgBase64');
+    tryRun(getDialogSigilo, 'getDialogSigilo');
+    tryRun(getDialogReview, 'getDialogReview');
+    tryRun(getDialogDitado, 'getDialogDitado');
+    tryRun(getDialogBatchImgQuality, 'getDialogBatchImgQuality');
+    tryRun(initDialogImageEditorPro, 'initDialogImageEditorPro');
+    tryRun(loadResizeImg, 'loadResizeImg');
+    tryRun(updateDialogDefinitionPro, 'updateDialogDefinitionPro');
+    tryRun(loadPasteImgToBase64, 'loadPasteImgToBase64');
+    tryRun(function () { insertFontIcon('head'); }, 'insertFontIcon');
+    tryRun(reloadModalLink, 'reloadModalLink');
+    tryRun(setDocCertidao, 'setDocCertidao');
+    tryRun(setDocAutomatico, 'setDocAutomatico');
+    tryRun(checkAutoSave, 'checkAutoSave');
+    tryRun(initDropImages, 'initDropImages');
+    tryRun(getStylesOnEditor, 'getStylesOnEditor');
+    tryRun(repairSaveButtonBug, 'repairSaveButtonBug');
+    tryRun(clickScroolToRef, 'clickScroolToRef');
+    tryRun(checkLoadJqueryUI, 'checkLoadJqueryUI');
+
+    // RETORNA DADOS DO PROCESSO
+    tryRun(function () {
+        var idProcedimento = getParamsUrlPro(window.location.href).id_procedimento;
+        if (!checkHostLimit()) getDadosIframeProcessoPro(idProcedimento, 'editor');
+    }, 'getDadosIframeProcessoPro');
+}
+$('body').addClass('seiEditor');
+
+// Boot unico para CK4 (SEI 3.1/4) e CK5 (SEI 5). O adapter resolve a versao
+// e nos aguardamos o editor ficar pronto antes de montar a toolbar customizada.
+if (typeof SeiProEditorAdapter !== 'undefined') {
+    SeiProEditorAdapter.waitReady(15000)
+        .then(function () { addButton(); })
+        .catch(function (e) { console.warn('[SEIPro] editor n\u00E3o detectado:', e); });
+} else if (typeof CKEDITOR !== 'undefined') {
+    addButton();
+}

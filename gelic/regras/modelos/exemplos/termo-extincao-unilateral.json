@@ -1,0 +1,67 @@
+{
+ "processo": {
+  "valor": "12345670000000.000000/2026-00",
+  "nota": "cabeçalho dos autos"
+ },
+ "regime": {
+  "valor": "14133",
+  "sei": "1000010",
+  "p": 12,
+  "nota": "preâmbulo do contrato"
+ },
+ "objeto": {
+  "valor": "contratação de serviços continuados de apoio administrativo, conforme condições estabelecidas no Termo de Referência.",
+  "sei": "1000010",
+  "p": 12
+ },
+ "contrato": {
+  "numero": {
+   "valor": "10/2025",
+   "sei": "1000010",
+   "p": 12
+  },
+  "sei": "1000010"
+ },
+ "contratada": {
+  "razao_social": {
+   "valor": "Empresa Exemplo Serviços Ltda.",
+   "sei": "1000010",
+   "p": 12
+  },
+  "cnpj": {
+   "valor": "00.000.000/0001-00",
+   "sei": "1000010",
+   "p": 12
+  },
+  "endereco": "Rua Exemplo, nº 1, Brasília/DF, CEP 70000-000"
+ },
+ "unidade_gestora": "GEX-LIC",
+ "e_minuta": true,
+ "instrumento": {
+  "tipo": "Contrato",
+  "numero": "78/2024",
+  "sei": "1000011",
+  "origem": "do Pregão Eletrônico nº 90012/2024",
+  "objeto": "a prestação de serviços continuados de apoio administrativo",
+  "o": "o"
+ },
+ "considerando": "o conteúdo da Informação Técnica nº 001/2026 (SEI 1000070) e do Ofício nº 1324/2026/CFC (SEI 1000071)",
+ "motivo_resumo": "a inexecução parcial de suas obrigações",
+ "extincao": {
+  "data_efeito": "1º de outubro de 2026",
+  "ultimo_dia": "o dia 30 de setembro de 2026"
+ },
+ "fundamento": {
+  "inciso_137": "I",
+  "clausula": "na Cláusula Décima Terceira do Contrato Original"
+ },
+ "motivacao": [
+  {
+   "texto": "A fiscalização registrou, na Informação Técnica (SEI 1000070), o descumprimento reiterado das obrigações previstas no Termo de Referência."
+  },
+  {
+   "texto": "A CONTRATADA foi notificada pelo Ofício nº 1324/2026/CFC (SEI 1000071), com prazo de 3 (três) dias úteis para manifestação, que transcorreu sem resposta."
+  }
+ ],
+ "reter_creditos": true
+}

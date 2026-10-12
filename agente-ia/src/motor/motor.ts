@@ -1,0 +1,512 @@
+/**
+ * Motor do agente: o laço modelo → tools → modelo.
+ *
+ * AS TRÊS FRONTEIRAS que este arquivo guarda:
+ *
+ * 1. Saída para o modelo. Toda mensagem do usuário e todo resultado de tool
+ *    passa por `privacidade.anonimizar` antes de entrar no histórico. O
+ *    histórico enviado ao provedor nunca contém dado pessoal em claro.
+ * 2. Entrada do modelo. Argumentos de tool são validados contra o esquema e
+ *    reidratados (`[PESSOA_1]` → nome real) só no momento de executar.
+ * 3. Escrita no SEI. Nenhuma tool de escrita executa fora de um plano
+ *    aprovado pelo usuário. As escritas de uma mesma rodada viram UM plano
+ *    (uma aprovação para 50 documentos, não 50), e o plano aprovado executa
+ *    de forma determinística, sem voltar ao modelo entre os passos — o
+ *    modelo não tem como "desviar" do que o usuário aprovou.
+ */
+
+import type { Pseudonimos } from "@nucleo/privacidade/anonimizar";
+import { nonceDaConversa } from "../seguranca/envelope";
+import { validar } from "./esquema";
+import type { ContextoTool, DefTool, EstadoConversa, RegistroTools } from "./tools";
+import type {
+  ChamadaTool,
+  DecisaoPlano,
+  InterfaceMotor,
+  Mensagem,
+  PassoPlano,
+  PlanoPrevisto,
+  PreviaItem,
+  Provedor,
+  Uso,
+} from "./tipos";
+
+export interface OpcoesMotor {
+  provedor: Provedor;
+  tools: RegistroTools;
+  ui: InterfaceMotor;
+  privacidade: Pseudonimos;
+  /** Operação na aba do SEI (a ponte). */
+  sei: (op: string, args: Record<string, unknown>, sinal: AbortSignal) => Promise<unknown>;
+  /** Monta o prompt de sistema (recebe o resumo da tela atual). */
+  sistema: (tela: TelaAtual | null, nonce: string) => string;
+  /**
+   * Regras da unidade, avaliadas antes de escrever (ver painel/regras.ts).
+   * Bloqueio nem chega ao cartão de aprovação: o que a unidade proíbe não se
+   * oferece para aprovar.
+   */
+  regras?: (passos: Array<{ tool: string; rotulo: string; args: Record<string, unknown> }>) => { bloqueios: unknown[]; avisos: string[]; recado: string };
+  /** Roda um agente auxiliar de leitura com contexto próprio (ver painel/main.ts). */
+  delegar?: (tarefa: string, sinal: AbortSignal) => Promise<string>;
+  /** GANCHO GELIC G3 (docs/gelic/GANCHOS.md): uma chamada ao modelo, sem ferramentas e fora do histórico. */
+  completar?: (sistema: string, pedido: string, sinal: AbortSignal) => Promise<string>;
+  /** Guarda um fato sobre a unidade (ver painel/memoria.ts). */
+  lembrar?: (fato: string) => Promise<{ guardado: boolean; motivo?: string }>;
+  /** Lê a tela atual da aba do SEI. */
+  tela?: (sinal: AbortSignal) => Promise<TelaAtual | null>;
+  limitePassos?: number;
+  /** Tamanho máximo de um resultado de tool enviado ao modelo. */
+  limiteResultado?: number;
+}
+
+export interface TelaAtual {
+  /** `acao` do controlador: que tela do SEI está aberta (procedimento_controlar, protocolo_pesquisar...). */
+  acao?: string;
+  unidade?: string;
+  usuario?: string;
+  versao?: string;
+  processo?: { protocolo: string; tipo?: string; nivel?: string };
+  documento?: { numero: string; titulo?: string };
+  selecionados?: string[];
+  /** Documentos abertos em janelas do editor. */
+  editores?: string[];
+  sigiloso?: boolean;
+}
+
+const LIMITE_HISTORICO = 400_000; // caracteres (~100 mil tokens)
+/** A partir daqui, resumir o começo compensa o custo da chamada extra. */
+const LIMITE_COMPACTAR = 250_000;
+/** Rodadas recentes que nunca são resumidas: é nelas que está o pedido em curso. */
+const MANTER_INTACTAS = 8;
+export const MARCA_RESUMO = "[Resumo da conversa at\u00E9 aqui]";
+
+export class ErroMotor extends Error {}
+
+export class Motor {
+  private historico: Mensagem[] = [];
+  /**
+   * Envelope desta conversa: todo conteúdo de documento entregue ao modelo vai
+   * delimitado por ele (ver `seguranca/envelope.ts`). Sorteado aqui porque é
+   * por conversa, e porque documento algum pode conhecê-lo de antemão.
+   */
+  private readonly nonce = nonceDaConversa();
+  private controlador: AbortController | null = null;
+  private usoTotal: Uso = { entrada: 0, saida: 0, custo: 0 };
+  readonly estado: EstadoConversa = { consentimentoRestrito: null, anexos: [] };
+
+  constructor(private readonly o: OpcoesMotor) {}
+
+  /** O delimitador desta conversa, para quem monta conteúdo fora do motor. */
+  get envelope(): string {
+    return this.nonce;
+  }
+
+  get ocupado(): boolean {
+    return this.controlador !== null;
+  }
+
+  mensagens(): readonly Mensagem[] {
+    return this.historico;
+  }
+
+  /** Recomeça a conversa (o mapa de pseudônimos é do painel e é trocado junto). */
+  limpar(): void {
+    this.historico = [];
+    this.usoTotal = { entrada: 0, saida: 0, custo: 0 };
+    this.estado.consentimentoRestrito = null;
+    this.estado.anexos = [];
+  }
+
+  /**
+   * Registra no histórico um fato que aconteceu FORA da conversa — hoje, o
+   * usuário desfazendo uma ação. Sem isso o modelo segue raciocinando sobre um
+   * SEI que não existe mais.
+   */
+  anotar(texto: string): void {
+    this.historico.push({ role: "user", content: `[sistema] ${texto}` });
+  }
+
+  restaurar(historico: Mensagem[], uso?: Uso): void {
+    this.historico = historico;
+    if (uso) this.usoTotal = uso;
+  }
+
+  parar(): void {
+    this.controlador?.abort();
+  }
+
+  /** `cancelar`: sinal de fora (o auxiliar morre junto com a rodada que o criou). */
+  async enviar(texto: string, cancelar?: AbortSignal): Promise<void> {
+    if (this.controlador) throw new ErroMotor("O agente ainda est\u00E1 trabalhando no pedido anterior.");
+    const controlador = (this.controlador = new AbortController());
+    cancelar?.addEventListener("abort", () => controlador.abort(), { once: true });
+    if (cancelar?.aborted) controlador.abort();
+    const sinal = controlador.signal;
+    try {
+      const tela = this.o.tela ? await this.o.tela(sinal).catch(() => null) : null;
+      if (tela?.sigiloso) {
+        this.o.ui.aviso("Este processo \u00E9 sigiloso. O agente n\u00E3o atua em processos sigilosos.");
+        return;
+      }
+      this.historico.push({ role: "user", content: this.o.privacidade.anonimizar(texto) });
+      await this.compactarSePreciso(sinal);
+      const limite = this.o.limitePassos ?? 40;
+      for (let passo = 0; passo < limite; passo += 1) {
+        const resposta = await this.o.provedor.conversar(
+          { mensagens: [{ role: "system", content: this.o.sistema(tela, this.nonce) }, ...this.compactado()], tools: this.o.tools.paraProvedor() },
+          sinal,
+          (d) => this.o.ui.texto(d),
+        );
+        if (resposta.uso) {
+          this.usoTotal = {
+            entrada: this.usoTotal.entrada + resposta.uso.entrada,
+            saida: this.usoTotal.saida + resposta.uso.saida,
+            custo: this.usoTotal.custo + resposta.uso.custo,
+            cache: (this.usoTotal.cache ?? 0) + (resposta.uso.cache ?? 0),
+          };
+          this.o.ui.uso(this.usoTotal);
+        }
+        this.historico.push({ role: "assistant", content: resposta.texto || null, ...(resposta.chamadas.length ? { tool_calls: resposta.chamadas } : {}) });
+        if (!resposta.chamadas.length) {
+          if (resposta.fim === "length") this.o.ui.aviso("A resposta foi cortada pelo limite do modelo.");
+          if (resposta.interrompida) {
+            this.o.ui.aviso("O servi\u00E7o de IA parou de responder no meio da resposta. O que chegou at\u00E9 aqui est\u00E1 acima; pergunte de novo se faltou algo.");
+          }
+          return;
+        }
+        const resultados = await this.executarChamadas(resposta.chamadas, sinal);
+        for (const c of resposta.chamadas) this.historico.push({ role: "tool", tool_call_id: c.id, content: resultados.get(c.id) ?? "{}" });
+      }
+      this.o.ui.aviso(`O agente parou ap\u00F3s ${limite} rodadas de ferramentas. Pe\u00E7a para continuar, se for o caso.`);
+    } catch (e) {
+      if (sinal.aborted) this.o.ui.aviso("Interrompido.");
+      else throw e;
+    } finally {
+      this.controlador = null;
+      this.o.ui.fimDaResposta();
+    }
+  }
+
+  /**
+   * Resultado de tool → texto seguro para o modelo. `finais`: as passadas que a tool pediu (`ContextoTool.aoModelo`),
+   * sobre o texto exato que vai ao modelo (depois da anonimização e do corte); se uma falhar, nada do resultado vai.
+   */
+  private paraModelo(valor: unknown, finais: ReadonlyArray<(texto: string) => string> = []): string {
+    let t = typeof valor === "string" ? valor : JSON.stringify(valor);
+    t = this.o.privacidade.anonimizar(t ?? "");
+    const limite = this.o.limiteResultado ?? 12_000;
+    if (t.length > limite) t = `${t.slice(0, limite)}\n[... resultado cortado: ${t.length - limite} caracteres omitidos. Pe\u00E7a um trecho menor ou use os par\u00E2metros de pagina\u00E7\u00E3o da ferramenta.]`;
+    try {
+      for (const f of finais) t = f(t);
+    } catch {
+      return JSON.stringify({ erro: "N\u00E3o foi poss\u00EDvel conferir o resultado desta ferramenta antes de envi\u00E1-lo: nada dele foi enviado." });
+    }
+    return t;
+  }
+
+  private contexto(sinal: AbortSignal, extra: Partial<ContextoTool> = {}): ContextoTool {
+    return {
+      sinal,
+      sei: <T>(op: string, args: Record<string, unknown> = {}) => this.o.sei(op, args, sinal) as Promise<T>,
+      estado: this.estado,
+      consentirRestrito: async (detalhe) => {
+        if (this.estado.consentimentoRestrito === null) this.estado.consentimentoRestrito = await this.o.ui.consentir("restrito", detalhe);
+        return this.estado.consentimentoRestrito;
+      },
+      consentirConector: (detalhe) => this.o.ui.consentir("conector", detalhe),
+      nonce: this.nonce,
+      registrarAchados: (documento, achados) => this.o.ui.integridade?.(documento, achados),
+      anonimizar: (texto) => this.o.privacidade.anonimizar(texto),
+      pessoasVistas: (nomes) => this.o.privacidade.registrarPessoas(nomes),
+      ui: this.o.ui,
+      ...(this.o.delegar ? { delegar: this.o.delegar } : {}),
+      // GANCHO GELIC G3: o que sai passa pela mesma pseudonimização do histórico; a resposta volta com os nomes.
+      ...(this.o.completar ? { completar: async (s: string, p: string, sn: AbortSignal) => this.o.privacidade.reidratar(await this.o.completar!(this.o.privacidade.anonimizar(s), this.o.privacidade.anonimizar(p), sn)) } : {}),
+      ...(this.o.lembrar ? { lembrar: this.o.lembrar } : {}),
+      ...extra,
+    };
+  }
+
+  private async executarChamadas(chamadas: ChamadaTool[], sinal: AbortSignal): Promise<Map<string, string>> {
+    const saida = new Map<string, string>();
+    const leituras: Array<{ c: ChamadaTool; t: DefTool; args: Record<string, unknown> }> = [];
+    const externas: Array<{ c: ChamadaTool; t: DefTool; args: Record<string, unknown> }> = [];
+    const escritas: Array<{ c: ChamadaTool; passos: PassoPlano[]; objetivo?: string }> = [];
+
+    for (const c of chamadas) {
+      const t = this.o.tools.obter(c.function.name);
+      if (!t) {
+        saida.set(c.id, this.paraModelo({ erro: `Ferramenta "${c.function.name}" n\u00E3o existe.` }));
+        continue;
+      }
+      let bruto: unknown;
+      try {
+        bruto = JSON.parse(c.function.arguments || "{}");
+      } catch {
+        saida.set(c.id, this.paraModelo({ erro: "Argumentos n\u00E3o s\u00E3o JSON v\u00E1lido." }));
+        continue;
+      }
+      const { valor, erros } = validar(t.parametros, bruto);
+      if (erros.length) {
+        saida.set(c.id, this.paraModelo({ erro: "Argumentos inv\u00E1lidos.", detalhes: erros }));
+        continue;
+      }
+      const args = this.o.privacidade.reidratarValor(valor as Record<string, unknown>);
+      if (t.nome === "plano_propor") {
+        const r = this.passosDoPlano(args);
+        if ("erro" in r) saida.set(c.id, this.paraModelo(r));
+        else escritas.push({ c, passos: r.passos, objetivo: String(args.objetivo ?? "") });
+      } else if (t.efeito === "leitura" || t.efeito === "interna") {
+        leituras.push({ c, t, args });
+      } else if (t.efeito === "externo") {
+        externas.push({ c, t, args });
+      } else {
+        escritas.push({ c, passos: [{ tool: t.nome, rotulo: t.rotulo(args), efeito: t.efeito, args, previa: [], dependente: false }] });
+      }
+    }
+
+    // Leituras em paralelo; as internas (perguntar, tarefas) seguem a ordem.
+    await Promise.all(
+      leituras.map(async ({ c, t, args }) => {
+        this.o.ui.toolIniciada(c.id, t.nome, t.rotulo(args));
+        const finais: Array<(texto: string) => string> = [];
+        try {
+          const r = await t.executar(args, this.contexto(sinal, { aoModelo: (f) => void finais.push(f) }));
+          saida.set(c.id, this.paraModelo(r, finais));
+          this.o.ui.toolTerminada(c.id, true, "");
+        } catch (e) {
+          saida.set(c.id, this.paraModelo(erroParaModelo(e), finais));
+          this.o.ui.toolTerminada(c.id, false, erroParaModelo(e).erro);
+        }
+      }),
+    );
+
+    // Externas em sequência: cada uma pode pedir autorização ao usuário, e
+    // duas perguntas ao mesmo tempo no painel não têm como ser respondidas.
+    for (const { c, t, args } of externas) {
+      this.o.ui.toolIniciada(c.id, t.nome, t.rotulo(args));
+      const finais: Array<(texto: string) => string> = [];
+      try {
+        const r = await t.executar(args, this.contexto(sinal, { aoModelo: (f) => void finais.push(f) }));
+        saida.set(c.id, this.paraModelo(r, finais));
+        this.o.ui.toolTerminada(c.id, true, "");
+      } catch (e) {
+        saida.set(c.id, this.paraModelo(erroParaModelo(e), finais));
+        this.o.ui.toolTerminada(c.id, false, erroParaModelo(e).erro);
+      }
+    }
+
+    if (escritas.length) {
+      const passos = escritas.flatMap((e) => e.passos);
+      // As passadas de cada passo, à parte: valem só para a mensagem da chamada que o trouxe (a do plano_propor é um
+      // texto só, com os passos dele), nunca para o resultado de outra chamada.
+      const finais: Array<Array<(texto: string) => string>> = passos.map(() => []);
+      const resultados = await this.executarPlano(passos, escritas.map((e) => e.objetivo).filter(Boolean).join("; "), sinal, finais);
+      let i = 0;
+      for (const e of escritas) {
+        const meus = resultados.slice(i, i + e.passos.length);
+        const minhas = finais.slice(i, i + e.passos.length).flat();
+        i += e.passos.length;
+        saida.set(e.c.id, this.paraModelo(e.passos.length === 1 && e.c.function.name !== "plano_propor" ? meus[0] : { passos: meus }, minhas));
+      }
+    }
+    return saida;
+  }
+
+  /** Valida os passos de `plano_propor`. */
+  private passosDoPlano(args: Record<string, unknown>): { passos: PassoPlano[] } | { erro: string; detalhes?: string[] } {
+    const lista = (args.passos as Array<{ tool: string; args: Record<string, unknown> }>) ?? [];
+    const passos: PassoPlano[] = [];
+    const erros: string[] = [];
+    lista.forEach((p, i) => {
+      const t = this.o.tools.obter(p.tool);
+      if (!t) return erros.push(`passo ${i + 1}: ferramenta "${p.tool}" n\u00E3o existe`);
+      if (t.efeito === "leitura" || t.efeito === "interna" || t.efeito === "externo") {
+        return erros.push(`passo ${i + 1}: "${p.tool}" n\u00E3o escreve no SEI; chame-a diretamente`);
+      }
+      const dependente = JSON.stringify(p.args ?? {}).includes("$");
+      const { valor, erros: e } = dependente ? { valor: p.args, erros: [] } : validar(t.parametros, p.args ?? {});
+      if (e.length) return erros.push(...e.map((x) => `passo ${i + 1}: ${x}`));
+      const a = valor as Record<string, unknown>;
+      passos.push({ tool: t.nome, rotulo: dependente ? t.nome : t.rotulo(a), efeito: t.efeito, args: a, previa: [], dependente });
+    });
+    return erros.length ? { erro: "Plano inv\u00E1lido.", detalhes: erros } : { passos };
+  }
+
+  /** `finais[i]`: onde ficam as passadas finais (`ContextoTool.aoModelo`) que o passo `i` pedir. */
+  private async executarPlano(passos: PassoPlano[], objetivo: string, sinal: AbortSignal, finais: Array<Array<(texto: string) => string>> = []): Promise<unknown[]> {
+    // Prévia de cada passo independente (em paralelo; é leitura).
+    await Promise.all(
+      passos.map(async (p) => {
+        if (p.dependente) return;
+        const t = this.o.tools.obter(p.tool)!;
+        try {
+          p.previa = (await t.previsualizar?.(p.args, this.contexto(sinal))) ?? [];
+        } catch (e) {
+          p.previa = [{ alvo: "", mudancas: [], resumo: "", erro: erroParaModelo(e).erro }];
+        }
+      }),
+    );
+    // Nada muda em nenhum item (ex.: documento já assinado, marcador já aplicado): não pede aprovação.
+    if (passos.every((p) => !p.dependente && p.previa.length && p.previa.every((i) => !i.erro && !i.mudancas.length))) {
+      return passos.map((p) => ({ executado: false, nada_a_fazer: true, itens: p.previa.map((i) => ({ alvo: i.alvo, resumo: i.resumo })) }));
+    }
+    // Regras da unidade: barram ANTES da aprovação. Bloqueio que só aparecesse
+    // no cartão já teria deixado o usuário aprovar algo que a unidade proíbe.
+    const veredito = this.o.regras?.(passos.map((p) => ({ tool: p.tool, rotulo: p.rotulo, args: p.args })));
+    if (veredito?.bloqueios.length) {
+      const recado = veredito.recado;
+      this.o.ui.aviso(recado.split("\n")[0]);
+      return passos.map(() => ({ executado: false, barrado_por_regra: true, motivo: recado }));
+    }
+    const plano: PlanoPrevisto = {
+      objetivo: objetivo || passos.map((p) => p.rotulo).join("; "),
+      passos,
+      ...(veredito?.avisos.length ? { avisos: veredito.avisos } : {}),
+    };
+    const decisao: DecisaoPlano = await this.o.ui.aprovarPlano(plano);
+    if (!decisao.aprovado) {
+      return passos.map(() => ({ aprovado: false, motivo: decisao.motivo || "O usu\u00E1rio n\u00E3o aprovou o plano. Pergunte o que ajustar." }));
+    }
+    const ate = Math.min(decisao.ate ?? passos.length, passos.length);
+    const resultados: unknown[] = [];
+    for (let i = 0; i < passos.length; i += 1) {
+      const p = passos[i];
+      if (i >= ate) {
+        resultados.push({ executado: false, motivo: "O usu\u00E1rio aprovou s\u00F3 os passos anteriores." });
+        continue;
+      }
+      if (sinal.aborted) {
+        resultados.push({ executado: false, motivo: "Interrompido pelo usu\u00E1rio." });
+        continue;
+      }
+      const t = this.o.tools.obter(p.tool)!;
+      this.o.ui.progressoPlano(i + 1, ate, p.rotulo);
+      const id = `plano_${i}`;
+      this.o.ui.toolIniciada(id, t.nome, p.rotulo);
+      try {
+        const args = resolverReferencias(p.args, resultados);
+        if (p.dependente) {
+          const { erros } = validar(t.parametros, args);
+          if (erros.length) throw new Error(`Refer\u00EAncias n\u00E3o resolvidas: ${erros.join("; ")}`);
+        }
+        const doPasso = (finais[i] ??= []);
+        const aoModelo = (f: (texto: string) => string) => void doPasso.push(f);
+        const r = await t.executar(args, this.contexto(sinal, p.efeito === "assinatura" ? { assinatura: decisao.assinatura, aoModelo } : { aoModelo }));
+        resultados.push(r);
+        // Antes de `toolTerminada`: é ela que redesenha o item, e o painel
+        // precisa já saber que aquela ação pode ser desfeita.
+        this.o.ui.escritaFeita?.(id, p.tool, args, r);
+        this.o.ui.toolTerminada(id, true, "");
+      } catch (e) {
+        const erro = erroParaModelo(e);
+        resultados.push({ executado: false, ...erro });
+        this.o.ui.toolTerminada(id, false, erro.erro);
+        // Um passo que falha interrompe os seguintes: eles podiam depender dele.
+        for (let j = i + 1; j < passos.length; j += 1) resultados.push({ executado: false, motivo: `Passo ${i + 1} falhou antes.` });
+        break;
+      }
+    }
+    return resultados;
+  }
+
+  /** Histórico enviado ao modelo, com resultados antigos resumidos quando o todo passa do limite. */
+  /**
+   * Resume o começo da conversa quando ela fica longa demais.
+   *
+   * Antes disto, o que havia era poda: resultados antigos de ferramenta viravam
+   * "[omitido]". Isso segura o tamanho, mas joga fora o que foi DECIDIDO — e o
+   * modelo passa a repetir perguntas já respondidas. Aqui o começo vira um
+   * resumo escrito pelo próprio modelo (uma chamada, sem ferramentas), e as
+   * últimas rodadas ficam intactas, porque é nelas que está o pedido em curso.
+   *
+   * O texto resumido JÁ está pseudonimizado: o resumo não devolve nome nenhum.
+   */
+  private async compactarSePreciso(sinal: AbortSignal): Promise<void> {
+    const tamanho = (ms: Mensagem[]) => ms.reduce((n, m) => n + (typeof m.content === "string" ? m.content.length : 0), 0);
+    if (tamanho(this.historico) <= LIMITE_COMPACTAR) return;
+    // O corte cai sempre num pedido do usuário — separar uma chamada de
+    // ferramenta da sua resposta faria o provedor recusar o histórico.
+    // Procura-se o começo de rodada mais antigo que ainda preserve as últimas
+    // MANTER_INTACTAS mensagens; se a conversa for curta e gorda (três
+    // documentos enormes bastam), vale o começo da rodada atual.
+    const alvo = Math.max(0, this.historico.length - MANTER_INTACTAS);
+    let corte = -1;
+    for (let i = this.historico.length - 1; i >= 1; i -= 1) {
+      if (this.historico[i].role !== "user") continue;
+      corte = i;
+      if (i <= alvo) break;
+    }
+    if (corte < 2) return;
+    const antigas = this.historico.slice(0, corte);
+    const resumoAnterior = antigas.find((m) => typeof m.content === "string" && m.content.startsWith(MARCA_RESUMO));
+    const texto = antigas
+      .map((m) => `${m.role}: ${typeof m.content === "string" ? m.content.slice(0, 4000) : "(chamada de ferramenta)"}`)
+      .join("\n")
+      .slice(-120_000);
+    try {
+      const r = await this.o.provedor.conversar(
+        {
+          mensagens: [
+            {
+              role: "system",
+              content:
+                "Voc\u00EA resume o in\u00EDcio de uma conversa de trabalho no SEI para que ela continue sem perder o essencial. Escreva em t\u00F3picos curtos: o que o usu\u00E1rio pediu, o que foi FEITO no SEI (com n\u00FAmeros de processo e de documento), o que ficou decidido e o que ainda falta. Preserve os r\u00F3tulos entre colchetes como est\u00E3o. N\u00E3o invente nada.",
+            },
+            { role: "user", content: `${resumoAnterior ? "Inclua tamb\u00E9m o que j\u00E1 estava resumido.\n" : ""}${texto}` },
+          ],
+          tools: [],
+        },
+        sinal,
+        () => undefined,
+      );
+      if (!r.texto.trim()) return;
+      this.historico = [{ role: "user", content: `${MARCA_RESUMO}\n${r.texto.trim()}` }, ...this.historico.slice(corte)];
+      this.o.ui.aviso("A conversa ficou longa: resumi o come\u00E7o para caber no contexto. O que foi feito e decidido continua valendo.");
+    } catch {
+      // Falhou (rede, limite do provedor): segue com a poda de sempre, que é
+      // pior mas não interrompe o trabalho de quem está usando.
+    }
+  }
+
+  private compactado(): Mensagem[] {
+    let total = this.historico.reduce((n, m) => n + (typeof m.content === "string" ? m.content.length : 0), 0);
+    if (total <= LIMITE_HISTORICO) return this.historico;
+    const copia = this.historico.map((m) => ({ ...m })) as Mensagem[];
+    for (let i = 0; i < copia.length - 8 && total > LIMITE_HISTORICO; i += 1) {
+      const m = copia[i];
+      if (m.role === "tool" && m.content.length > 400) {
+        total -= m.content.length - 120;
+        copia[i] = { ...m, content: `[resultado antigo omitido para caber no contexto: ${m.content.slice(0, 100)}...]` };
+      }
+    }
+    return copia;
+  }
+}
+
+/** Erro → objeto curto que o modelo entende (código + mensagem + dica). */
+export function erroParaModelo(e: unknown): { erro: string; codigo?: string; detalhe?: string } {
+  const x = e as { codigo?: string; message?: string; detalhe?: string };
+  return { erro: x?.message ?? String(e), ...(x?.codigo ? { codigo: x.codigo } : {}), ...(x?.detalhe ? { detalhe: x.detalhe.slice(0, 800) } : {}) };
+}
+
+/** `"$2.dados.numero"` → valor; `"Despacho {$1.numero}"` → interpolação. Índices 1-based. */
+export function resolverReferencias<T>(valor: T, resultados: unknown[]): T {
+  const buscar = (ref: string): unknown => {
+    const [idx, ...caminho] = ref.slice(1).split(".");
+    let v: unknown = resultados[Number(idx) - 1];
+    for (const k of caminho) v = v == null ? undefined : (v as Record<string, unknown>)[/^\d+$/.test(k) ? Number(k) : k];
+    return v;
+  };
+  if (typeof valor === "string") {
+    if (/^\$\d+(\.[\w-]+)*$/.test(valor)) return buscar(valor) as T;
+    return valor.replace(/\{(\$\d+(?:\.[\w-]+)*)\}/g, (_, r: string) => String(buscar(r) ?? "")) as T;
+  }
+  if (Array.isArray(valor)) return valor.map((v) => resolverReferencias(v, resultados)) as T;
+  if (valor && typeof valor === "object") {
+    return Object.fromEntries(Object.entries(valor).map(([k, v]) => [k, resolverReferencias(v, resultados)])) as T;
+  }
+  return valor;
+}
+
+export type { PreviaItem };

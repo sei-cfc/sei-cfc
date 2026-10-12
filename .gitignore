@@ -1,0 +1,119 @@
+# =============================================================================
+# SEI Pro - .gitignore
+# O repositorio publico versiona apenas a extensao (dist/), a documentacao
+# (README, PRIVACY_POLICY, pages/, img/) e o manifest publico.
+# Tudo que for backend, whitelabel, ferramenta interna ou dado nao vai junto.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Pastas privadas / nao distribuiveis
+# -----------------------------------------------------------------------------
+/antaq/
+/backend/
+/backup/
+/seilab/
+/seilab-app/
+/seipro/
+/tools/
+/updates/
+/whitelabels/
+/tests/
+
+# -----------------------------------------------------------------------------
+# Manifests de whitelabel (o publico e apenas dist/manifest.json)
+# -----------------------------------------------------------------------------
+dist/manifest_*.json
+
+# -----------------------------------------------------------------------------
+# Segredos e configuracao local
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+config.json
+config_local.json
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+
+# -----------------------------------------------------------------------------
+# Pacotes e artefatos de build (zips da raiz nao sao versionados)
+# -----------------------------------------------------------------------------
+/*.zip
+/release/
+/*.crx
+/*.tar
+/*.tar.gz
+build/
+dist-temp/
+
+# -----------------------------------------------------------------------------
+# Dumps e bancos de dados
+# -----------------------------------------------------------------------------
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+
+# -----------------------------------------------------------------------------
+# Dependencias
+# -----------------------------------------------------------------------------
+node_modules/
+package-lock.json
+yarn.lock
+
+# -----------------------------------------------------------------------------
+# Area de trabalho dos planos (ledger, briefs, rascunhos de revisao)
+# -----------------------------------------------------------------------------
+/.superpowers/
+
+# -----------------------------------------------------------------------------
+# Textos de submissao as lojas (formularios da Chrome Web Store e da AMO)
+# -----------------------------------------------------------------------------
+/docs/lojas/
+
+# -----------------------------------------------------------------------------
+# Scripts utilitarios locais
+# -----------------------------------------------------------------------------
+clean_home.js
+
+# -----------------------------------------------------------------------------
+# Arquivos do sistema operacional
+# -----------------------------------------------------------------------------
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+*.icloud
+
+# -----------------------------------------------------------------------------
+# IDE / Editor
+# -----------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# -----------------------------------------------------------------------------
+# Temporarios, logs e backups
+# -----------------------------------------------------------------------------
+*.tmp
+*.temp
+*.log
+*.cache
+*.bak
+*.backup
+*.md.bak
+
+# Cache do Python (ex.: _og/gerar_capas.py)
+__pycache__/
+*.pyc
+
+# Pagina de opcoes: pre-visualizacao local (gerada)
+opcoes-pagina/.preview/

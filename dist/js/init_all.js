@@ -1,0 +1,170 @@
+const compareVersionNumbers_initall = (v1, v2) => /^\d+(\.\d+)*$/.test(v1) && /^\d+(\.\d+)*$/.test(v2) ? ((a, b) => { for (let i = 0; i < Math.max(a.length, b.length); i++) { const n1 = +a[i] || 0, n2 = +b[i] || 0; if (n1 !== n2) return n1 > n2 ? 1 : -1; } return 0; })(v1.split('.'), v2.split('.')) : NaN;
+var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
+var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionNumbers_initall(sessionStorage.getItem('versaoSei'),'5') >= 0 ? true : false;
+var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
+
+// O init_all.js e o init.js pedem o sei-functions-pro.js para o mundo da pagina, e a ordem entre os dois nao e
+// garantida: no SEI 4.1.5 o init.js chegou a executar ANTES deste arquivo no topo (Controle de Processos e
+// processo). Uma segunda copia no mesmo documento nunca executa nada - morre em "Identifier 'loadFunctionsPro'
+// has already been declared" -, entao quem pede primeiro marca sfpPedidoPaginaPro (global do mundo isolado da
+// extensao, que os dois arquivos compartilham no mesmo documento) e o outro nao pede de novo. O <script> ainda
+// no DOM cobre um pedido feito por outro caminho que ainda nao terminou de carregar.
+if (!frmEditor.length 
+    // && (!isNewSEI || (isNewSEI && typeof loadFunctionsPro === 'undefined'))
+    && !window.sfpPedidoPaginaPro && !document.querySelector('script[src*="/js/sei-functions-pro.js"]')
+) { window.sfpPedidoPaginaPro = true; $.getScript(getUrlExtension("js/sei-functions-pro.js")); }
+
+function getUrlExtension(url) {
+    if (typeof browser === "undefined") {
+        return chrome.runtime.getURL(url);
+    } else {
+        return browser.runtime.getURL(url);
+    }
+}
+function getManifestExtension() {
+    if (typeof browser === "undefined") {
+        return chrome.runtime.getManifest();
+    } else {
+        return browser.runtime.getManifest();
+    }
+}
+function loadFontIcons(elementTo, target = $('html')) {
+    var iconBoxSlim = (localStorage.getItem('seiSlim')) ? true : false;
+    var pathExtension = pathExtensionSEIPro();
+    if (target.find('link[data-style="seipro-fonticon"]').length == 0 && target.find('style[data-style="seipro-fonticon"]').length == 0) {
+        $("<link/>", {
+            rel: "stylesheet",
+            type: "text/css",
+            datastyle: "seipro-fonticon",
+            href: getUrlExtension("css/fontawesome.pro.min.css") 
+        }).appendTo(target.find(elementTo));
+        
+        var htmlStyleFont = '<style type="text/css" data-style="seipro-fonticon" data-index="1">'+
+                            '    @font-face {\n'+
+                            '       font-family: "Font Awesome 5 Pro";\n'+
+                            '       font-style: normal;\n'+
+                            '       font-weight: 900;\n'+
+                            '       font-display: block;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot) !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-solid-900.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-solid-900.svg#fontawesome) format("svg") !important;\n'+
+                            '   }\n'+
+                            '   @font-face {\n'+
+                            '       font-family: \"Font Awesome 5 Pro";\n'+
+                            '       font-style: normal;\n'+
+                            '       font-weight: 400;\n'+
+                            '       font-display: block;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot) !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-regular-400.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-regular-400.svg#fontawesome) format("svg") !important;\n'+
+                            '   }\n'+
+                            (iconBoxSlim ?
+                            '   @font-face { \n'+
+                            '       font-family: "Font Awesome 5 Pro";\n'+
+                            '       font-style: normal;\n'+
+                            '       font-weight: 300;\n'+
+                            '       font-display: block;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-light-300.eot) !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-light-300.eot?#iefix) format("embedded-opentype"), url('+pathExtension+'webfonts/pro/fa-light-300.woff2) format("woff2"), url('+pathExtension+'webfonts/pro/fa-light-300.woff) format("woff"), url('+pathExtension+'webfonts/pro/fa-light-300.ttf) format("truetype"), url('+pathExtension+'webfonts/pro/fa-light-300.svg#fontawesome) format("svg") !important; }\n'+
+                            '   }\n'+
+                            '   @font-face {\n'+
+                            '       font-family: \"Font Awesome 5 Duotone\";\n'+
+                            '       font-style: normal;\n'+
+                            '       font-weight: 900;\n'+
+                            '       font-display: block;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-duotone-900.eot) !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-duotone-900.eot?#iefix) format(\"embedded-opentype\"), url('+pathExtension+'webfonts/pro/fa-duotone-900.woff2) format("woff2"), url('+pathExtension+'webfonts/pro/fa-duotone-900.woff) format("woff"), url('+pathExtension+'webfonts/pro/fa-duotone-900.ttf) format("truetype"), url('+pathExtension+'webfonts/pro/fa-duotone-900.svg#fontawesome) format("svg") !important; }\n'+
+                            '   }\n'
+                            : '')
+                            '</style>';
+        target.find('head').append(htmlStyleFont);
+    }
+}
+function loadStylePro(url, elementTo) {
+    if ($('link[data-style="seipro-style"]').length == 0) {
+        $("<link/>", {
+            rel: "stylesheet",
+            type: "text/css",
+            datastyle: "seipro-style",
+            href: url
+        }).appendTo(elementTo);
+    }
+}
+function loadFilesUI() {
+    if (typeof jQuery.ui === 'undefined') $.getScript(getUrlExtension('js/lib/jquery-ui.min.js'));
+    loadStylePro(getUrlExtension('css/jquery-ui.css'), 'head');
+}
+function pathExtensionSEIPro() {
+    var URL_SPRO = getUrlExtension("js/sei-pro.js");
+        URL_SPRO = URL_SPRO.toString().replace('js/sei-pro.js', '');
+    return URL_SPRO;
+}
+function getPathExtensionPro() {
+    if ($('script[data-config="config-seipro"]').length == 0) {
+        var URL_SPRO = pathExtensionSEIPro();
+        var manifest = getManifestExtension();
+        var VERSION_SPRO = manifest.version;
+        var NAMESPACE_SPRO = manifest.short_name;
+        var URLPAGES_SPRO = manifest.homepage_url;
+        setSessionNameSpace({URL_SPRO: URL_SPRO, NAMESPACE_SPRO: NAMESPACE_SPRO, URLPAGES_SPRO: URLPAGES_SPRO, VERSION_SPRO: VERSION_SPRO, ICON_SPRO: manifest.icons});
+    }
+}
+function setSessionNameSpace(param) {
+    sessionStorage.setItem((param.NAMESPACE_SPRO != 'SPro' ? 'new_extension' : 'old_extension'),  JSON.stringify(param));
+}
+function _P() { // get  Session Name Space
+    return JSON.parse(sessionStorage.getItem('new_extension'));
+}
+function loadStyleDesign() {
+    var body = document.body;
+    if (localStorage.getItem('seiSlim')) {
+    // if (localStorage.getItem('seiSlim') && !isNewSEI) {
+        body.classList.add("seiSlim");
+        body.classList.add("seiSlim_parent");
+        if (document.getElementById("divInfraAreaTelaE") === null) body.classList.add("seiSlim_view");
+        if (localStorage.getItem('darkModePro')) {
+            body.classList.add("dark-mode");
+        }
+    }
+}
+function divDialogsPro() {
+    var html_box = '<div class="divBoxPro" style="display: none;">'
+                            +'  <div id="alertaBoxPro" style="display: none;"></div>'
+                            +'  <div id="dialogBoxPro" style="display: none;"></div>'
+                            +'  <div id="configBoxPro" style="display: none;"></div>'
+                            +'  <div id="iframeBoxPro" style="display: none;"></div>'
+                            +'  <div id="editorBoxPro" style="display: none;"></div>'
+                            +'  <div id="printBoxPro" class="ck-content" style="display: none;"></div>'
+                            +'</div>';
+    $('.divBoxPro').remove();
+    $('body').append(html_box);
+}
+function loadScriptProAll() {
+    getPathExtensionPro();
+    divDialogsPro();
+    loadFilesUI();
+	if (!frmEditor.length) {
+        loadFontIcons('head');
+        if (typeof jmespath === 'undefined') $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
+        if (typeof DOMPurify === 'undefined') $.getScript(getUrlExtension("js/lib/purify.min.js"));
+        if (typeof moment === 'undefined') $.getScript(getUrlExtension("js/lib/moment.min.js"));
+        if (typeof $.tablesorter === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
+        if (typeof $().chosen === 'undefined') $.getScript(getUrlExtension("js/lib/chosen.jquery.min.js"));
+        if (typeof Favico === 'undefined') $.getScript(getUrlExtension("js/lib/favico-0.3.10.min.js"));
+        if (typeof loadSEIProAll === 'undefined') $.getScript(getUrlExtension("js/sei-pro-all.js"));
+    }
+}
+if (getManifestExtension().short_name == 'SPro') {
+    setTimeout(function(){ 
+        if (sessionStorage.getItem('new_extension') === null){
+            loadScriptProAll();
+        } else {
+            var URL_SPRO = pathExtensionSEIPro();
+            var manifest = getManifestExtension();
+            var VERSION_SPRO = manifest.version;
+            var NAMESPACE_SPRO = manifest.short_name;
+            setSessionNameSpace({URL_SPRO: URL_SPRO, NAMESPACE_SPRO: NAMESPACE_SPRO, VERSION_SPRO: VERSION_SPRO, ICON_SPRO: manifest.icons});
+        }
+    }, 1000);
+} else {
+    loadScriptProAll();
+}
+loadStyleDesign();

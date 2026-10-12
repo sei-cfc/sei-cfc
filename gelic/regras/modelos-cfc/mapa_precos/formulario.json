@@ -1,0 +1,178 @@
+[
+ {
+  "id": "objeto",
+  "texto": "Descrição sucinta do objeto",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": "objeto",
+  "quando_aparece": null
+ },
+ {
+  "id": "justificativa_pesquisa",
+  "texto": "Pesquisa de preços e pertinência das referências utilizadas",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Parâmetros da IN SEGES/ME nº 65/2021 (art. 5º) usados e por que as referências pesquisadas são pertinentes ao objeto.",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "proposta_instituicao",
+  "texto": "Instituição/empresa da proposta analisada",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "proposta_valor_unitario",
+  "texto": "Valor unitário da proposta (R$)",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Formato 138,50 (sem R$).",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "proposta_valor_global",
+  "texto": "Valor global estimado da proposta (R$)",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Formato 27.700.000,00 (sem R$).",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "quantidade_estimada",
+  "texto": "Quantitativo estimado para a contratação",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Ex.: \"até 200.000 inscrições homologadas\".",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "fonte_1_instituicao",
+  "texto": "Referência 1 — órgão/empresa contratada",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "fonte_1_objeto",
+  "texto": "Referência 1 — objeto da contratação pesquisada",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "fonte_1_valor_unitario",
+  "texto": "Referência 1 — valor unitário considerado na pesquisa (R$)",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Formato 173,00 (sem R$).",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "fonte_2_instituicao",
+  "texto": "Referência 2 — órgão/empresa contratada",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "fonte_2_objeto",
+  "texto": "Referência 2 — objeto da contratação pesquisada",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "fonte_2_valor_unitario",
+  "texto": "Referência 2 — valor unitário considerado na pesquisa (R$)",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Formato 180,00 (sem R$).",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "fonte_3_instituicao",
+  "texto": "Referência 3 — órgão/empresa contratada",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "fonte_3_objeto",
+  "texto": "Referência 3 — objeto da contratação pesquisada",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "fonte_3_valor_unitario",
+  "texto": "Referência 3 — valor unitário considerado na pesquisa (R$)",
+  "tipo": "texto",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "Formato 134,30 (sem R$).",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ },
+ {
+  "id": "conclusao",
+  "texto": "Conclusão sobre a compatibilidade do preço proposto",
+  "tipo": "texto_longo",
+  "opcoes": null,
+  "obrigatoria": true,
+  "nota": "",
+  "check_list_id": null,
+  "le_do_cadastro": null,
+  "quando_aparece": null
+ }
+]
