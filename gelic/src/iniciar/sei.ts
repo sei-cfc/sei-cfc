@@ -68,24 +68,90 @@ async function contatoCfc(sei: Sei, form: Formulario, sinal?: AbortSignal): Prom
   return exatos.length === 1 ? { id: exatos[0].id, nome: exatos[0].texto } : null;
 }
 
+// ---------------------------------------------------------------- tela de cadastro e assuntos
+
+/** A tela de cadastro do tipo (só abre: nada é gravado), pelo link do tipo ou pelo escolher(id) da página. */
+async function telaDeCadastro(sei: Sei, idTipo: string, sinal?: AbortSignal): Promise<Formulario> {
+  const escolha = await listaDeTiposDeProcesso(sei, sinal);
+  const tipos = lerTiposDeProcesso(escolha);
+  const tipo = tipos.find(t => t.id === idTipo);
+  if (!tipo) throw new ErroSei('ARGUMENTO_INVALIDO', `O tipo de processo ${idTipo} não está disponível na sua unidade.`, tipos.map(t => t.nome).join(' | '));
+  return tipo.href
+    ? Formulario.abrir(sei.http, tipo.href, '#frmProcedimentoCadastro', { sinal })
+    // o que o escolher(id) da página faz: grava o tipo no campo escondido e envia o formulário da escolha
+    : Formulario.de(await Formulario.de(escolha, '#frmProcedimentoEscolherTipo', sei.http).definir({ hdnIdTipoProcedimento: tipo.id }).enviar({ sinal }), '#frmProcedimentoCadastro', sei.http);
+}
+
+/** Os assuntos que o tipo já traz (o hdn ou, vazio, as opções do select, como o lote do SEI Pro). */
+const assuntosDaTela = (form: Formulario): Opcao[] =>
+  (form.itensLupa('selAssuntos').length ? form.itensLupa('selAssuntos') : form.opcoes('selAssuntos').filter(o => o.valor).map(o => ({ id: o.valor, texto: o.texto })))
+    .map(i => ({ id: i.id, nome: i.texto }));
+
+/** O autocompletar de assuntos da tela de cadastro: o link (com o hash da sessão) e o nome do parâmetro da busca. */
+export function ajaxDeAssuntos(html: string): { link: string; campo: string } | null {
+  const link = /controlador_ajax\.php\?acao_ajax=assunto_auto_completar[^'"]*/.exec(html)?.[0];
+  if (!link) return null;
+  // o SEI manda "palavras_pesquisa=" no prepararExecucao do autocompletar; lido da tela, se ela disser outro
+  const preparar = /AutoCompletarAssunto\.prepararExecucao\s*=\s*function\s*\(\)\s*\{\s*return\s*['"](\w+)=/.exec(html)?.[1];
+  return { link: decodificar(link), campo: preparar ?? 'palavras_pesquisa' };
+}
+
+/**
+ * Assuntos pela tela de cadastro: os sugeridos do tipo e a busca do SEI ("Classificação por Assuntos" é obrigatória, e
+ * no SEI do CFC há tipos sem assunto sugerido). A tela de cada tipo é aberta uma vez.
+ */
+export function assuntosDoSei(sei: Sei) {
+  const telas = new Map<string, Promise<Formulario>>();
+  const tela = (tipo: string, sinal?: AbortSignal) => {
+    if (!telas.has(tipo)) telas.set(tipo, telaDeCadastro(sei, tipo, sinal).catch(e => { telas.delete(tipo); throw e; }));
+    return telas.get(tipo)!;
+  };
+  return {
+    sugeridos: async (tipo: string, sinal?: AbortSignal): Promise<Opcao[]> => assuntosDaTela(await tela(tipo, sinal)),
+    buscar: async (tipo: string, termo: string, sinal?: AbortSignal): Promise<Opcao[]> => {
+      const ajax = ajaxDeAssuntos((await tela(tipo, sinal)).pagina.html);
+      if (!ajax) throw new ErroSei('SEI_VERSAO_NAO_SUPORTADA', 'A tela de cadastro do processo não tem a busca de assuntos: escolha o assunto no SEI.');
+      return (await sei.ajax(ajax.link, [[ajax.campo, termo]], { sinal })).map(i => ({ id: i.id, nome: i.texto }));
+    },
+  };
+}
+
+// ---------------------------------------------------------------- recusa do SEI
+
+const DESESCAPAR: Readonly<Record<string, string>> = { n: '\n', r: '', t: ' ' };
+/** Os alert('…') com texto literal dos scripts da página (o SEI avisa assim a recusa de um cadastro). */
+export function alertas(html: string): string[] {
+  return [...html.matchAll(/\balert\s*\(\s*(['"])((?:\\.|(?!\1)[^\\\n])*)\1\s*\)/g)].map(m => m[2]
+    .replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\\x([0-9a-fA-F]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\\(.)/g, (_, c: string) => DESESCAPAR[c] ?? c)
+    .trim()).filter(Boolean);
+}
+
+/**
+ * A mensagem com que o SEI recusou o envio: os alertas da página devolvida que a tela enviada não tinha (os da validação
+ * da própria tela, em funções, estão nas duas). Sem alerta novo, null.
+ */
+export function mensagemDaRecusa(antes: Pagina, depois: Pagina): string | null {
+  const ja = new Set(alertas(antes.html));
+  const novas = [...new Set(alertas(depois.html).filter(a => !ja.has(a)))];
+  return novas.length ? novas.join(' ').replace(/\s+/g, ' ') : null;
+}
+
 // ---------------------------------------------------------------- iniciar processo
 
 export interface NovoProcesso {
   /** Id do tipo de processo (escolhido na lista do SEI). */
   tipo: string;
   especificacao: string;
+  /** A classificação por assunto escolhida no diálogo (somada às que o tipo já traz). */
+  assunto?: Opcao;
 }
 export interface ProcessoCriado { protocolo: string; idProcedimento: string; avisos: string[]; /** A tela do processo novo (o SEI redireciona para ela). */ url?: string }
 
 export async function iniciarProcesso(sei: Sei, novo: NovoProcesso, sinal?: AbortSignal): Promise<ProcessoCriado> {
-  const escolha = await listaDeTiposDeProcesso(sei, sinal);
-  const tipos = lerTiposDeProcesso(escolha);
-  const tipo = tipos.find(t => t.id === novo.tipo);
-  if (!tipo) throw new ErroSei('ARGUMENTO_INVALIDO', `O tipo de processo ${novo.tipo} não está disponível na sua unidade.`, tipos.map(t => t.nome).join(' | '));
-  const form = tipo.href
-    ? await Formulario.abrir(sei.http, tipo.href, '#frmProcedimentoCadastro', { sinal })
-    // o que o escolher(id) da página faz: grava o tipo no campo escondido e envia o formulário da escolha
-    : Formulario.de(await Formulario.de(escolha, '#frmProcedimentoEscolherTipo', sei.http).definir({ hdnIdTipoProcedimento: tipo.id }).enviar({ sinal }), '#frmProcedimentoCadastro', sei.http);
+  const form = await telaDeCadastro(sei, novo.tipo, sinal);
+  const antes = form.pagina;
 
   const avisos: string[] = [];
   form.definir({
@@ -95,14 +161,15 @@ export async function iniciarProcesso(sei: Sei, novo: NovoProcesso, sinal?: Abor
     rdoProtocolo: 'M',
     txaObservacoes: '',
   });
-  // O SEI exige os assuntos do tipo; o hdn vem vazio e quem o preenche é o JS da tela, no envio (lote do SEI Pro).
+  // O SEI exige ao menos um assunto: os do tipo (o hdn vem vazio e quem o preenche é o JS da tela, no envio, como no
+  // lote do SEI Pro) e o escolhido no diálogo. Sem nenhum, nem envia: o SEI recusaria.
   const lupa = (select: string, itens: { id: string; texto: string }[]) => {
     try { form.definirLupa(select, itens); } catch { avisos.push(`A tela não tem a lista ${select} esperada: confira no SEI.`); }
   };
-  if (!form.itensLupa('selAssuntos').length) {
-    const assuntos = form.opcoes('selAssuntos').filter(o => o.valor).map(o => ({ id: o.valor, texto: o.texto }));
-    if (assuntos.length) lupa('selAssuntos', assuntos);
-  }
+  const assuntos = assuntosDaTela(form);
+  if (novo.assunto && !assuntos.some(a => a.id === novo.assunto!.id)) assuntos.push(novo.assunto);
+  if (!assuntos.length) throw new ErroSei('ARGUMENTO_INVALIDO', 'Escolha a classificação por assunto: o tipo de processo não traz assunto sugerido, e o SEI a exige.');
+  lupa('selAssuntos', assuntos.map(a => ({ id: a.id, texto: a.nome })));
   // Interessado: o CFC (decisão do usuário), somado aos que o tipo já traz.
   // como o lote do SEI Pro: o hdn pode vir vazio, e os interessados do tipo estão nas opções do select
   const interessados = form.itensLupa('selInteressados').length ? form.itensLupa('selInteressados') : form.opcoes('selInteressados').filter(o => o.valor).map(o => ({ id: o.valor, texto: o.texto }));
@@ -110,11 +177,13 @@ export async function iniciarProcesso(sei: Sei, novo: NovoProcesso, sinal?: Abor
   if (!cfc) avisos.push('O contato "CFC" não foi encontrado na lista de interessados: inclua-o no processo, no SEI.');
   else if (!interessados.some(i => i.id === cfc.id)) lupa('selInteressados', [...interessados, { id: cfc.id, texto: cfc.nome }]);
 
-  const resposta = await form.enviar({
-    sinal,
-    operacao: 'a criação do processo',
-    sucesso: p => /acao=procedimento_trabalhar/.test(p.url) && /acao_origem=procedimento_gerar/.test(p.url),
-  });
+  const resposta = await form.enviar({ sinal });
+  if (!(/acao=procedimento_trabalhar/.test(resposta.url) && /acao_origem=procedimento_gerar/.test(resposta.url))) {
+    // a tela volta com o alerta do SEI: ele vai para o diálogo, no lugar do "não confirmou" genérico
+    const motivo = mensagemDaRecusa(antes, resposta);
+    const onde = `${textoDe(resposta.doc.querySelector('title'))} — ${resposta.url.replace(/infra_hash=\w+/, 'infra_hash=…')}`;
+    throw motivo ? new ErroSei('SEI_VALIDACAO', `O SEI recusou a criação do processo: ${motivo}`, onde) : new ErroSei('SEI_RESPOSTA_INESPERADA', 'O SEI não confirmou a criação do processo.', onde);
+  }
   // o id na URL ou, como o lote do SEI Pro, no quadro da árvore da tela do processo
   const doQuadro = resposta.doc.querySelector('#ifrArvore')?.getAttribute('src') ?? '';
   const idProcedimento = parametros(resposta.url).get('id_procedimento') ?? parametros(decodificar(doQuadro)).get('id_procedimento') ?? '';

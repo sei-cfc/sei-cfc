@@ -398,7 +398,7 @@ if (botaoPcaLigado) {
 }
 
 // SEI CFC com o PCA ligado: "Buscar no PCA" (fetch da página, CORS) põe objeto e via; a prévia confere a permissão
-// de vincular no /saude. O SEI de mentira não tem a tela de tipos: o tipo de processo é posto à mão no select.
+// de vincular no /saude. O SEI de mentira não tem a tela de tipos: o tipo de processo e o assunto são postos à mão.
 let iniciarPca = null;
 if (PERFIL === 'cfc') {
   if (await avaliar("!!document.getElementById('gelic-iniciar')")) await clicar('#gelic-iniciar');
@@ -409,6 +409,7 @@ if (PERFIL === 'cfc') {
   for (let i = 0; i < 20 && via !== 'dispensa'; i++) { await espera(300); via = await avaliar("document.querySelector('#gelic-iniciar-dialogo [name=via] option[selected]')?.value ?? null"); }
   const objeto = await avaliar("document.querySelector('#gelic-iniciar-dialogo [name=objeto]').value");
   await avaliar(`(() => { const c = document.getElementById('gelic-iniciar-dialogo'); c.querySelector('[name=tipo_processo]').innerHTML = '<option value="10" selected>Contratação</option>';
+    c.querySelector('[name=assunto]').innerHTML = '<option value="4220" selected>CFP.422 - APOIO A CURSOS E EVENTOS</option>';
     c.querySelector('[data-gelic-acao=previa]').click(); return true; })()`);
   let vinculo = null;
   for (let i = 0; i < 20 && !vinculo; i++) { await espera(300); vinculo = await avaliar("document.querySelector('#gelic-iniciar-dialogo [data-gelic-pca=vinculo]')?.textContent ?? null"); }

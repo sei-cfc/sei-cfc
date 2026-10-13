@@ -11,7 +11,7 @@ import { Sei } from '../../sei-nucleo/src/sei';
 import { lerArvore } from '../../sei-nucleo/src/dominio/arvore';
 import { definirAnalisador } from '../../sei-nucleo/src/sessao/dom';
 import { chaveDoTipo, criarPecas, escolherTipo, resolverTipos } from '../src/iniciar/executar';
-import { duracao, ID_DIALOGO, montarIniciar, selecionar, type DepsDialogo, type ItemDoPca } from '../src/iniciar/dialogo';
+import { duracao, ID_DIALOGO, montarIniciar, selecionar, type DepsDialogo, type ItemDoPca, type Lembrados } from '../src/iniciar/dialogo';
 import { incluirExternoVazio, iniciarProcesso, tiposDeDocumento, tiposDeProcesso } from '../src/iniciar/sei';
 import { depsPcaIniciar, valorBr } from '../src/iniciar/pca';
 import { criarClientePca, type Buscar } from '../src/pca/cliente';
@@ -33,6 +33,9 @@ const LISTA_TIPOS = (todos: boolean) => pag(`<form id="frmProcedimentoEscolherTi
   <table id="tblTipoProcedimento"><tr><td><a class="ancoraOpcao" href="controlador.php?acao=procedimento_escolher_tipo&amp;id_tipo_procedimento=10&amp;infra_hash=${HASH}">Contratação: Pregão</a></td></tr>
   ${todos ? `<tr><td><a class="ancoraOpcao" href="controlador.php?acao=procedimento_escolher_tipo&amp;id_tipo_procedimento=11&amp;infra_hash=${HASH}">Contratação: Dispensa</a></td></tr>` : ''}</table></form>`);
 const CADASTRO = pag(`<script>var url = 'controlador_ajax.php?acao_ajax=contato_auto_completar_contexto_RI1225&amp;infra_hash=${HASH}';
+  objAutoCompletarAssunto = new infraAjaxAutoCompletar('hdnIdAssunto','txtAssunto','controlador_ajax.php?acao_ajax=assunto_auto_completar_RI1223&amp;infra_hash=${HASH}');
+  objAutoCompletarAssunto.prepararExecucao = function(){ return 'palavras_pesquisa='+document.getElementById('txtAssunto').value; };
+  function validarCadastro(){ if (infraTrim(document.getElementById('txtDescricao').value)=='') { alert('Informe a especifica\u00e7\u00e3o.'); return false; } return true; }
   objLupaAssuntos = new infraLupaSelect('selAssuntos','hdnAssuntos','x'); objLupaInteressados = new infraLupaSelect('selInteressados','hdnInteressados','y');</script>
   <form id="frmProcedimentoCadastro" method="post" action="controlador.php?acao=procedimento_gerar&acao_origem=procedimento_escolher_tipo&infra_hash=${HASH}">
   <input type="text" id="txtDescricao" name="txtDescricao" value="">
@@ -51,8 +54,13 @@ const EXTERNO = pag(`<form id="frmDocumentoCadastro" method="post" action="contr
   <input type="hidden" id="hdnFlagDocumentoCadastro" name="hdnFlagDocumentoCadastro" value="1"><input type="hidden" id="hdnAnexos" name="hdnAnexos" value="">
   <button type="submit" name="sbmCadastrar" value="Salvar">Salvar</button></form>`);
 
-function seiFalso(o: { semCfc?: boolean; falhar?: boolean } = {}) {
+// O SEI do CFC (2026-10-13): tipo sem assunto sugerido; na recusa, a tela volta com o alerta do SEI
+const SEM_ASSUNTO = CADASTRO.replace('<option value="55">Licitação</option>', '');
+const RECUSA = SEM_ASSUNTO.replace('</body>', `<script type="text/javascript">alert('Classifica\\u00e7\\u00e3o por Assuntos n\\u00e3o informada.');</script></body>`);
+
+function seiFalso(o: { semCfc?: boolean; falhar?: boolean; semAssunto?: boolean; recusar?: boolean } = {}) {
   const posts: { acao: string; corpo: string }[] = [];
+  const gets: string[] = [];
   const resp = (url: string, html: string) => {
     const bytes = new Uint8Array([...html].map(c => c.charCodeAt(0) & 0xff));
     return { url, status: 200, arrayBuffer: async () => bytes.buffer, headers: new Headers({ 'content-type': 'text/html; charset=iso-8859-1' }) } as unknown as Response;
@@ -60,10 +68,12 @@ function seiFalso(o: { semCfc?: boolean; falhar?: boolean } = {}) {
   const fetch = (async (u: string, init?: RequestInit) => {
     const acao = /[?&]acao(?:_ajax)?=(\w+)/.exec(u)?.[1] ?? '';
     const corpo = String(init?.body ?? '');
-    if (init?.method === 'POST') posts.push({ acao, corpo });
-    if (acao === 'procedimento_escolher_tipo' && /id_tipo_procedimento=/.test(u)) return resp(u, CADASTRO);
+    if (init?.method === 'POST') posts.push({ acao, corpo }); else gets.push(acao);
+    if (acao === 'procedimento_escolher_tipo' && /id_tipo_procedimento=/.test(u)) return resp(u, o.semAssunto ? SEM_ASSUNTO : CADASTRO);
+    if (acao.startsWith('assunto_auto_completar')) return resp(u, /CFP\.422/.test(decodeURIComponent(corpo)) ? '<itens><item id="4220" descricao="CFP.422 - APOIO A CURSOS E EVENTOS"></item></itens>' : '<itens></itens>');
     if (acao === 'procedimento_escolher_tipo') return resp(u, LISTA_TIPOS(init?.method === 'POST'));
     if (acao.startsWith('contato_auto_completar')) return resp(u, o.semCfc ? '<itens></itens>' : '<itens><item id="900" descricao="CFC - Conselho Federal de Contabilidade"></item><item id="901" descricao="CFC-RJ"></item></itens>');
+    if (acao === 'procedimento_gerar' && o.recusar) return resp(u, RECUSA);
     if (acao === 'procedimento_gerar') return resp(o.falhar ? u : `${RAIZ}controlador.php?acao=procedimento_trabalhar&acao_origem=procedimento_gerar&id_procedimento=777`, pag('', 'SEI - 12345670000033.000099/2026-01'));
     if (acao === 'documento_escolher_tipo' && /hdnIdSerie=-1/.test(corpo)) return resp(u, EXTERNO);
     if (acao === 'documento_escolher_tipo') return resp(u, ler('p_documento_escolher_tipo.html'));
@@ -77,7 +87,7 @@ function seiFalso(o: { semCfc?: boolean; falhar?: boolean } = {}) {
   const arvoreHtml = ler('arvore.html');
   const arv = lerArvore({ url: `${RAIZ}controlador.php?acao=procedimento_visualizar&id_procedimento=148265`, status: 200, html: arvoreHtml, doc: parseHTML(arvoreHtml).document as unknown as Document });
   (sei as unknown as { arvore: () => Promise<typeof arv> }).arvore = async () => arv;
-  return { sei, posts };
+  return { sei, posts, gets };
 }
 
 export async function verificarIniciar(): Promise<void> {
@@ -122,6 +132,38 @@ export async function verificarIniciar(): Promise<void> {
     const sem = await iniciarProcesso(seiFalso({ semCfc: true }).sei, { tipo: '10', especificacao: 'x' });
     assert.match(sem.avisos[0], /CFC/);
     await assert.rejects(iniciarProcesso(seiFalso({ falhar: true }).sei, { tipo: '10', especificacao: 'x' }), /não confirmou a criação do processo/);
+  });
+  await teste('iniciar SEI: tipo sem assunto sugerido (SEI do CFC): sem assunto nem envia; com o escolhido, vai no hdnAssuntos; a busca usa o autocompletar da tela, aberta uma vez', async () => {
+    const { sei, posts, gets } = seiFalso({ semAssunto: true });
+    await assert.rejects(iniciarProcesso(sei, { tipo: '10', especificacao: 'x' }), /Escolha a classificação por assunto/);
+    assert.equal(posts.some(p => p.acao === 'procedimento_gerar'), false, 'o SEI recusaria: nada é enviado');
+    const r = await iniciarProcesso(sei, { tipo: '10', especificacao: 'Eventos', assunto: { id: '4220', nome: 'CFP.422 - APOIO A CURSOS E EVENTOS' } });
+    assert.equal(r.protocolo, '12345670000033.000099/2026-01');
+    const corpo = unescape(posts.find(p => p.acao === 'procedimento_gerar')!.corpo.replace(/\+/g, ' '));
+    assert.match(corpo, /hdnAssuntos=4220±CFP\.422 - APOIO A CURSOS E EVENTOS/);
+    // com assunto sugerido pelo tipo, o escolhido se soma a ele
+    const com = seiFalso();
+    await iniciarProcesso(com.sei, { tipo: '10', especificacao: 'x', assunto: { id: '4220', nome: 'CFP.422' } });
+    assert.match(unescape(com.posts.find(p => p.acao === 'procedimento_gerar')!.corpo), /hdnAssuntos=55±Licitação¥4220±CFP\.422/);
+    const { assuntosDoSei } = await import('../src/iniciar/sei');
+    const a = assuntosDoSei(seiFalso().sei);
+    const b = seiFalso({ semAssunto: true });
+    const sem = assuntosDoSei(b.sei);
+    assert.deepEqual(await a.sugeridos('10'), [{ id: '55', nome: 'Licitação' }]);
+    assert.deepEqual(await sem.sugeridos('10'), []);
+    assert.deepEqual(await sem.buscar('10', 'CFP.422'), [{ id: '4220', nome: 'CFP.422 - APOIO A CURSOS E EVENTOS' }]);
+    assert.deepEqual(await sem.buscar('10', 'nada'), []);
+    assert.match(decodeURIComponent(b.posts.find(p => p.acao.startsWith('assunto_auto_completar'))!.corpo), /^palavras_pesquisa=CFP\.422$/);
+    assert.equal(b.gets.filter(g => g === 'procedimento_escolher_tipo').length, 2, 'a escolha e o cadastro do tipo, uma vez para as três chamadas');
+    void gets;
+  });
+  await teste('iniciar SEI: recusa do SEI → a mensagem do próprio SEI (o alerta novo da tela devolvida), não o "não confirmou"', async () => {
+    const { alertas, mensagemDaRecusa } = await import('../src/iniciar/sei');
+    await assert.rejects(iniciarProcesso(seiFalso({ semAssunto: true, recusar: true }).sei, { tipo: '10', especificacao: 'x', assunto: { id: '1', nome: 'A' } }),
+      (e: Error) => { assert.equal(e.message, 'O SEI recusou a criação do processo: Classificação por Assuntos não informada.'); return true; });
+    assert.deepEqual(alertas(`<script>alert("Diz \\"oi\\"\\nlinha"); alert('a' + b); x.alert ('ok\\'s');</script>`), ['Diz "oi"\nlinha', "ok's"]);
+    const p = (html: string) => ({ url: 'u', status: 200, html, doc: parseHTML(html).document as unknown as Document });
+    assert.equal(mensagemDaRecusa(p(CADASTRO), p(CADASTRO)), null, 'o alerta da validação da tela está nas duas');
   });
   await teste('iniciar SEI: tipos de documento (internos da escolha, externos da tela do externo) e externo SEM arquivo', async () => {
     const { sei, posts } = seiFalso();
@@ -186,7 +228,7 @@ export async function verificarIniciar(): Promise<void> {
     const { document } = parseHTML('<html><body><div><div id="divRecebidos"><table id="tblProcessosRecebidos"></table></div></div></body></html>');
     const doc = document as unknown as Document;
     const log: string[] = [];
-    let lembrado: Record<string, unknown> = {};
+    let lembrado: Partial<Lembrados> = {};
     const deps: DepsDialogo = {
       tiposDeProcesso: async () => [{ id: '10', nome: 'Contratação: Pregão' }],
       iniciar: async n => { log.push(`processo:${n.tipo}:${n.especificacao}`); return { protocolo: 'P-1', idProcedimento: '777', avisos: [] }; },
@@ -232,6 +274,67 @@ export async function verificarIniciar(): Promise<void> {
     assert.match(q('.gelic-ini-status').textContent!, /Processo P-1 criado com 14 peças/);
     await clicar('abrir');
     assert.equal(log.at(-1), 'abrir:777');
+  });
+  await teste('iniciar diálogo: classificação por assunto — tipo sem assunto não avança sem ele; busca e escolhe; vai ao SEI, fica lembrado e volta preenchido', async () => {
+    const montar = (lembrados: Lembrados, sugeridos: Record<string, { id: string; nome: string }[]>) => {
+      const { document } = parseHTML('<html><body><div><div id="divRecebidos"><table id="tblProcessosRecebidos"></table></div></div></body></html>');
+      const doc = document as unknown as Document;
+      const log: string[] = [];
+      const memoria: Partial<Lembrados>[] = [];
+      const deps: DepsDialogo = {
+        tiposDeProcesso: async () => [{ id: '10', nome: 'Licitação: NLL - Dispensa' }, { id: '11', nome: 'Contratação: Pregão' }],
+        iniciar: async n => { log.push(`processo:${n.tipo}:${n.assunto?.id ?? '-'}`); return { protocolo: 'P-1', idProcedimento: '777', avisos: [] }; },
+        assuntos: {
+          sugeridos: async t => sugeridos[t] ?? [],
+          buscar: async (t, termo) => { log.push(`buscar:${t}:${termo}`); return /422/.test(termo) ? [{ id: '4220', nome: 'CFP.422 - APOIO A CURSOS E EVENTOS' }] : []; },
+        },
+        tiposDeDocumento: async () => ({ internos: [], externos: [] }),
+        lembrados: async () => lembrados, lembrar: async l => { memoria.push(l); }, guardarDfd: async () => {},
+        interno: async () => {}, externo: async () => {}, abrirProcesso: () => {},
+      };
+      return { doc, log, memoria, abrir: montarIniciar(doc, deps) };
+    };
+    const passo = async () => { for (let i = 0; i < 6; i++) await new Promise(r => setTimeout(r, 0)); };
+    const m = montar({ tipos: {} }, { 11: [{ id: '55', nome: 'Licitação' }] });
+    const caixa = await m.abrir();
+    await passo();
+    const q = <T extends Element>(sel: string) => caixa.querySelector<T>(sel)!;
+    const clicar = async (acao: string) => { q<HTMLButtonElement>(`[data-gelic-acao=${acao}]`).click(); await passo(); };
+    q<HTMLTextAreaElement>('[name=objeto]').value = 'Apoio a eventos';
+    selecionar(q<HTMLSelectElement>('[name=tipo_processo]'), '10');
+    await clicar('previa');
+    assert.match(q('.gelic-ini-status').textContent!, /Escolha a classificação por assunto/, 'tipo sem assunto: não avança');
+    assert.equal(caixa.querySelector('[data-gelic-acao=criar]'), null);
+    q<HTMLInputElement>('[name=assunto_busca]').value = 'ev';
+    await clicar('buscar-assunto');
+    assert.match(q('.gelic-ini-status').textContent!, /ao menos 3 letras/);
+    q<HTMLInputElement>('[name=assunto_busca]').value = 'CFP.422';
+    await clicar('buscar-assunto');
+    assert.equal(q('[name=assunto] option[selected]').getAttribute('value'), '4220', 'um só achado: já escolhido');
+    await clicar('previa');
+    assert.equal(q('[data-gelic-assunto=previa]').textContent, 'Classificação por assunto: CFP.422 - APOIO A CURSOS E EVENTOS');
+    await clicar('criar');
+    assert.deepEqual(m.log, ['buscar:10:CFP.422', 'processo:10:4220']);
+    assert.deepEqual(m.memoria[0].assuntos, { 10: { id: '4220', nome: 'CFP.422 - APOIO A CURSOS E EVENTOS' } }, 'lembrado logo depois do processo');
+    assert.deepEqual(m.memoria.at(-1)!.assuntos, { 10: { id: '4220', nome: 'CFP.422 - APOIO A CURSOS E EVENTOS' } }, 'e mantido com os tipos de documento');
+
+    // da próxima vez: o tipo lembrado vem com o assunto dele escolhido
+    const de_novo = montar({ tipos: {}, tipoProcesso: '10', assuntos: { 10: { id: '4220', nome: 'CFP.422 - APOIO A CURSOS E EVENTOS' } } }, {});
+    const c2 = await de_novo.abrir();
+    await passo();
+    assert.equal(c2.querySelector('[name=assunto] option[selected]')?.getAttribute('value'), '4220');
+    // tipo que já traz assunto: avança sem escolher, e a prévia diz qual vai
+    const sugerido = montar({ tipos: {} }, { 11: [{ id: '55', nome: 'Licitação' }] });
+    const c3 = await sugerido.abrir();
+    await passo();
+    c3.querySelector<HTMLTextAreaElement>('[name=objeto]')!.value = 'Pregão de limpeza';
+    selecionar(c3.querySelector<HTMLSelectElement>('[name=tipo_processo]')!, '11');
+    c3.querySelector<HTMLButtonElement>('[data-gelic-acao=previa]')!.click();
+    await passo();
+    assert.equal(c3.querySelector('[data-gelic-assunto=previa]')?.textContent, 'Classificação por assunto: Licitação');
+    c3.querySelector<HTMLButtonElement>('[data-gelic-acao=criar]')!.click();
+    await passo();
+    assert.deepEqual(sugerido.log, ['processo:11:-']);
   });
   await teste('iniciar PCA v1.1: item com via (modalidade) e unidade; vínculo só com pode_instruir; vínculo feito vai para o cache do selo', async () => {
     const ITEM: ItemPca = { item_pca: 117, exercicio: 2026, descricao_objeto: 'Licenças', valor_estimado: '48000.00', unidade: 'CGTI', grau_prioridade: 'Alto',

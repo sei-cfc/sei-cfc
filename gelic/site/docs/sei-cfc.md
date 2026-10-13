@@ -28,9 +28,14 @@ No Controle de Processos, **Iniciar processo** cria o processo e a árvore inici
 - o objeto, a via e o item do PCA (com **Buscar no PCA**, se a extensão estiver ligada ao PCA);
 - o valor e a data;
 - quantos termos de cientificação e quantas cotações;
-- o tipo de processo.
+- o tipo de processo e a **classificação por assunto**.
 
-Depois mostra a prévia da árvore. **Criar no SEI** cria o processo e as peças em branco.
+O SEI exige a classificação por assunto. Quando o tipo de processo não traz uma, digite o código ou uma palavra (por
+exemplo, `CFP.422` ou `eventos`), clique em **Buscar** e escolha na lista. A extensão lembra o assunto de cada tipo de
+processo e o traz preenchido da próxima vez.
+
+Depois mostra a prévia da árvore, com o assunto. **Criar no SEI** cria o processo e as peças em branco. Se o SEI recusar
+a criação, o diálogo mostra a mensagem do próprio SEI.
 
 O botão fica no alto do Controle de Processos, tanto na lista do SEI quanto no **Novo Controle de Processos** (a grade
 do SEI Pro, que abre pelo botão ao lado do título).

@@ -1,5 +1,14 @@
 # Novidades
 
+## 3.2.2.27 — 13/10/2026 {#v3-2-2-27}
+
+- **SEI CFC, Iniciar processo:** o diálogo pede a **classificação por assunto**, que o SEI exige e que alguns tipos de
+  processo do CFC não trazem. Busque pelo código ou por uma palavra e escolha na lista. O assunto fica lembrado para o
+  tipo de processo.
+- Se o SEI recusar a criação do processo, o diálogo mostra a mensagem do próprio SEI.
+- Trocar no diálogo uma escolha que veio preenchida (o tipo de processo lembrado, a via trazida do PCA) passa a valer
+  na criação. Antes, a escolha preenchida podia continuar valendo.
+
 ## 3.2.2.26 — 13/10/2026 {#v3-2-2-26}
 
 - **SEI CFC, Iniciar processo:** a lista de tipos de processo carrega no SEI do CFC, que escolhe o tipo por um
