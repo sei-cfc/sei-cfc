@@ -22,6 +22,10 @@ VERSAO="$(ler versao)"; BASE="$(ler base)"; INICIO="$(ler inicio)"; FIM="$(ler f
 [[ "$VERSAO" =~ ^[0-9]+(\.[0-9]+){1,4}$ && "$BASE" =~ ^[0-9]+(\.[0-9]+){0,3}$ && "$INICIO$FIM" =~ ^[0-9a-f]{80}$ ]] || { echo "estado do pacote inválido"; exit 1; }
 [[ -n "${SEI_CFC_TOKEN:-}" ]] || { echo "Falta o SEI_CFC_TOKEN (ver docs/gelic/ATUALIZACAO.md)."; exit 1; }
 [[ "$(git rev-parse --abbrev-ref HEAD)" == main ]] || { echo "Publique a partir do branch main."; exit 1; }
+# O gh escolheria sozinho o repositório padrão, que no clone local é o upstream (SEI-Pro/sei-pro): fixa no origin.
+ORIGEM="$(git remote get-url origin | sed -E 's#^(git@github\.com:|https://github\.com/)##; s#\.git$##')"
+[[ "$ORIGEM" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || { echo "origin fora do GitHub: $ORIGEM"; exit 1; }
+export GH_REPO="${GITHUB_REPOSITORY:-$ORIGEM}"
 
 # 1. main: avança do commit de antes até o fim do pacote (só fast-forward; o main não pode ter mudado no meio)
 case "$(git rev-parse HEAD)" in

@@ -9,3 +9,4 @@ Código-fonte das extensões do Conselho Federal de Contabilidade para o SEI, pu
 - Montar as extensões: `cd gelic && npm install && npm run build` (pastas `build/sei-pro-gelic/` e `build/sei-pro-cfc/`).
 
 Esta é uma cópia de cada versão publicada. O desenvolvimento acontece num repositório interno do CFC.
+Para contribuir, veja `CONTRIBUTING.md`.
