@@ -84,7 +84,7 @@ export function montarIniciar(doc: Document, deps: DepsDialogo): (o?: { pelo?: P
   // No título "Controle de Processos", onde a grade nova do SEI Pro também põe o botão dela: visível na lista do SEI e
   // na grade (que esconde a área das tabelas). Sem o título, acima das tabelas, como antes.
   const titulo = doc.querySelector<HTMLElement>(TITULO_CONTROLE);
-  const alvo = doc.getElementById('divRecebidos')?.parentElement ?? doc.querySelector('#tblProcessosRecebidos, #tblProcessosGerados')?.closest('div');
+  const alvo = doc.getElementById('divRecebidos')?.parentElement ?? doc.querySelector('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado')?.closest('div');
   if (titulo) { botao.style.marginLeft = '12px'; botao.style.verticalAlign = 'middle'; titulo.append(botao); }
   else if (alvo?.parentElement) alvo.parentElement.insertBefore(botao, alvo);
   else doc.body.prepend(botao);

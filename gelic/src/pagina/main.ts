@@ -87,7 +87,8 @@ function iniciar(): void {
   // As etapas no Controle de Processos são da Gelic.
   else if (acao === 'procedimento_controlar' && perfilAtual() === 'gelic') montarControle();
   // SEI CFC: "Iniciar processo" (cria o processo e a árvore inicial da instrução)
-  else if (acao === 'procedimento_controlar' && perfilAtual() === 'cfc' && document.querySelector('#tblProcessosRecebidos, #tblProcessosGerados')) {
+  // O botão vai no título da tela, que existe em qualquer visão: resumida, detalhada (#tblProcessosDetalhado) ou a grade nova
+  else if (acao === 'procedimento_controlar' && perfilAtual() === 'cfc') {
     const estilo = document.createElement('style');
     estilo.textContent = cssIniciar;
     (document.head ?? document.documentElement).append(estilo);

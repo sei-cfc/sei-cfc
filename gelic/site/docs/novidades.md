@@ -1,5 +1,9 @@
 # Novidades
 
+## 3.2.2.25 — 13/10/2026 {#v3-2-2-25}
+
+- **SEI CFC:** o **Iniciar processo** aparece também com o Controle de Processos na visão detalhada do SEI.
+
 ## 3.2.2.24 — 13/10/2026 {#v3-2-2-24}
 
 - **SEI CFC:** o botão **Iniciar processo** passa a ficar ao lado do título "Controle de Processos". Antes, com a grade
