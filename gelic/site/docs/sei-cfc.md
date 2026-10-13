@@ -30,8 +30,9 @@ No Controle de Processos, **Iniciar processo** cria o processo e a árvore inici
 - quantos termos de cientificação e quantas cotações;
 - o tipo de processo e a **classificação por assunto**.
 
-O SEI exige a classificação por assunto. Quando o tipo de processo não traz uma, digite o código ou uma palavra (por
-exemplo, `CFP.422` ou `eventos`), clique em **Buscar** e escolha na lista. A extensão lembra o assunto de cada tipo de
+O SEI exige a classificação por assunto. Quando o tipo de processo não traz uma, comece a digitar o código ou uma
+palavra (por exemplo, `CFP.422` ou `eventos`): as opções aparecem logo abaixo do campo, como no próprio SEI. Clique na
+certa, ou use as setas e Enter. A extensão lembra o assunto de cada tipo de
 processo e o traz preenchido da próxima vez.
 
 Depois mostra a prévia da árvore, com o assunto. **Criar no SEI** cria o processo e as peças em branco. Se o SEI recusar

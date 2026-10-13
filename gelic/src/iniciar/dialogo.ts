@@ -28,6 +28,8 @@ export interface DepsDialogo extends DepsPecas {
   iniciar: (novo: { tipo: string; especificacao: string; assunto?: Opcao }) => Promise<ProcessoCriado>;
   /** Classificação por assunto (obrigatória no SEI): os que o tipo já traz e a busca do SEI. Sem ela, o campo não aparece. */
   assuntos?: { sugeridos: (tipo: string) => Promise<Opcao[]>; buscar: (tipo: string, termo: string) => Promise<Opcao[]> };
+  /** A pausa (ms) entre a última tecla e a busca do assunto (padrão 300): os testes passam 0. */
+  esperaBusca?: number;
   tiposDeDocumento: (ref: string) => Promise<{ internos: Opcao[]; externos: Opcao[] }>;
   /** Tipos lembrados (por chaveDoTipo), o tipo de processo lembrado e o assunto de cada tipo de processo. */
   lembrados: () => Promise<Lembrados>;
@@ -161,15 +163,35 @@ export async function abrirDialogo(doc: Document, deps: DepsDialogo, o: { pelo?:
 
   const lembrados: Lembrados = await deps.lembrados().catch(() => ({ tipos: {} }));
 
-  // ---- classificação por assunto: o SEI a exige; o tipo pode trazer (sugeridos) ou não, e aí a pessoa busca e escolhe
-  const assunto = el(doc, 'select', { name: 'assunto' }, el(doc, 'option', { value: '' }, '—')) as HTMLSelectElement;
-  const termoAssunto = el(doc, 'input', { name: 'assunto_busca', placeholder: 'código ou palavra (ex.: CFP.422, eventos)' }) as HTMLInputElement;
+  // ---- classificação por assunto: o SEI a exige; o tipo pode trazer (sugeridos) ou não. Como no SEI: digitar já
+  // busca, e as opções aparecem embaixo do campo; clique, ou ↓/↑ e Enter, escolhe
+  let assuntoAtual: Opcao | undefined;
+  const termoAssunto = el(doc, 'input', { name: 'assunto_busca', autocomplete: 'off', role: 'combobox', 'aria-autocomplete': 'list', 'aria-expanded': 'false',
+    placeholder: 'digite o código ou uma palavra (ex.: CFP.422, eventos)' }) as HTMLInputElement;
+  const listaAssuntos = el(doc, 'ul', { class: 'gelic-ini-sugestoes', role: 'listbox', 'data-gelic-assunto': 'lista', hidden: '' });
   const notaAssunto = el(doc, 'small', { 'data-gelic-assunto': 'nota' }, 'obrigatória no SEI; fica lembrada para o tipo de processo');
-  const buscarAssunto = el(doc, 'button', { type: 'button', 'data-gelic-acao': 'buscar-assunto' }, 'Buscar');
-  /** As opções do select e o texto delas: a prévia mostra o nome do assunto escolhido. */
-  const opcoesAssunto = (lista: readonly Opcao[], marcado?: string) => {
-    assunto.replaceChildren(el(doc, 'option', { value: '' }, lista.length ? 'escolha o assunto' : '—'), ...lista.map(a => el(doc, 'option', { value: a.id }, a.nome)));
-    if (marcado) selecionar(assunto, marcado);
+  const NOTA_PADRAO = 'obrigatória no SEI; fica lembrada para o tipo de processo';
+  let notaDoTipo = NOTA_PADRAO;
+  const atualizarNota = () => { notaAssunto.textContent = assuntoAtual ? `escolhido: ${assuntoAtual.nome}` : notaDoTipo; };
+  const fecharLista = () => { listaAssuntos.replaceChildren(); listaAssuntos.toggleAttribute('hidden', true); termoAssunto.setAttribute('aria-expanded', 'false'); };
+  const escolherAssunto = (a: Opcao | undefined) => {
+    assuntoAtual = a;
+    termoAssunto.value = a?.nome ?? '';
+    fecharLista();
+    atualizarNota();
+  };
+  /** A lista embaixo do campo: as opções, ou uma linha de aviso (buscando, nada achado, erro). */
+  const mostrarLista = (itens: readonly Opcao[], aviso?: string) => {
+    listaAssuntos.replaceChildren(...(aviso ? [el(doc, 'li', { class: 'gelic-ini-sugestao-aviso' }, aviso)] : []),
+      ...itens.map((a, k) => {
+        const li = el(doc, 'li', { role: 'option', 'data-id': a.id, ...(k === 0 ? { 'aria-selected': 'true' } : {}) }, a.nome);
+        // mousedown, e não click: o campo perderia o foco (e a lista fecharia) antes do click
+        li.addEventListener('mousedown', e => { e.preventDefault(); escolherAssunto(a); });
+        li.addEventListener('click', () => escolherAssunto(a));
+        return li;
+      }));
+    listaAssuntos.toggleAttribute('hidden', false);
+    termoAssunto.setAttribute('aria-expanded', 'true');
   };
   const sugeridos = new Map<string, Promise<Opcao[]>>();
   const sugeridosDo = (t: string) => {
@@ -180,32 +202,57 @@ export async function abrirDialogo(doc: Document, deps: DepsDialogo, o: { pelo?:
   /** Ao trocar o tipo: o assunto lembrado dele vem escolhido, e a nota diz se o tipo já traz assunto. */
   const aoTrocarTipo = () => {
     const t = valorDe(tipo);
-    const lembrado = t ? lembrados.assuntos?.[t] : undefined;
-    opcoesAssunto(lembrado ? [lembrado] : [], lembrado?.id);
-    notaAssunto.textContent = 'obrigatória no SEI; fica lembrada para o tipo de processo';
+    escolherAssunto(t ? lembrados.assuntos?.[t] : undefined);
+    notaDoTipo = NOTA_PADRAO;
+    atualizarNota();
     void sugeridosDo(t).then(s => {
       if (t !== valorDe(tipo)) return;
-      notaAssunto.textContent = s.length ? `o tipo já traz: ${s.map(a => a.nome).join('; ')} (outro assunto é opcional)`
-        : 'o tipo não traz assunto: busque e escolha (obrigatória no SEI); fica lembrada para este tipo';
+      notaDoTipo = s.length ? `o tipo já traz: ${s.map(a => a.nome).join('; ')} (outro assunto é opcional)`
+        : 'o tipo não traz assunto: digite e escolha (obrigatória no SEI); fica lembrada para este tipo';
+      atualizarNota();
     });
   };
   tipo.addEventListener('change', aoTrocarTipo);
-  buscarAssunto.addEventListener('click', async () => {
-    const t = valorDe(tipo), termo = termoAssunto.value.trim();
-    if (!t) return mostrar('Escolha primeiro o tipo de processo.', true);
-    if (termo.length < 3) return mostrar('Digite ao menos 3 letras ou o código do assunto.', true);
-    mostrar('Buscando o assunto no SEI…');
-    try {
-      const achados = await deps.assuntos!.buscar(t, termo);
-      opcoesAssunto(achados, achados.length === 1 ? achados[0].id : undefined);
-      mostrar(achados.length ? `${achados.length} assunto(s) encontrado(s): escolha na lista.` : `Nenhum assunto com "${termo}": tente outra palavra ou o código.`, !achados.length);
-    } catch (e) { mostrar(`Assuntos: ${(e as Error).message}`, true); }
+  /** Só a resposta da última busca vale: as que chegam atrasadas são descartadas. */
+  let buscaAtual = 0;
+  let relogio: ReturnType<typeof setTimeout> | undefined;
+  termoAssunto.addEventListener('input', () => {
+    const termo = termoAssunto.value.trim();
+    if (assuntoAtual && termoAssunto.value !== assuntoAtual.nome) { assuntoAtual = undefined; atualizarNota(); }
+    clearTimeout(relogio);
+    const minha = ++buscaAtual;
+    if (termo.length < 2) return fecharLista();
+    const t = valorDe(tipo);
+    if (!t) return mostrarLista([], 'escolha primeiro o tipo de processo');
+    relogio = setTimeout(async () => {
+      mostrarLista([], 'buscando no SEI…');
+      try {
+        const achados = await deps.assuntos!.buscar(t, termo);
+        if (minha !== buscaAtual) return;
+        mostrarLista(achados, achados.length ? undefined : `nenhum assunto com "${termo}": tente outra palavra ou o código`);
+      } catch (e) { if (minha === buscaAtual) mostrarLista([], `não foi possível buscar: ${(e as Error).message}`); }
+    }, deps.esperaBusca ?? 300);
   });
-  /** O assunto escolhido no select (com o nome), ou nenhum. */
-  const assuntoEscolhido = (): Opcao | undefined => {
-    const id = valorDe(assunto);
-    return id ? { id, nome: assunto.querySelector(`option[value="${id}"]`)?.textContent ?? id } : undefined;
-  };
+  termoAssunto.addEventListener('keydown', e => {
+    const ev = e as KeyboardEvent;
+    const opcoes = [...listaAssuntos.querySelectorAll<HTMLElement>('li[role=option]')];
+    const ativa = opcoes.findIndex(o => o.getAttribute('aria-selected') === 'true');
+    if (ev.key === 'Escape') return fecharLista();
+    if (!opcoes.length) return;
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      ev.preventDefault();
+      const nova = (ativa + (ev.key === 'ArrowDown' ? 1 : -1) + opcoes.length) % opcoes.length;
+      opcoes.forEach((o, k) => o.toggleAttribute('aria-selected', k === nova));
+      opcoes[nova].setAttribute('aria-selected', 'true');
+      opcoes[nova].scrollIntoView?.({ block: 'nearest' });
+    } else if (ev.key === 'Enter' && ativa >= 0) {
+      ev.preventDefault();
+      escolherAssunto({ id: opcoes[ativa].getAttribute('data-id')!, nome: opcoes[ativa].textContent ?? '' });
+    }
+  });
+  // fora do campo, a lista fecha; o texto digitado sem escolher não vale como assunto
+  termoAssunto.addEventListener('blur', () => setTimeout(fecharLista, 150));
+  const assuntoEscolhido = (): Opcao | undefined => assuntoAtual;
 
   void deps.tiposDeProcesso().then(ts => {
     tipo.replaceChildren(el(doc, 'option', { value: '' }, 'escolha o tipo de processo'), ...ts.map(t => el(doc, 'option', { value: t.id }, t.nome)));
@@ -236,9 +283,12 @@ export async function abrirDialogo(doc: Document, deps: DepsDialogo, o: { pelo?:
       el(doc, 'div', { class: 'gelic-ini-linha' }, campo(doc, 'Termos de cientificação', termos), campo(doc, 'Cotações', cotacoes)),
       campo(doc, 'Tipo de processo no SEI', tipo),
       ...(deps.assuntos ? [
-        el(doc, 'div', { class: 'gelic-ini-linha' }, campo(doc, 'Classificação por assunto', termoAssunto), buscarAssunto),
-        // a nota muda com o tipo: vai dentro do campo, como as notas fixas
-        (() => { const c = campo(doc, 'Assunto', assunto); c.append(notaAssunto); return c; })(),
+        // a lista fica presa ao campo (posição absoluta), e a nota muda com o tipo e a escolha
+        (() => {
+          const c = campo(doc, 'Classificação por assunto', el(doc, 'div', { class: 'gelic-ini-autocompletar' }, termoAssunto, listaAssuntos));
+          c.append(notaAssunto);
+          return c;
+        })(),
       ] : []),
       el(doc, 'div', { class: 'gelic-ini-botoes' }, avancar),
     );
@@ -262,7 +312,7 @@ export async function abrirDialogo(doc: Document, deps: DepsDialogo, o: { pelo?:
     if (deps.assuntos) {
       const doTipo = escolhido ? [] : await sugeridosDo(valorDe(tipo));
       if (minha !== geracao || emAndamento || criado || !caixa.isConnected) return;
-      if (!escolhido && !doTipo.length) { mostrar('Escolha a classificação por assunto: o tipo de processo não traz assunto, e o SEI a exige. Busque pelo código ou por uma palavra.', true); return; }
+      if (!escolhido && !doTipo.length) { mostrar('Escolha a classificação por assunto: o tipo de processo não traz assunto, e o SEI a exige. Digite o código ou uma palavra e escolha na lista.', true); return; }
       linhaAssunto = `Classificação por assunto: ${escolhido ? escolhido.nome : doTipo.map(a => a.nome).join('; ')}`;
     }
     // o vínculo só acontece se esta prévia o anunciou: a decisão vai presa no botão "Criar no SEI"

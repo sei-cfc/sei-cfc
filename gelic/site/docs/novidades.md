@@ -1,5 +1,10 @@
 # Novidades
 
+## 3.2.2.28 — 13/10/2026 {#v3-2-2-28}
+
+- **SEI CFC, Iniciar processo:** a classificação por assunto agora funciona como a do próprio SEI. Enquanto você digita,
+  as opções aparecem logo abaixo do campo. Clique na certa, ou use as setas e Enter. Não há mais o botão **Buscar**.
+
 ## 3.2.2.27 — 13/10/2026 {#v3-2-2-27}
 
 - **SEI CFC, Iniciar processo:** o diálogo pede a **classificação por assunto**, que o SEI exige e que alguns tipos de

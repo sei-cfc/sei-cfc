@@ -40,8 +40,8 @@ Processos. O diálogo vem com o item, o objeto e o valor já preenchidos.
 O diálogo pergunta o que falta:
 - a data;
 - quantos termos de cientificação e quantas cotações;
-- o tipo de processo e a classificação por assunto. Se o tipo não trouxer assunto, busque pelo código ou por uma
-  palavra e escolha na lista. A extensão lembra a escolha para esse tipo.
+- o tipo de processo e a classificação por assunto. Se o tipo não trouxer assunto, comece a digitar o código ou uma
+  palavra; as opções aparecem embaixo do campo, e um clique escolhe. A extensão lembra a escolha para esse tipo.
 
 Em seguida mostra a **prévia da árvore**: as peças que serão criadas, na ordem. Confira e clique em **Criar no SEI**.
 

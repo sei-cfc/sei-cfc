@@ -1,0 +1,10 @@
+<!doctype html><html><head><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"><title>SEI - Iniciar Processo</title></head><body>
+<!-- Tela fictícia no formato do SEI do CFC (2026-10-13): o link é "#" e o tipo vai pelo onclick="escolher(id)",
+     que grava hdnIdTipoProcedimento e envia o formulário. -->
+<form id="frmProcedimentoEscolherTipo" method="post" action="controlador.php?acao=procedimento_escolher_tipo&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000">
+<input type="hidden" id="hdnFiltroTipoProcedimento" name="hdnFiltroTipoProcedimento" value="T">
+<input type="hidden" id="hdnIdTipoProcedimento" name="hdnIdTipoProcedimento" value="">
+<table id="tblTipoProcedimento">
+<tr><td><a href="#" onclick="escolher(900001)" class="ancoraOpcao">Licitação: NLL - Dispensa</a></td></tr>
+<tr><td><a href="#" onclick="escolher(900002)" class="ancoraOpcao">Licitação: NLL - Pregão Eletrônico</a></td></tr>
+</table></form></body></html>

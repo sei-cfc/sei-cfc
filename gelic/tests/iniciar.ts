@@ -275,7 +275,7 @@ export async function verificarIniciar(): Promise<void> {
     await clicar('abrir');
     assert.equal(log.at(-1), 'abrir:777');
   });
-  await teste('iniciar diálogo: classificação por assunto — tipo sem assunto não avança sem ele; busca e escolhe; vai ao SEI, fica lembrado e volta preenchido', async () => {
+  await teste('iniciar diálogo: classificação por assunto como no SEI — digitar já busca e as opções aparecem embaixo; clique ou teclado escolhe; vai ao SEI, fica lembrado e volta preenchido', async () => {
     const montar = (lembrados: Lembrados, sugeridos: Record<string, { id: string; nome: string }[]>) => {
       const { document } = parseHTML('<html><body><div><div id="divRecebidos"><table id="tblProcessosRecebidos"></table></div></div></body></html>');
       const doc = document as unknown as Document;
@@ -286,35 +286,65 @@ export async function verificarIniciar(): Promise<void> {
         iniciar: async n => { log.push(`processo:${n.tipo}:${n.assunto?.id ?? '-'}`); return { protocolo: 'P-1', idProcedimento: '777', avisos: [] }; },
         assuntos: {
           sugeridos: async t => sugeridos[t] ?? [],
-          buscar: async (t, termo) => { log.push(`buscar:${t}:${termo}`); return /422/.test(termo) ? [{ id: '4220', nome: 'CFP.422 - APOIO A CURSOS E EVENTOS' }] : []; },
+          buscar: async (t, termo) => { log.push(`buscar:${t}:${termo}`); return /42/.test(termo) ? [{ id: '4220', nome: 'CFP.422 - APOIO A CURSOS E EVENTOS' }, { id: '4230', nome: 'CFP.423 - OUTRO' }] : []; },
         },
         tiposDeDocumento: async () => ({ internos: [], externos: [] }),
         lembrados: async () => lembrados, lembrar: async l => { memoria.push(l); }, guardarDfd: async () => {},
-        interno: async () => {}, externo: async () => {}, abrirProcesso: () => {},
+        interno: async () => {}, externo: async () => {}, abrirProcesso: () => {}, esperaBusca: 0,
       };
       return { doc, log, memoria, abrir: montarIniciar(doc, deps) };
     };
     const passo = async () => { for (let i = 0; i < 6; i++) await new Promise(r => setTimeout(r, 0)); };
+    // o Event do linkedom (o do Node não aceita a fase que o linkedom grava)
+    const Evento = (parseHTML('<html></html>') as unknown as { Event: typeof Event }).Event;
+    const digitar = async (c: HTMLElement, texto: string) => {
+      const i = c.querySelector<HTMLInputElement>('[name=assunto_busca]')!;
+      i.value = texto;
+      i.dispatchEvent(new Evento('input'));
+      await passo();
+    };
+    const tecla = async (c: HTMLElement, key: string) => { c.querySelector('[name=assunto_busca]')!.dispatchEvent(Object.assign(new Evento('keydown'), { key })); await passo(); };
+    const opcoes = (c: HTMLElement) => [...c.querySelectorAll('[data-gelic-assunto=lista] li')].map(li => li.textContent);
     const m = montar({ tipos: {} }, { 11: [{ id: '55', nome: 'Licitação' }] });
     const caixa = await m.abrir();
     await passo();
     const q = <T extends Element>(sel: string) => caixa.querySelector<T>(sel)!;
     const clicar = async (acao: string) => { q<HTMLButtonElement>(`[data-gelic-acao=${acao}]`).click(); await passo(); };
     q<HTMLTextAreaElement>('[name=objeto]').value = 'Apoio a eventos';
+    await digitar(caixa, 'CFP');
+    assert.deepEqual(opcoes(caixa), ['escolha primeiro o tipo de processo']);
+    // como no navegador: a escolha e o change (o diálogo põe o atributo selected e lê os assuntos do tipo)
     selecionar(q<HTMLSelectElement>('[name=tipo_processo]'), '10');
+    q('[name=tipo_processo]').dispatchEvent(new Evento('change', { bubbles: true }));
+    await passo();
+    assert.match(q('[data-gelic-assunto=nota]').textContent!, /o tipo não traz assunto/);
+    assert.equal(q<HTMLInputElement>('[name=assunto_busca]').value, '', 'trocar o tipo limpa o texto solto');
     await clicar('previa');
     assert.match(q('.gelic-ini-status').textContent!, /Escolha a classificação por assunto/, 'tipo sem assunto: não avança');
     assert.equal(caixa.querySelector('[data-gelic-acao=criar]'), null);
-    q<HTMLInputElement>('[name=assunto_busca]').value = 'ev';
-    await clicar('buscar-assunto');
-    assert.match(q('.gelic-ini-status').textContent!, /ao menos 3 letras/);
-    q<HTMLInputElement>('[name=assunto_busca]').value = 'CFP.422';
-    await clicar('buscar-assunto');
-    assert.equal(q('[name=assunto] option[selected]').getAttribute('value'), '4220', 'um só achado: já escolhido');
+    await digitar(caixa, 'C');
+    assert.ok(q('[data-gelic-assunto=lista]').hasAttribute('hidden'), 'uma letra só: não busca');
+    await digitar(caixa, 'eventos');
+    assert.deepEqual(opcoes(caixa), ['nenhum assunto com "eventos": tente outra palavra ou o código']);
+    await digitar(caixa, 'CFP.42');
+    assert.deepEqual(opcoes(caixa), ['CFP.422 - APOIO A CURSOS E EVENTOS', 'CFP.423 - OUTRO']);
+    assert.equal(q('[data-gelic-assunto=lista]').hasAttribute('hidden'), false);
+    // teclado: ↓ passa para a segunda, ↑ volta à primeira, Enter escolhe
+    await tecla(caixa, 'ArrowDown');
+    await tecla(caixa, 'ArrowUp');
+    await tecla(caixa, 'Enter');
+    assert.equal(q<HTMLInputElement>('[name=assunto_busca]').value, 'CFP.422 - APOIO A CURSOS E EVENTOS');
+    assert.ok(q('[data-gelic-assunto=lista]').hasAttribute('hidden'), 'escolhido: a lista fecha');
+    assert.equal(q('[data-gelic-assunto=nota]').textContent, 'escolhido: CFP.422 - APOIO A CURSOS E EVENTOS');
+    // digitar de novo desfaz a escolha; o clique numa opção escolhe
+    await digitar(caixa, 'CFP.42');
+    assert.match(q('[data-gelic-assunto=nota]').textContent!, /não traz assunto/);
+    caixa.querySelector<HTMLElement>('[data-gelic-assunto=lista] li[data-id="4220"]')!.click();
+    await passo();
     await clicar('previa');
     assert.equal(q('[data-gelic-assunto=previa]').textContent, 'Classificação por assunto: CFP.422 - APOIO A CURSOS E EVENTOS');
     await clicar('criar');
-    assert.deepEqual(m.log, ['buscar:10:CFP.422', 'processo:10:4220']);
+    assert.deepEqual(m.log, ['buscar:10:eventos', 'buscar:10:CFP.42', 'buscar:10:CFP.42', 'processo:10:4220']);
     assert.deepEqual(m.memoria[0].assuntos, { 10: { id: '4220', nome: 'CFP.422 - APOIO A CURSOS E EVENTOS' } }, 'lembrado logo depois do processo');
     assert.deepEqual(m.memoria.at(-1)!.assuntos, { 10: { id: '4220', nome: 'CFP.422 - APOIO A CURSOS E EVENTOS' } }, 'e mantido com os tipos de documento');
 
@@ -322,7 +352,8 @@ export async function verificarIniciar(): Promise<void> {
     const de_novo = montar({ tipos: {}, tipoProcesso: '10', assuntos: { 10: { id: '4220', nome: 'CFP.422 - APOIO A CURSOS E EVENTOS' } } }, {});
     const c2 = await de_novo.abrir();
     await passo();
-    assert.equal(c2.querySelector('[name=assunto] option[selected]')?.getAttribute('value'), '4220');
+    assert.equal(c2.querySelector<HTMLInputElement>('[name=assunto_busca]')?.value, 'CFP.422 - APOIO A CURSOS E EVENTOS');
+    assert.equal(c2.querySelector('[data-gelic-assunto=nota]')?.textContent, 'escolhido: CFP.422 - APOIO A CURSOS E EVENTOS');
     // tipo que já traz assunto: avança sem escolher, e a prévia diz qual vai
     const sugerido = montar({ tipos: {} }, { 11: [{ id: '55', nome: 'Licitação' }] });
     const c3 = await sugerido.abrir();

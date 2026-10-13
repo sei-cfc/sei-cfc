@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"><title>SEI - Iniciar Processo</title>
+<script>
+var objAutoCompletarAssunto = new infraAjaxAutoCompletar('hdnIdAssunto','txtAssunto','controlador_ajax.php?acao_ajax=assunto_auto_completar_RI1223&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+objAutoCompletarAssunto.prepararExecucao = function(){ return 'palavras_pesquisa='+document.getElementById('txtAssunto').value; };
+function validarCadastro(){ if (document.getElementById('txtDescricao').value=='') { alert('Informe a especificação.'); return false; } return true; }
+objLupaAssuntos = new infraLupaSelect('selAssuntos','hdnAssuntos','x'); objLupaInteressados = new infraLupaSelect('selInteressados','hdnInteressados','y');
+</script></head><body>
+<!-- Tela fictícia de cadastro: tipo SEM assunto sugerido, como "Licitação: NLL - Dispensa" no SEI do CFC. -->
+<form id="frmProcedimentoCadastro" method="post" action="controlador.php?acao=procedimento_gerar&amp;acao_origem=procedimento_escolher_tipo&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000">
+<input type="text" id="txtDescricao" name="txtDescricao" value="">
+<input type="text" id="txtAssunto" name="txtAssunto" value=""><input type="hidden" id="hdnIdAssunto" name="hdnIdAssunto" value="">
+<select id="selAssuntos" name="selAssuntos" multiple></select><input type="hidden" id="hdnAssuntos" name="hdnAssuntos" value="">
+<select id="selInteressados" name="selInteressados" multiple></select><input type="hidden" id="hdnInteressados" name="hdnInteressados" value="">
+<input type="radio" name="rdoNivelAcesso" value="0"><input type="hidden" id="hdnFlagProcedimentoCadastro" name="hdnFlagProcedimentoCadastro" value="1">
+<button type="submit" name="sbmSalvar" value="Salvar">Salvar</button></form></body></html>

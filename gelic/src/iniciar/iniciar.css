@@ -17,3 +17,9 @@
 #gelic-iniciar-dialogo .gelic-ini-primario { background: #0e5c7a; color: #fff; }
 #gelic-iniciar-dialogo .gelic-ini-aviso { color: #b7791f; font-weight: 600; }
 #gelic-iniciar-dialogo .gelic-ini-ok { color: #276749; font-weight: 600; }
+#gelic-iniciar-dialogo .gelic-ini-autocompletar { position: relative; }
+#gelic-iniciar-dialogo .gelic-ini-sugestoes { position: absolute; left: 0; right: 0; top: 100%; z-index: 2; margin: 2px 0 0; padding: 2px 0; list-style: none; max-height: 240px; overflow: auto; background: #fff; border: 1px solid #c7ced6; border-radius: 4px; box-shadow: 0 6px 16px rgba(0, 0, 0, .18); }
+#gelic-iniciar-dialogo .gelic-ini-sugestoes[hidden] { display: none; }
+#gelic-iniciar-dialogo .gelic-ini-sugestoes li { padding: 5px 8px; cursor: pointer; }
+#gelic-iniciar-dialogo .gelic-ini-sugestoes li[aria-selected="true"], #gelic-iniciar-dialogo .gelic-ini-sugestoes li[role=option]:hover { background: #eef5f8; }
+#gelic-iniciar-dialogo .gelic-ini-sugestoes .gelic-ini-sugestao-aviso { color: #5d6772; cursor: default; font-style: italic; }

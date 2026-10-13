@@ -299,13 +299,16 @@ const comGrade = JSON.parse(await avaliar(`(() => {
 const botaoPca = await avaliar("!!document.querySelector('#gelic-controle .gelic-ctl-pca')");
 // No cfc a espera acima (12 s) é o tempo que a barra teria para aparecer.
 const controleCfc = PERFIL === 'cfc' ? await avaliar("!!document.getElementById('gelic-controle')") : null;
-// SEI CFC: "Iniciar processo" no Controle de Processos (o SEI de mentira não tem a tela de tipos: o diálogo abre e avisa)
+// SEI CFC: "Iniciar processo" no Controle de Processos: o diálogo abre e lista os tipos da tela no formato do SEI do CFC
 let iniciarCfc = null;
 if (PERFIL === 'cfc') {
   const botao = await avaliar("!!document.getElementById('gelic-iniciar')");
   if (botao) await clicar('#gelic-iniciar');
   await espera(800);
-  iniciarCfc = { botao, dialogo: await avaliar("!!document.querySelector('#gelic-iniciar-dialogo [name=objeto]')") };
+  const dialogo = await avaliar("!!document.querySelector('#gelic-iniciar-dialogo [name=objeto]')");
+  let tipos = null;
+  for (let i = 0; i < 20 && !tipos; i++) { await espera(300); tipos = await avaliar("[...document.querySelectorAll('#gelic-iniciar-dialogo [name=tipo_processo] option')].map(o => o.textContent).filter(t => t.startsWith('Licitação')).join(' | ') || null"); }
+  iniciarCfc = { botao, dialogo, tipos };
 }
 // O processo 148265 foi aberto acima (selo da árvore): a etapa dele já veio guardada, sem requisição.
 const doSelo = (await chamar('Runtime.evaluate', { returnByValue: true, expression: "document.querySelector('tr#P148265 .gelic-etapa-linha')?.textContent ?? null" }))?.result?.value ?? null;
@@ -398,7 +401,7 @@ if (botaoPcaLigado) {
 }
 
 // SEI CFC com o PCA ligado: "Buscar no PCA" (fetch da página, CORS) põe objeto e via; a prévia confere a permissão
-// de vincular no /saude. O SEI de mentira não tem a tela de tipos: o tipo de processo e o assunto são postos à mão.
+// de vincular no /saude. O tipo vem da lista; o assunto, digitado, pelo autocompletar da tela de cadastro (como no SEI).
 let iniciarPca = null;
 if (PERFIL === 'cfc') {
   if (await avaliar("!!document.getElementById('gelic-iniciar')")) await clicar('#gelic-iniciar');
@@ -408,12 +411,19 @@ if (PERFIL === 'cfc') {
   let via = null;
   for (let i = 0; i < 20 && via !== 'dispensa'; i++) { await espera(300); via = await avaliar("document.querySelector('#gelic-iniciar-dialogo [name=via] option[selected]')?.value ?? null"); }
   const objeto = await avaliar("document.querySelector('#gelic-iniciar-dialogo [name=objeto]').value");
-  await avaliar(`(() => { const c = document.getElementById('gelic-iniciar-dialogo'); c.querySelector('[name=tipo_processo]').innerHTML = '<option value="10" selected>Contratação</option>';
-    c.querySelector('[name=assunto]').innerHTML = '<option value="4220" selected>CFP.422 - APOIO A CURSOS E EVENTOS</option>';
-    c.querySelector('[data-gelic-acao=previa]').click(); return true; })()`);
+  for (let i = 0; i < 20 && !(await avaliar("!!document.querySelector('#gelic-iniciar-dialogo [name=tipo_processo] option[value=\"900001\"]')")); i++) await espera(300);
+  await avaliar(`(() => { const c = document.getElementById('gelic-iniciar-dialogo'); const t = c.querySelector('[name=tipo_processo]');
+    t.value = '900001'; t.dispatchEvent(new Event('change', { bubbles: true }));
+    const a = c.querySelector('[name=assunto_busca]'); a.focus(); a.value = 'cfp.42'; a.dispatchEvent(new Event('input', { bubbles: true })); return true; })()`);
+  let sugestoes = null;
+  for (let i = 0; i < 20 && !sugestoes; i++) { await espera(300); sugestoes = await avaliar("[...document.querySelectorAll('#gelic-iniciar-dialogo [data-gelic-assunto=lista] li[role=option]')].map(li => li.textContent).join(' | ') || null"); }
+  await avaliar(`(() => { const li = document.querySelector('#gelic-iniciar-dialogo [data-gelic-assunto=lista] li[data-id="4220"]');
+    li?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    document.querySelector('#gelic-iniciar-dialogo [data-gelic-acao=previa]').click(); return true; })()`);
   let vinculo = null;
   for (let i = 0; i < 20 && !vinculo; i++) { await espera(300); vinculo = await avaliar("document.querySelector('#gelic-iniciar-dialogo [data-gelic-pca=vinculo]')?.textContent ?? null"); }
-  iniciarPca = { via, objeto, vinculo };
+  const assunto = await avaliar("document.querySelector('#gelic-iniciar-dialogo [data-gelic-assunto=previa]')?.textContent ?? null");
+  iniciarPca = { via, objeto, vinculo, sugestoes, assunto };
 }
 
 // "Iniciar processo" pela ficha do item no PCA (pca.sistemascfc.org → PCA de mentira): o cfc põe o botão e o clique
@@ -554,7 +564,12 @@ if (PERFIL === 'cfc') {
   });
   ok('cfc: sem a barra de etapas da Gelic no Controle de Processos', () => assert.equal(controleCfc, false));
   ok('cfc: com a grade nova do SEI Pro 3.x aberta, o "Iniciar processo" continua à vista', () => assert.equal(comGrade.iniciar, true, JSON.stringify(comGrade)));
-  ok('cfc: "Iniciar processo" no Controle de Processos abre o diálogo das perguntas', () => assert.deepEqual(iniciarCfc, { botao: true, dialogo: true }));
+  ok('cfc: "Iniciar processo" no Controle de Processos abre o diálogo das perguntas, com os tipos da tela do SEI do CFC (escolher(id))', () =>
+    assert.deepEqual(iniciarCfc, { botao: true, dialogo: true, tipos: 'Licitação: NLL - Dispensa | Licitação: NLL - Pregão Eletrônico' }));
+  ok('cfc: "Iniciar processo": a classificação por assunto aparece enquanto se digita (autocompletar da tela de cadastro) e o clique escolhe', () => {
+    assert.equal(iniciarPca?.sugestoes, 'CFP.422 - APOIO A CURSOS E EVENTOS | CFP.423 - APOIO A PUBLICAÇÕES', JSON.stringify(iniciarPca));
+    assert.equal(iniciarPca.assunto, 'Classificação por assunto: CFP.422 - APOIO A CURSOS E EVENTOS');
+  });
   ok('cfc: "Iniciar processo" busca o item no PCA (objeto e via pela modalidade) e a prévia anuncia o vínculo', () => {
     assert.equal(iniciarPca?.objeto, 'Objeto de teste', JSON.stringify(iniciarPca));
     assert.equal(iniciarPca.via, 'dispensa');

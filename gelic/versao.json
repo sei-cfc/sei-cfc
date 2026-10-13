@@ -1,4 +1,4 @@
 {
   "_leia": "Revisao da camada Gelic sobre a versao do SEI Pro do upstream. A versao final e <upstream>.<revisao> (ex.: 3.2.2 + revisao 22 = 3.2.2.22). Suba a revisao a cada entrega; ela nunca volta a 1, porque a Chrome Web Store exige versao sempre maior.",
-  "revisao": 27
+  "revisao": 28
 }
