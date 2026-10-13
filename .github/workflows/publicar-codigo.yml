@@ -1,0 +1,44 @@
+# Código público: uma tag vX no repositório privado publica a cópia limpa daquela versão em sei-cfc/sei-cfc (commit
+# "Versão X" e a mesma tag lá). Decisão do usuário, 2026-10-12. Ver docs/gelic/ATUALIZACAO.md.
+#   git tag -a v3.2.2.24 -m "SEI CFC 3.2.2.24" && git push origin v3.2.2.24
+# Só git, python e a trava de dados reais (scripts/gelic-codigo.sh): nada do upstream roda aqui.
+# A tag criada pelo workflow diário (GITHUB_TOKEN) não dispara este: lá a publicação do código é feita no próprio job.
+name: Publicar o código (tag)
+
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+concurrency:
+  group: publicar-codigo
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: publicacao
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Cópia limpa, trava e push para sei-cfc/sei-cfc
+        env:
+          SEI_CFC_TOKEN: ${{ secrets.SEI_CFC_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          [ -n "$SEI_CFC_TOKEN" ] || { echo "Falta o segredo SEI_CFC_TOKEN (ver docs/gelic/ATUALIZACAO.md)."; exit 1; }
+          # a trava compara com a versão do SEI Pro que está na base
+          BASE="$(node -p "require('./dist/manifest.json').version")"
+          git fetch -q --no-tags https://github.com/SEI-Pro/sei-pro.git "+refs/tags/v$BASE:refs/upstream-versao/v$BASE"
+          export GELIC_UPSTREAM_REF="refs/upstream-versao/v$BASE"
+          # o token vai em cabeçalho, pela configuração do git em variável de ambiente: nem na URL, nem em arquivo
+          export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$SEI_CFC_TOKEN" | base64 -w0)"
+          export GELIC_CODIGO_REMOTO="https://github.com/sei-cfc/sei-cfc.git" GELIC_CODIGO_TAG="$TAG"
+          scripts/gelic-codigo.sh --publicar

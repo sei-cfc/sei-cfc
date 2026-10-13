@@ -160,6 +160,22 @@ export async function verificarIniciar(): Promise<void> {
     assert.deepEqual(falha.erro, { peca: 'Estudo Técnico Preliminar (ETP)', mensagem: 'recusado' });
     assert.equal(falha.criadas.length, 4);
   });
+  await teste('iniciar: o botão vai no título do Controle (visível na lista e na grade nova); clonado pelo SEI Pro, continua abrindo o diálogo', async () => {
+    const { document } = parseHTML('<html><body><div id="divInfraBarraLocalizacao">Controle de Processos</div><div id="divTabelaProcesso"><div class="x"><div id="divRecebidos"><table id="tblProcessosRecebidos"></table></div></div></div></body></html>');
+    const doc = document as unknown as Document;
+    const chamadas: string[] = [];
+    // dependências de mentira: qualquer chamada responde vazio e fica registrada
+    const deps = new Proxy({}, { get: (_, k) => async () => { chamadas.push(String(k)); return k === 'lembrados' ? { tipos: {} } : []; } }) as unknown as DepsDialogo;
+    montarIniciar(doc, deps);
+    const titulo = doc.getElementById('divInfraBarraLocalizacao')!;
+    assert.ok(titulo.querySelector('#gelic-iniciar'), 'no título, fora da área que a grade esconde');
+    assert.equal(doc.getElementById('divTabelaProcesso')!.querySelector('#gelic-iniciar'), null);
+    // o legado clona a área do título ($.fn.moveTo): o clone perde os ouvintes do botão
+    titulo.replaceWith(titulo.cloneNode(true));
+    doc.querySelector<HTMLButtonElement>('#gelic-iniciar')!.click();
+    for (let i = 0; i < 5; i++) await new Promise(r => setTimeout(r, 0));
+    assert.ok(doc.getElementById(ID_DIALOGO), 'o clique no botão clonado abre o diálogo');
+  });
   await teste('iniciar diálogo: perguntas → prévia → cria o processo, pergunta o tipo que falta, cria as peças e guarda o DFD e os tipos', async () => {
     const { document } = parseHTML('<html><body><div><div id="divRecebidos"><table id="tblProcessosRecebidos"></table></div></div></body></html>');
     const doc = document as unknown as Document;

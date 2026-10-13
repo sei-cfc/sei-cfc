@@ -74,14 +74,25 @@ const campo = (doc: Document, rotulo: string, controle: HTMLElement, nota?: stri
   el(doc, 'label', { class: 'gelic-ini-campo' }, el(doc, 'span', {}, rotulo), controle, nota ? el(doc, 'small', {}, nota) : null);
 
 /** Põe o botão "Iniciar processo" acima das tabelas do Controle de Processos. Devolve a função que abre o diálogo. */
+/** O título da tela do Controle de Processos (os mesmos seletores da grade nova, grade-controle/src/ativacao/botao.ts). */
+const TITULO_CONTROLE = '#processosSEIPro .titlePanelHome, #processosSEIPro #divInfraBarraLocalizacao, #divInfraBarraLocalizacao.titlePanelHome, #divInfraBarraLocalizacao';
+let ouvinte: ((e: Event) => void) | null = null;
+
 export function montarIniciar(doc: Document, deps: DepsDialogo): (o?: { pelo?: PedidoPca }) => Promise<HTMLElement> {
   doc.getElementById(ID_BOTAO)?.remove();
   const botao = el(doc, 'button', { type: 'button', id: ID_BOTAO, class: 'gelic-ini-botao', title: 'Cria o processo e a árvore com as peças da instrução (você confere antes)' }, 'Iniciar processo');
+  // No título "Controle de Processos", onde a grade nova do SEI Pro também põe o botão dela: visível na lista do SEI e
+  // na grade (que esconde a área das tabelas). Sem o título, acima das tabelas, como antes.
+  const titulo = doc.querySelector<HTMLElement>(TITULO_CONTROLE);
   const alvo = doc.getElementById('divRecebidos')?.parentElement ?? doc.querySelector('#tblProcessosRecebidos, #tblProcessosGerados')?.closest('div');
-  if (alvo?.parentElement) alvo.parentElement.insertBefore(botao, alvo);
+  if (titulo) { botao.style.marginLeft = '12px'; botao.style.verticalAlign = 'middle'; titulo.append(botao); }
+  else if (alvo?.parentElement) alvo.parentElement.insertBefore(botao, alvo);
   else doc.body.prepend(botao);
   const abrir = (o: { pelo?: PedidoPca } = {}) => abrirDialogo(doc, deps, o);
-  botao.addEventListener('click', () => void abrir());
+  // O legado clona a área do título ($.fn.moveTo) e o clone perde os ouvintes: o clique é ouvido no documento.
+  if (ouvinte) doc.removeEventListener('click', ouvinte);
+  ouvinte = (e: Event) => { if ((e.target as Element | null)?.closest?.(`#${ID_BOTAO}`)) void abrir(); };
+  doc.addEventListener('click', ouvinte);
   return abrir;
 }
 

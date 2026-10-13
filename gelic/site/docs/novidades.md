@@ -1,5 +1,10 @@
 # Novidades
 
+## 3.2.2.24 — 13/10/2026 {#v3-2-2-24}
+
+- **SEI CFC:** o botão **Iniciar processo** passa a ficar ao lado do título "Controle de Processos". Antes, com a grade
+  nova do SEI Pro aberta, ele ficava escondido no SEI do CFC.
+
 ## 3.2.2.23 — 12/10/2026 {#v3-2-2-23}
 
 - **SEI CFC: Configurar a IA (opcional).** Uma página própria com o OpenRouter e a Anthropic lado a lado, cada um com

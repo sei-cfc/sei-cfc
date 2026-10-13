@@ -56,6 +56,11 @@ espelhar() {
     git -C "$dir" -c user.name="SEI CFC" -c user.email="sei-cfc@users.noreply.github.com" commit -q -m "Versão $VERSAO"
     git -C "$dir" -c http.extraheader="$CABECALHO" push -q origin HEAD:main
   fi
+  # no código público, também a tag da versão (a tag que este job cria no privado não dispara publicar-codigo.yml)
+  if [[ "$repo" == sei-cfc/sei-cfc ]] && ! git -C "$dir" -c http.extraheader="$CABECALHO" ls-remote --exit-code --tags origin "refs/tags/v$VERSAO" >/dev/null; then
+    git -C "$dir" -c user.name="SEI CFC" -c user.email="sei-cfc@users.noreply.github.com" tag -a "v$VERSAO" -m "SEI CFC $VERSAO"
+    git -C "$dir" -c http.extraheader="$CABECALHO" push -q origin "refs/tags/v$VERSAO"
+  fi
   rm -rf "$dir"
   echo "$repo: versão $VERSAO" | tee -a "$FEITO"
 }
