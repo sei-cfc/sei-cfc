@@ -1,5 +1,13 @@
 # Novidades
 
+## 3.2.2.23 — 12/10/2026 {#v3-2-2-23}
+
+- **SEI CFC: Configurar a IA (opcional).** Uma página própria com o OpenRouter e a Anthropic lado a lado, cada um com
+  o passo a passo (conta, crédito, limite de gasto, chave e modelo). O que a extensão consegue conferir, ela confere:
+  a chave, o modelo e, no OpenRouter, o limite de gasto da chave.
+- O selo do SEI CFC ganha a linha **IA (opcional)**, com o serviço, a data do teste e o limite. O **Configurar** dessa
+  linha e o das janelas das peças e da verificação abrem a página.
+
 ## 3.2.2.22 — 12/10/2026 {#v3-2-2-22}
 
 **Base nova: SEI Pro 3.2.2** (era a 2.9). O que chega do SEI Pro:

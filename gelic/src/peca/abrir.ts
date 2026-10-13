@@ -19,3 +19,9 @@ export const alvoDaVerificacao = (protocolo: string) => `gelic-verificar-${proto
 export function abrirVerificacao(abrir: (url: string, alvo: string) => unknown, protocolo: string): void {
   abrir(urlDaVerificacao(protocolo), alvoDaVerificacao(protocolo));
 }
+
+/** A página "Configurar a IA" (src/ia/): uma aba só, reaproveitada a cada clique. */
+export const URL_CONFIGURAR_IA = 'js/gelic/configurar-ia.html';
+export function abrirConfigurarIa(abrir: (url: string, alvo: string) => unknown): void {
+  abrir(URL_CONFIGURAR_IA, 'gelic-configurar-ia');
+}

@@ -6,6 +6,8 @@
 import { PontePainel } from '../../../agente-ia/src/ponte/cliente';
 import { vinculoDaConfig } from '../pca/dfd';
 import { completarDaConfig, contextoDaJanela, esperarAba, lerConfigAgente } from '../peca/contexto';
+import { abrirConfigurarIa } from '../peca/abrir';
+import { sincronizarResumo } from '../ia/guardado';
 import { areaPadrao, lerUo } from '../peca/guardados';
 import { guardarVerificacao, justificar, lerVerificacao, type Modo } from './estado';
 import { montarVerificacao } from './pagina';
@@ -34,6 +36,9 @@ async function iniciar(): Promise<void> {
   addEventListener('pagehide', () => sinal.abort());
   // A IA pode ser configurada com a janela aberta (em outra aba): `ia` muda e cada rodada lê a atual.
   let ia = await completarDaConfig(lerConfigAgente).catch(() => undefined);
+  // o resumo sem segredo que o selo lê, em dia mesmo quando a chave foi posta pelo painel do agente
+  const sincronizarIa = () => void lerConfigAgente().then(c => sincronizarResumo(areaPadrao(), c, new Date())).catch(() => undefined);
+  sincronizarIa();
   // sem IA, leitura local: nada sai do navegador, e o restrito é lido sem a pergunta do envio ao modelo
   const contexto = (modo: Modo = 'ia') => contextoDaJanela({
     protocolo: processo, ponte, sinal: sinal.signal, leituraLocal: modo === 'presenca',
@@ -62,10 +67,11 @@ async function iniciar(): Promise<void> {
   await montarVerificacao(document, {
     protocolo: processo,
     temIa: !!ia,
-    // Sem chave: o painel do agente abre na configuração (a página "Configurar a IA" própria vem depois).
-    configurarIa: () => void chrome.runtime.sendMessage({ tipo: 'abrirAgente' }).catch(() => undefined),
+    // a página "Configurar a IA" do SEI CFC (src/ia/), numa aba da mesma janela
+    configurarIa: () => abrirConfigurarIa((u, alvo) => window.open(chrome.runtime.getURL(u), alvo)),
     aoMudarIa: f => chrome.storage.onChanged.addListener((mud, a) => {
       if (a !== 'local' || !mud.agenteIA_config) return;
+      sincronizarIa();
       void completarDaConfig(lerConfigAgente).catch(() => undefined).then(nova => { ia = nova; f(!!nova); });
     }),
     // a mais recente dos dois modos: é a que a pessoa estava vendo

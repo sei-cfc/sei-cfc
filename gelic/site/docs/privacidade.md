@@ -8,7 +8,7 @@ As telas do SEI que você abre (árvore, documentos, Controle de Processos), par
 ## O que fica no seu navegador
 
 As etapas calculadas, os rascunhos das peças, o resultado da verificação prévia de cada processo e as configurações
-(o token do PCA e as preferências). Não saem dele.
+(o token do PCA, a chave de IA e as preferências). Não saem dele; a chave de IA vai só ao serviço de IA escolhido.
 
 ## O que vai para o PCA do CFC
 

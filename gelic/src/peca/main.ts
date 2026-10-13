@@ -7,6 +7,8 @@ import { PontePainel } from '../../../agente-ia/src/ponte/cliente';
 import { analisarCfc, GANCHOS_CFC, gravarCfc, previaCfc } from '../agente/cfc';
 import { DOCUMENTOS_CFC } from '../documentos/catalogo';
 import { completarDaConfig, contextoDaJanela, esperarAba, lerConfigAgente } from './contexto';
+import { abrirConfigurarIa } from './abrir';
+import { sincronizarResumo } from '../ia/guardado';
 import { areaPadrao } from './guardados';
 import { criarClientePca } from '../pca/cliente';
 import { lerConfigPca } from '../pca/config';
@@ -42,6 +44,9 @@ async function iniciar(): Promise<void> {
   addEventListener('pagehide', () => sinal.abort());
   // A IA pode ser configurada com a janela aberta (em outra aba): `ia` muda e o contexto lê sempre a atual.
   let ia = await completarDaConfig(lerConfigAgente).catch(() => undefined);
+  // o resumo sem segredo que o selo lê, em dia mesmo quando a chave foi posta pelo painel do agente
+  const sincronizarIa = () => void lerConfigAgente().then(c => sincronizarResumo(areaPadrao(), c, new Date())).catch(() => undefined);
+  sincronizarIa();
   const ctx = contextoDaJanela({
     protocolo: processo, ponte, sinal: sinal.signal,
     completar: (s: string, p: string, sn: AbortSignal) => (ia ? ia.completar(s, p, sn) : Promise.reject(new Error('Configure a IA no painel do agente.'))),
@@ -81,11 +86,11 @@ async function iniciar(): Promise<void> {
       if (r.ok && documento) await removerVazio(areaPadrao(), processo, documento).catch(() => {});
       return r;
     },
-    // Sem chave: o painel do agente abre na configuração (o "Configurar a IA" próprio é da verificação prévia).
-    // A janela é aba da mesma janela do navegador (abrir.ts), então o painel lateral abre ao lado dela.
-    configurarIa: () => void chrome.runtime.sendMessage({ tipo: 'abrirAgente' }).catch(() => undefined),
+    // a página "Configurar a IA" do SEI CFC (src/ia/), numa aba da mesma janela
+    configurarIa: () => abrirConfigurarIa((u, alvo) => window.open(chrome.runtime.getURL(u), alvo)),
     aoMudarIa: f => chrome.storage.onChanged.addListener((mud, area) => {
       if (area !== 'local' || !mud.agenteIA_config) return;
+      sincronizarIa();
       void completarDaConfig(lerConfigAgente).catch(() => undefined).then(nova => { ia = nova; f(!!nova); });
     }),
   });

@@ -11,7 +11,8 @@ import { PERFIS_MANIFESTO } from '../empacotamento/manifesto';
 import { perfilAtual, type Perfil } from '../perfil';
 import { ACOES, BOTOES_DO_PERFIL, pedirAoAgente } from './acoes';
 import { NOTA_ONDE, roteiro, type DocRoteiro, type PassoRoteiro } from '../peca/roteiro';
-import { abrirPeca, abrirVerificacao } from '../peca/abrir';
+import { abrirConfigurarIa, abrirPeca, abrirVerificacao } from '../peca/abrir';
+import { textoDoSelo, type ResumoIa } from '../ia/estado';
 
 export const ID = 'gelic-selo';
 const CHAVE_ABERTO = 'gelic_selo_aberto';
@@ -26,7 +27,9 @@ export type EstadoSelo =
   | { tipo: 'carregando' }
   | { tipo: 'sigiloso' }
   | { tipo: 'erro'; mensagem: string }
-  | { tipo: 'resumo'; resumo: Resumo; protocolo: string; docs?: readonly DocRoteiro[]; /** Internas criadas em branco pelo Iniciar processo. */ vazios?: readonly { chave: string; numero: string }[] };
+  | { tipo: 'resumo'; resumo: Resumo; protocolo: string; docs?: readonly DocRoteiro[]; /** Internas criadas em branco pelo Iniciar processo. */ vazios?: readonly { chave: string; numero: string }[];
+      /** Resumo sem segredo da IA (gelic_ia_estado), só no cfc: null = nada configurado neste navegador; ausente = não mostra. */
+      ia?: ResumoIa | null };
 
 export interface OpcoesSelo {
   /**
@@ -36,6 +39,8 @@ export interface OpcoesSelo {
   abrirJanela?: (modelo: string, protocolo: string, documento?: string) => void;
   /** Abre a janela da verificação prévia do processo (perfil cfc), também como aba. */
   abrirVerificacao?: (protocolo: string) => void;
+  /** Abre a página "Configurar a IA" (perfil cfc). */
+  abrirConfigurarIa?: () => void;
 }
 /** Extensão recarregada com o SEI aberto: o runtime some, e o clique avisa em vez de não fazer nada. */
 function comoAba(abrir: (aba: (url: string, alvo: string) => unknown) => void): void {
@@ -49,6 +54,14 @@ function comoAba(abrir: (aba: (url: string, alvo: string) => unknown) => void): 
 }
 const abrirComoAba = (modelo: string, protocolo: string, documento?: string) => comoAba(aba => abrirPeca(aba, modelo, protocolo, documento));
 const verificacaoComoAba = (protocolo: string) => comoAba(aba => abrirVerificacao(aba, protocolo));
+const configurarIaComoAba = () => comoAba(aba => abrirConfigurarIa(aba));
+
+/** A linha da IA (opcional) no selo do cfc: o resumo sem segredo e o botão que abre "Configurar a IA". */
+function linhaDaIa(doc: Document, ia: ResumoIa | null, abrir: () => void): HTMLElement {
+  const b = el(doc, 'button', { type: 'button', class: 'gelic-preencher', 'data-gelic-configurar-ia': '', title: 'Abre a página Configurar a IA numa aba' }, ia ? 'Trocar' : 'Configurar');
+  b.addEventListener('click', () => abrir());
+  return el(doc, 'div', { class: 'gelic-ia' }, el(doc, 'span', { class: 'gelic-ia-texto' }, textoDoSelo(ia)), ' ', b);
+}
 
 type Filho = Node | string | null | undefined | false;
 function el(doc: Document, tag: string, attrs: Record<string, string> = {}, ...filhos: Filho[]): HTMLElement {
@@ -287,6 +300,7 @@ export function desenharSelo(doc: Document, estado: EstadoSelo, aoPedir: (pedido
     const naArvore = new Map((estado.docs ?? []).map(d => [d.numero, d]));
     const vazio = rot.proxima ? estado.vazios?.find(v => v.chave === rot.proxima!.chave && naArvore.has(v.numero) && naArvore.get(v.numero)!.assinado === false)?.numero : undefined;
     extras.push(linhaDoRoteiro(doc, rot.passos, rot.proxima, rot.completa, estado.protocolo, abrirJanela, abrirVer, vazio));
+    if (estado.ia !== undefined) extras.push(linhaDaIa(doc, estado.ia, o.abrirConfigurarIa ?? configurarIaComoAba));
     det.insertBefore(passosDoRoteiro(doc, rot.passos), det.querySelector(`#${ID}-proximo`)?.nextSibling ?? null);
   }
   raiz.append(cab, ...acoes(doc, r, estado.protocolo, aoPedir, mostrarProximo, perfil, abrirJanela, abrirVer), ...extras, det);

@@ -15,6 +15,7 @@ import { verificarModelosFluxo } from './modelos-fluxo';
 import { verificarModelosCfcFluxo } from './modelos-cfc-fluxo';
 import { verificarPeca } from './peca';
 import { verificarVerificacao } from './verificacao';
+import { verificarIa } from './ia';
 import { verificarPca } from './pca';
 import { verificarIniciar } from './iniciar';
 import { verificarFicha } from './ficha';
@@ -158,10 +159,11 @@ await teste('pacote cfc: a janela das peças é recurso acessível às telas do 
   const r = cfc.web_accessible_resources!.find(x => x.resources.includes('js/gelic/peca.html'));
   assert.ok(r, 'peca.html acessível');
   assert.deepEqual(r.matches, ['*://sei.cfc.org.br/*'], 'só no SEI do CFC: nenhum outro site embute a janela');
-  assert.deepEqual(r.resources, ['js/gelic/peca.html', 'js/gelic/verificar.html', 'js/gelic/pca.html'], 'entrada própria, fora da lista do legado');
+  assert.deepEqual(r.resources, ['js/gelic/peca.html', 'js/gelic/verificar.html', 'js/gelic/configurar-ia.html', 'js/gelic/pca.html'], 'entrada própria, fora da lista do legado');
   const gelic = manifestoGelic(upstream(), 10, 'gelic').web_accessible_resources!;
   assert.ok(!gelic.some(x => x.resources.includes('js/gelic/peca.html')));
   assert.ok(!gelic.some(x => x.resources.includes('js/gelic/verificar.html')), 'a verificação prévia é só do CFC');
+  assert.ok(!gelic.some(x => x.resources.includes('js/gelic/configurar-ia.html')), 'na Gelic a chave é do time');
   assert.deepEqual(gelic.find(x => x.resources.includes('js/gelic/pca.html'))!.matches, ['*://sei.cfc.org.br/*'], 'a configuração do PCA nos dois perfis');
 });
 
@@ -178,6 +180,7 @@ await verificarModelosFluxo();
 await verificarModelosCfcFluxo();
 await verificarPeca();
 await verificarVerificacao();
+await verificarIa();
 await verificarPerfil();
 await verificarPca();
 await verificarIniciar();

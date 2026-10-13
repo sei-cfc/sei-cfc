@@ -22,6 +22,7 @@ import { docsDaArvore } from '../peca/roteiro';
 import { ligarPca, ligarPcaNoControleDaPagina } from '../pca/na-pagina';
 import { montarIniciarDaPagina } from '../iniciar/na-pagina';
 import { lerVazios } from '../iniciar/vazios';
+import { lerResumo } from '../ia/guardado';
 import { areaLocal } from '../pca/config';
 import cssIniciar from '../iniciar/iniciar.css';
 import { garantirPadroes } from '../padroes';
@@ -46,8 +47,11 @@ async function montarSelo(): Promise<void> {
     const resumo = resumir(docs);
     // o roteiro do CFC distingue peça assinada (ou externa com arquivo) de rascunho
     const docsRoteiro = docsDaArvore(arvore);
-    const vazios = perfilAtual() === 'cfc' ? await lerVazios(areaLocal(), arvore.protocolo) : [];
-    desenharSelo(document, { tipo: 'resumo', resumo, protocolo: arvore.protocolo, docs: docsRoteiro, vazios });
+    const cfc = perfilAtual() === 'cfc';
+    const vazios = cfc ? await lerVazios(areaLocal(), arvore.protocolo) : [];
+    // o resumo sem segredo da IA (a página do SEI nunca lê a chave): só no cfc
+    const ia = cfc ? await lerResumo(areaLocal()) : undefined;
+    desenharSelo(document, { tipo: 'resumo', resumo, protocolo: arvore.protocolo, docs: docsRoteiro, vazios, ...(cfc ? { ia } : {}) });
     // A etapa deste processo fica guardada para o Controle de Processos mostrar sem requisição.
     void guardarEtapas({ [arvore.idProcedimento]: guardavel(resumo, Date.now()) });
     // O PCA vem depois, sem atrasar o selo (sem configuração, nada sai pela rede).

@@ -13,6 +13,8 @@ const saidas = [
   { entrada: 'src/peca/main.ts', saida: 'saida/js/gelic/peca.js', ascii: false },
   // janela da verificação prévia do CFC (página da extensão, como a das peças)
   { entrada: 'src/verificacao/main.ts', saida: 'saida/js/gelic/verificar.js', ascii: false },
+  // página "Configurar a IA" do CFC (página da extensão)
+  { entrada: 'src/ia/main.ts', saida: 'saida/js/gelic/configurar-ia.js', ascii: false },
   // configuração do PCA (página da extensão, nos dois perfis)
   { entrada: 'src/pca/main.ts', saida: 'saida/js/gelic/pca.js', ascii: false },
   // content script do SEI CFC nas telas do PCA: o botão "Iniciar processo" na ficha do item
@@ -28,4 +30,5 @@ for (const { entrada, saida, ascii } of saidas) {
 for (const f of ['peca.html', 'peca.css']) await copyFile(caminho(`src/peca/${f}`), caminho(`saida/js/gelic/${f}`));
 await copyFile(caminho('src/pca/pca.html'), caminho('saida/js/gelic/pca.html'));
 await copyFile(caminho('src/verificacao/verificar.html'), caminho('saida/js/gelic/verificar.html'));
+await copyFile(caminho('src/ia/configurar-ia.html'), caminho('saida/js/gelic/configurar-ia.html'));
 console.log('Gelic: bundles gerados em gelic/saida/.');

@@ -47,6 +47,8 @@ export const PAGINA_PECA = 'js/gelic/peca.html';
 export const PAGINA_PCA = 'js/gelic/pca.html';
 /** Janela da verificação prévia do CFC (src/verificacao/verificar.html, copiada por build.mjs). */
 export const PAGINA_VERIFICAR = 'js/gelic/verificar.html';
+/** Página "Configurar a IA" do CFC (src/ia/configurar-ia.html, copiada por build.mjs). */
+export const PAGINA_IA = 'js/gelic/configurar-ia.html';
 export const TAMANHOS = ['16', '32', '48', '128'] as const;
 export const icone = (tamanho: string, perfil: Perfil = 'gelic') => `icons/${perfil}/icon-${tamanho}.png`;
 export const LOGO_SELO = PERFIS_MANIFESTO.gelic.logoSelo;
@@ -156,7 +158,7 @@ export function manifestoGelic(upstream: Manifesto, revisao: number, perfil: Per
   for (const r of m.web_accessible_resources ?? []) r.matches = paraOCfc(r.matches);
   // Páginas da extensão abertas pelo selo, numa entrada própria (só o SEI, não o SIP; nenhum outro site as embute): a
   // janela das peças (só no pacote do CFC) e a configuração do PCA (nos dois).
-  m.web_accessible_resources!.push({ resources: perfil === 'cfc' ? [PAGINA_PECA, PAGINA_VERIFICAR, PAGINA_PCA] : [PAGINA_PCA], matches: [...MATCHES_PECA] });
+  m.web_accessible_resources!.push({ resources: perfil === 'cfc' ? [PAGINA_PECA, PAGINA_VERIFICAR, PAGINA_IA, PAGINA_PCA] : [PAGINA_PCA], matches: [...MATCHES_PECA] });
   // SEI CFC também no PCA: o botão "Iniciar processo" na ficha do item, e a configuração do PCA que o clique sem
   // configuração abre. Entra depois do filtro paraOCfc (que tiraria qualquer host fora do SEI do CFC).
   if (perfil === 'cfc') {

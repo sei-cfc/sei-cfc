@@ -172,6 +172,25 @@ if (PERFIL === 'cfc') {
     ws5.close();
     await fetch(`http://127.0.0.1:${portaCdp}/json/close/${alvoVer.id}`);
   }
+  // Linha da IA (opcional) no selo e a página "Configurar a IA" numa aba da extensão
+  seloCfc.ia = await avaliar("document.querySelector('#gelic-selo .gelic-ia')?.textContent ?? null");
+  await clicar('#gelic-selo [data-gelic-configurar-ia]');
+  const urlIa = `chrome-extension://${idExt}/js/gelic/configurar-ia.html`;
+  let alvoIa = null;
+  for (let i = 0; i < 30 && !alvoIa; i++) { await espera(400); alvoIa = (await alvos()).find(a => a.type === 'page' && a.url.startsWith(urlIa)) ?? null; }
+  seloCfc.paginaIa = null;
+  if (alvoIa) {
+    const ws6 = new WebSocket(alvoIa.webSocketDebuggerUrl);
+    await new Promise(r => ws6.addEventListener('open', r));
+    for (let i = 0; i < 30 && !(seloCfc.paginaIa?.colunas === 2); i++) {
+      await espera(400);
+      ws6.send(JSON.stringify({ id: 1, method: 'Runtime.evaluate', params: { returnByValue: true, expression: "JSON.stringify({ colunas: document.querySelectorAll('[data-gelic-servico]').length, titulo: document.querySelector('h1')?.textContent ?? '' })" } }));
+      const v = await new Promise(r => ws6.addEventListener('message', function f(ev) { const m = JSON.parse(ev.data); if (m.id === 1) { ws6.removeEventListener('message', f); r(m.result?.result?.value ?? null); } }));
+      if (v) seloCfc.paginaIa = JSON.parse(v);
+    }
+    ws6.close();
+    await fetch(`http://127.0.0.1:${portaCdp}/json/close/${alvoIa.id}`);
+  }
 } else {
   seloGelicBotoes = JSON.parse(await avaliar("JSON.stringify([...document.querySelectorAll('#gelic-selo .gelic-acao')].map(b => b.dataset.acao))"));
   await clicar('#gelic-selo [data-acao=documento]');
@@ -522,6 +541,10 @@ if (PERFIL === 'cfc') {
     assert.ok(seloCfc.verificacao, 'a aba verificar.html não abriu');
     assert.match(seloCfc.verificacao.texto ?? '', /Verificação prévia/);
     assert.ok(/Processo \S+/.test(seloCfc.verificacao.texto) || /Abra o processo \S+ no SEI/.test(seloCfc.verificacao.texto), seloCfc.verificacao.texto);
+  });
+  ok('cfc: linha "IA (opcional)" no selo; "Configurar" abre a página com OpenRouter e Anthropic lado a lado', () => {
+    assert.match(seloCfc.ia ?? '', /^IA \(opcional\): não configurada neste navegador/, String(seloCfc.ia));
+    assert.deepEqual(seloCfc.paginaIa, { colunas: 2, titulo: 'Configurar a IA (opcional)' });
   });
   ok('cfc: agente sem as ferramentas de escrita da Gelic (gelic_dvi_gravar, gelic_documento_gravar), com a do demandante', () => {
     assert.ok(agente.escritas.includes('documento_criar'), 'as do SEI Pro continuam');

@@ -131,6 +131,7 @@
 
 /* Roteiro da instrução (só no SEI CFC): andamento e próxima peça, sempre visível; os passos ficam no detalhe. */
 #gelic-selo .gelic-roteiro { margin: 0 8px 8px 36px; font-size: 11px; color: var(--g-suave); }
+#gelic-selo .gelic-ia { margin: -4px 8px 8px 36px; font-size: 11px; color: var(--g-suave); }
 #gelic-selo .gelic-roteiro .gelic-proxima { color: var(--g-texto); font-weight: 600; }
 #gelic-selo .gelic-roteiro[data-completa] .gelic-completa { color: #2f855a; font-weight: 600; }
 .dark-mode #gelic-selo .gelic-roteiro[data-completa] .gelic-completa { color: #5cc48a; }

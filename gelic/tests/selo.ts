@@ -157,6 +157,26 @@ export async function verificarSelo(): Promise<void> {
     assert.deepEqual(abertas, ['P1']);
     assert.deepEqual(pedidos, []);
   });
+  await teste('selo cfc: linha da IA (opcional) com o resumo sem segredo; sem resumo, "não configurada"; o botão abre a página', () => {
+    const doc = docDe(fixture('arvore.html'));
+    let abriu = 0;
+    const ia = { servico: 'openrouter', modelo: 'm', testada: true, limite: 10, usado: 2, em: '2026-10-12T13:00:00.000Z' };
+    desenharSelo(doc, { tipo: 'resumo', resumo: resumir(PREP), protocolo: 'P1', docs: PREP, ia }, () => {}, 'cfc', { abrirJanela: () => {}, abrirConfigurarIa: () => { abriu++; } });
+    const linha = doc.querySelector('#gelic-selo .gelic-ia')!;
+    assert.equal(linha.querySelector('.gelic-ia-texto')!.textContent, 'IA (opcional): OpenRouter, testada em 12/10/2026, limite US$ 10.00 (usado US$ 2.00)');
+    const b = linha.querySelector<HTMLButtonElement>('[data-gelic-configurar-ia]')!;
+    assert.equal(b.textContent, 'Trocar');
+    b.click();
+    assert.equal(abriu, 1);
+    const doc2 = docDe(fixture('arvore.html'));
+    desenharSelo(doc2, { tipo: 'resumo', resumo: resumir(PREP), protocolo: 'P1', docs: PREP, ia: null }, () => {}, 'cfc', { abrirJanela: () => {}, abrirConfigurarIa: () => {} });
+    assert.match(doc2.querySelector('#gelic-selo .gelic-ia')!.textContent!, /não configurada neste navegador.*Configurar/);
+  });
+  await teste('selo gelic: sem a linha da IA (na Gelic a chave é do time)', () => {
+    const doc = docDe(fixture('arvore.html'));
+    desenharSelo(doc, { tipo: 'resumo', resumo: resumir(PREP), protocolo: 'P1', docs: PREP, ia: null }, () => {}, 'gelic');
+    assert.equal(doc.querySelector('#gelic-selo .gelic-ia'), null);
+  });
   await teste('selo gelic: sem "Verificar antes de enviar"', () => {
     const doc = docDe(fixture('arvore.html'));
     desenharSelo(doc, { tipo: 'resumo', resumo: resumir(PREP), protocolo: 'P1', docs: PREP }, () => {}, 'gelic');

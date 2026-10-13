@@ -10,7 +10,7 @@ import { entradasCfc } from '../src/modelos/analise-cfc';
 import { camposDoFormulario, dadosDoFormulario, origemDe } from '../src/peca/formulario';
 import { completarDaConfig, contextoDaJanela, escolherAba, esperarAba } from '../src/peca/contexto';
 import { montarJanela, type DepsJanela } from '../src/peca/pagina';
-import { abrirPeca, abrirVerificacao, urlDaPeca, urlDaVerificacao } from '../src/peca/abrir';
+import { abrirConfigurarIa, abrirPeca, abrirVerificacao, urlDaPeca, urlDaVerificacao } from '../src/peca/abrir';
 import { apagarRascunho, guardarRascunho, guardarUo, lerRascunho, lerUo, type Area } from '../src/peca/guardados';
 import { teste } from './util';
 
@@ -298,6 +298,11 @@ export async function verificarPeca(): Promise<void> {
     const comIa = contextoDaJanela({ protocolo: 'P', ponte, confirmar: async () => { perguntou++; return false; }, sinal: new AbortController().signal });
     assert.equal(await comIa.consentirRestrito('Documento 1'), false);
     assert.equal(perguntou, 1);
+  });
+  await teste('configurar a IA: abre como aba, sempre a mesma', () => {
+    const abertas: unknown[][] = [];
+    abrirConfigurarIa((...a: unknown[]) => { abertas.push(a); return null; });
+    assert.deepEqual(abertas, [['js/gelic/configurar-ia.html', 'gelic-configurar-ia']]);
   });
   await teste('esperarAba: acha a aba já conectada, espera a que conecta depois e desiste no prazo', async () => {
     const abas: { id: number; titulo: string; papel: string }[] = [];

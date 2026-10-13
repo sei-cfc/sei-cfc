@@ -75,11 +75,34 @@ pronto e não volta. A verificação é **opcional**, e a IA também: há dois m
 
 Se entrar documento no processo depois da verificação, a gravação pede uma nova rodada antes.
 
-A IA é a do **painel do agente**, com a chave de IA de cada pessoa; o gasto aparece na janela. Sem chave, só o botão
-**Verificar sem IA** fica disponível, e **Configurar a IA (opcional)** abre o painel do agente.
+A IA usa a chave de cada pessoa (veja **Configurar a IA**, abaixo), e o gasto aparece na janela. Sem chave, só o botão
+**Verificar sem IA** fica disponível.
 
 !!! example "Espaço para print"
     Verificação prévia com um item pendente.
+
+## Configurar a IA (opcional)
+
+A IA é opcional no SEI CFC: a verificação sem IA e os formulários funcionam sem ela. Com ela, a verificação julga o
+conteúdo e os formulários preenchem o que falta.
+
+O selo mostra a linha **IA (opcional)**, com o serviço, a data do teste e o limite de gasto. **Configurar** (ou
+**Trocar**) abre a página **Configurar a IA**, que também abre pelo botão das janelas das peças e da verificação. Nela,
+o **OpenRouter** e a **Anthropic** aparecem lado a lado, cada um com o passo a passo. Escolha um dos dois.
+
+| Passo | OpenRouter | Anthropic |
+|---|---|---|
+| Criar a conta | você marca | você marca |
+| Pôr crédito | você marca | você marca |
+| Limite de gasto | a extensão confere na chave | você marca (limite da organização, no console) |
+| Colar a chave e **Testar** | a extensão confere | a extensão confere (o navegador pede permissão na primeira vez) |
+| Escolher o modelo | você escolhe (a lista vem do serviço, depois do teste) | você escolhe |
+
+Depois do teste, **Usar este serviço** grava a escolha. A chave fica só neste navegador e vai só ao serviço escolhido;
+a página do SEI nunca a lê. Se o painel do agente estiver aberto, feche e abra de novo.
+
+**Recomendação:** no OpenRouter, crie a chave com **limite de gasto** (Credit limit). Assim, o gasto nunca passa do
+que você definiu.
 
 ## Dados da contratação
 
