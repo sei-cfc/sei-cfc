@@ -81,6 +81,12 @@ function seiFalso(o: { semCfc?: boolean; falhar?: boolean } = {}) {
 }
 
 export async function verificarIniciar(): Promise<void> {
+  await teste('iniciar: tipos de processo no formato do SEI do CFC (a.ancoraOpcao com escolher(id), sem o id no link)', async () => {
+    const { lerTiposDeProcesso } = await import('../src/iniciar/sei');
+    const html = '<html><body><form id="frmProcedimentoEscolherTipo" method="post" action="controlador.php?acao=procedimento_escolher_tipo"><input type="hidden" id="hdnIdTipoProcedimento" name="hdnIdTipoProcedimento" value=""><table id="tblTipoProcedimento"><tr><td><input type="checkbox" value="100000578" title="Licitação: NLL - Credenciamento"><a href="controlador.php?acao=procedimento_escolher_tipo#" onclick="escolher(100000578)" class="ancoraOpcao">Licitação: NLL - Credenciamento</a></td></tr><tr><td><a href="#" onclick="escolher(100000579)" class="ancoraOpcao">Licitação: NLL - Dispensa</a></td></tr></table></form></body></html>';
+    const tipos = lerTiposDeProcesso({ url: 'https://sei.exemplo/sei/controlador.php?acao=procedimento_escolher_tipo', status: 200, html, doc: parseHTML(html).document as unknown as Document });
+    assert.deepEqual(tipos.map(t => [t.id, t.nome, t.href ?? '']), [['100000578', 'Licitação: NLL - Credenciamento', ''], ['100000579', 'Licitação: NLL - Dispensa', '']]);
+  });
   await teste('iniciar: árvore inicial na ordem do usuário; cada título é reconhecido como a peça certa pelo roteiro', () => {
     const a = arvoreInicial({ via: 'pregao', termos: 4, cotacoes: 3 });
     assert.equal(a.length, 1 + 4 + 2 + 2 + 3 + 1 + 2 + 1);

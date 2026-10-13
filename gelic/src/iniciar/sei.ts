@@ -18,7 +18,8 @@ import type { Pagina } from '../../../sei-nucleo/src/sessao/http';
 import type { Sei } from '../../../sei-nucleo/src/sei';
 
 export interface Opcao { id: string; nome: string }
-interface TipoProcesso extends Opcao { href: string }
+/** `href`: o link do tipo (SEI que põe o id no link); sem ele, o tipo se escolhe pelo formulário (escolher(id)). */
+interface TipoProcesso extends Opcao { href?: string }
 
 const decodificar = (s: string) => s.replace(/&amp;/g, '&');
 
@@ -32,13 +33,20 @@ async function listaDeTiposDeProcesso(sei: Sei, sinal?: AbortSignal): Promise<Pa
   return form.definir({ hdnFiltroTipoProcedimento: 'T' }).enviar({ sinal });
 }
 
-function lerTiposDeProcesso(p: Pagina): TipoProcesso[] {
+export function lerTiposDeProcesso(p: Pagina): TipoProcesso[] {
   const vistos = new Map<string, TipoProcesso>();
   for (const a of p.doc.querySelectorAll('a[href*="procedimento_escolher_tipo"][href*="id_tipo_procedimento="]')) {
     const href = decodificar(a.getAttribute('href') ?? '');
     const id = parametros(href).get('id_tipo_procedimento');
     const nome = textoDe(a);
     if (id && nome && !vistos.has(id)) vistos.set(id, { id, nome, href });
+  }
+  // SEI do CFC (2026-10-13): o link é a própria página ("#") e o tipo vai pelo onclick="escolher(id)", que grava
+  // hdnIdTipoProcedimento e envia #frmProcedimentoEscolherTipo
+  for (const a of p.doc.querySelectorAll('a.ancoraOpcao[onclick*="escolher("]')) {
+    const id = /escolher\((\d+)\)/.exec(a.getAttribute('onclick') ?? '')?.[1];
+    const nome = textoDe(a);
+    if (id && nome && !vistos.has(id)) vistos.set(id, { id, nome });
   }
   return [...vistos.values()];
 }
@@ -70,10 +78,14 @@ export interface NovoProcesso {
 export interface ProcessoCriado { protocolo: string; idProcedimento: string; avisos: string[]; /** A tela do processo novo (o SEI redireciona para ela). */ url?: string }
 
 export async function iniciarProcesso(sei: Sei, novo: NovoProcesso, sinal?: AbortSignal): Promise<ProcessoCriado> {
-  const tipos = lerTiposDeProcesso(await listaDeTiposDeProcesso(sei, sinal));
+  const escolha = await listaDeTiposDeProcesso(sei, sinal);
+  const tipos = lerTiposDeProcesso(escolha);
   const tipo = tipos.find(t => t.id === novo.tipo);
   if (!tipo) throw new ErroSei('ARGUMENTO_INVALIDO', `O tipo de processo ${novo.tipo} não está disponível na sua unidade.`, tipos.map(t => t.nome).join(' | '));
-  const form = await Formulario.abrir(sei.http, tipo.href, '#frmProcedimentoCadastro', { sinal });
+  const form = tipo.href
+    ? await Formulario.abrir(sei.http, tipo.href, '#frmProcedimentoCadastro', { sinal })
+    // o que o escolher(id) da página faz: grava o tipo no campo escondido e envia o formulário da escolha
+    : Formulario.de(await Formulario.de(escolha, '#frmProcedimentoEscolherTipo', sei.http).definir({ hdnIdTipoProcedimento: tipo.id }).enviar({ sinal }), '#frmProcedimentoCadastro', sei.http);
 
   const avisos: string[] = [];
   form.definir({

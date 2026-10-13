@@ -1,5 +1,10 @@
 # Novidades
 
+## 3.2.2.26 — 13/10/2026 {#v3-2-2-26}
+
+- **SEI CFC, Iniciar processo:** a lista de tipos de processo carrega no SEI do CFC, que escolhe o tipo por um
+  formulário, e não por link. Os campos do diálogo ficam alinhados.
+
 ## 3.2.2.25 — 13/10/2026 {#v3-2-2-25}
 
 - **SEI CFC:** o **Iniciar processo** aparece também com o Controle de Processos na visão detalhada do SEI.
