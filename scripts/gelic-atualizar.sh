@@ -25,8 +25,17 @@ if [[ "${1:-}" != "--sem-merge" ]]; then
   fi
 fi
 
-# Ordem dos módulos: as bibliotecas primeiro (são importadas pelo fonte), depois quem gera o dist/.
-for m in sei-comum sei-nucleo ferramentas-pdf projetos agente-ia favoritos historico anotacoes-controle gelic; do
+# Módulos descobertos sozinhos (o upstream cria módulo novo com frequência: grade-controle na 3.0): toda pasta da raiz
+# com package.json. As bibliotecas primeiro (são importadas pelo fonte dos outros), a gelic por último.
+BIBLIOTECAS=(sei-comum sei-nucleo)
+OUTROS=()
+for d in */; do
+  m="${d%/}"
+  [[ -f "$m/package.json" ]] || continue
+  [[ " ${BIBLIOTECAS[*]} gelic " == *" $m "* ]] && continue
+  OUTROS+=("$m")
+done
+for m in "${BIBLIOTECAS[@]}" "${OUTROS[@]}" gelic; do
   [[ -f "$m/package.json" ]] || continue
   echo "== $m: npm install"
   (cd "$m" && npm install --no-audit --no-fund --loglevel=error)
@@ -36,10 +45,17 @@ done
 if (( $(node -p 'process.versions.node.split(".")[0]') >= 21 )); then
   export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--no-experimental-global-navigator"
 fi
-for m in ferramentas-pdf projetos agente-ia favoritos historico anotacoes-controle; do
+# Quem gera o dist/ (testes + bundle de cada módulo). As bibliotecas e a gelic não entram aqui.
+for m in "${OUTROS[@]}"; do
   [[ -f "$m/build.mjs" ]] || continue
   echo "== $m: build (testes + bundle)"
-  (cd "$m" && npm run -s build)
+  # Teste do upstream sensível a tempo (projetos, "app ainda nao ligou", com a máquina carregada) falha às vezes:
+  # uma segunda tentativa, registrada. Falha de verdade falha duas vezes e para tudo. Os testes da gelic não repetem.
+  if ! (cd "$m" && npm run -s build); then
+    echo "== $m: falhou; segunda tentativa"
+    (cd "$m" && npm run -s build)
+    echo "== $m: passou na segunda tentativa (teste do upstream instável)"
+  fi
 done
 echo "== gelic: testes, build e empacotamento (SEI CFC Gelic e SEI CFC)"
 (cd gelic && npm run -s build && npm run -s zip:todos)

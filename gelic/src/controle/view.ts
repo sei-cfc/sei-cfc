@@ -104,8 +104,11 @@ export function criarBarra(doc: Document, acoes: { calcular(): void; cancelar():
   const cancelar = el(doc, 'button', { type: 'button', class: 'gelic-ctl-cancelar', hidden: '' }, 'Cancelar');
   const progresso = el(doc, 'span', { class: 'gelic-ctl-progresso', 'aria-live': 'polite' });
   const chips = el(doc, 'div', { class: 'gelic-ctl-chips', role: 'group', 'aria-label': 'Filtrar por etapa da Gelic' });
+  // A grade nova do SEI Pro 3.x esconde a tabela nativa, onde a etapa de cada linha aparece: com ela aberta, a barra só
+  // mostra este aviso (controle.css, atributo data-spro-grade do <html>).
+  const aviso = el(doc, 'span', { class: 'gelic-ctl-grade' }, 'A etapa de cada processo aparece na visão nativa do Controle de Processos: feche a grade nova (botão ao lado do título) para ver, calcular e filtrar por etapa.');
   const raiz = el(doc, 'section', { id: ID_BARRA, 'aria-label': 'Etapas da Gelic' },
-    el(doc, 'span', { class: 'gelic-ctl-marca' }, 'Gelic'), botao, cancelar, progresso, chips);
+    el(doc, 'span', { class: 'gelic-ctl-marca' }, 'Gelic'), botao, cancelar, progresso, chips, aviso);
   botao.addEventListener('click', () => acoes.calcular());
   cancelar.addEventListener('click', () => acoes.cancelar());
   const alvo = doc.getElementById('divRecebidos')?.parentElement ?? doc.querySelector(TABELAS)?.closest('div');

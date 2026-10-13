@@ -33,6 +33,10 @@ só depois da prévia e da sua aprovação, e nada é assinado.
 
 Com a pesquisa rápida do SEI Pro ligada, os dois botões agem só sobre os processos que a pesquisa deixou na tela.
 
+O **Novo Controle de Processos** do SEI Pro (a grade, que abre pelo botão ao lado do título) esconde a lista do SEI, e
+com ela a etapa de cada linha. Para ver, calcular e filtrar por etapa, volte à lista pelo mesmo botão. Com a grade
+aberta, a barra da Gelic mostra esse aviso.
+
 ## PCA
 
 Ligada ao PCA (detalhe do selo, **Ligar ao PCA…**), a extensão mostra no selo o item do PCA do processo e a situação

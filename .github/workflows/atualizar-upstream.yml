@@ -1,0 +1,130 @@
+# Atualização automática das extensões do CFC com a versão nova do SEI Pro original (SEI-Pro/sei-pro).
+# Decisão do usuário (2026-10-12): todo dia; com tudo verde, publica sozinho (main, release com os zips, site e código
+# público); com conflito em fonte ou teste vermelho, abre uma issue e não publica nada. Ver docs/gelic/ATUALIZACAO.md.
+#
+# Três jobs, para o código do upstream nunca rodar perto de um token de escrita:
+#   construir  roda o upstream (npm install, builds, testes, e2e) SEM segredo e só com leitura; entrega um pacote;
+#   publicar   só git, rsync e gh sobre o pacote; único com o SEI_CFC_TOKEN (environment "publicacao");
+#   avisar     abre (ou comenta) a issue quando algo falha, com o log filtrado.
+# Segredo: SEI_CFC_TOKEN, token fine-grained com Contents: read and write em sei-cfc/sei-cfc.github.io e sei-cfc/sei-cfc.
+name: Atualizar do SEI Pro
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # 06:00 em Brasília
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: atualizar-upstream
+  cancel-in-progress: false
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    outputs:
+      novo: ${{ steps.estado.outputs.novo }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Chromium para o e2e (o Chrome estável ignora --load-extension)
+        run: npx -y playwright install --with-deps chromium
+      - name: Identidade dos commits
+        run: |
+          git config user.name "SEI CFC (atualização automática)"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Merge da versão nova, testes, e2e, site e código conferidos
+        run: |
+          set -o pipefail
+          mkdir -p build
+          scripts/gelic-ci-atualizar.sh 2>&1 | tee build/ci.log
+      - id: estado
+        if: always()
+        run: echo "novo=$(sed -n 's/^novo=//p' build/ci-saida/estado 2>/dev/null)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: steps.estado.outputs.novo == 'sim'
+        with:
+          name: pacote
+          path: build/ci-saida/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: log-construir
+          path: |
+            build/ci.log
+            build/ci-resultado.txt
+          retention-days: 30
+
+  publicar:
+    needs: construir
+    if: needs.construir.outputs.novo == 'sim'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: publicacao
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SEI_CFC_TOKEN: ${{ secrets.SEI_CFC_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: pacote
+          path: build/ci-saida
+      - name: Publicar (main, release, site e código público)
+        run: |
+          set -o pipefail
+          scripts/gelic-ci-publicar.sh build/ci-saida 2>&1 | tee build/ci-publicar.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: log-publicar
+          path: |
+            build/ci-publicar.log
+            build/ci-publicado.txt
+          retention-days: 30
+
+  avisar:
+    needs: [construir, publicar]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: log-*
+          merge-multiple: true
+          path: logs
+      - name: Issue
+        run: |
+          # nunca um token na issue: o mascaramento do GitHub vale para a tela, não para os arquivos de log
+          limpo() { sed -E -e 's#x-access-token:[^@[:space:]]*@#***@#g' -e 's#(AUTHORIZATION: basic )[A-Za-z0-9+/=]+#\1***#Ig' -e 's#gh[pousr]_[A-Za-z0-9]{20,}#***#g' -e 's#github_pat_[A-Za-z0-9_]{20,}#***#g' -e 's#```#ʼʼʼ#g' -e 's#@([A-Za-z0-9-]+)#＠\1#g' "$@" 2>/dev/null; }
+          publicado="$(limpo logs/ci-publicado.txt)"
+          titulo="Atualização automática do SEI Pro falhou"
+          corpo="$(printf 'Execução: %s/%s/actions/runs/%s\n\n**Resumo**\n\n```\n%s\n```\n\n**Já publicado nesta execução**\n\n```\n%s\n```\n\n**Fim do log**\n\n```\n%s\n```\n\nO que diz "Já publicado" saiu; o resto não. Veja docs/gelic/ATUALIZACAO.md, "Quando a issue abrir".' \
+            "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$(limpo logs/ci-resultado.txt)" "${publicado:-nada}" \
+            "$( (limpo logs/ci-publicar.log; limpo logs/ci.log) | tail -60)")"
+          aberta="$(gh issue list --state open --search "\"$titulo\" in:title" --json number --jq '.[0].number')"
+          if [ -n "$aberta" ]; then gh issue comment "$aberta" --body "$corpo"; else gh issue create --title "$titulo" --body "$corpo"; fi

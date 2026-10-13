@@ -2,6 +2,70 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 3.2.2
+12/10/2026
+
+Ajuste no [Novo Controle de Processos](../pages/GRADECONTROLE.md) (*SEI Pro Lab*, Chrome e Edge): a opção continua **ligada por padrão**, mas a grade **não abre sozinha**.
+
+- **O Controle de Processos abre na lista do SEI**, como sempre. A grade só aparece depois que você clica no botão ao lado do título; o navegador lembra a escolha nas próximas aberturas, e clicar de novo volta à lista.
+- Quem desmarcar a opção nas Configurações, aba Geral, tira o botão e a grade de cena.
+
+### Versão 3.2.1
+12/10/2026
+
+Mais uma correção de segurança no download de documentos pelo [Agente de IA](../pages/AGENTEIA.md) (*SEI Pro Lab*, Chrome e Edge).
+
+- **O download só acontece com o cartão que você aprovou.** O agente só grava o arquivo se o nome e o destino estiverem no cartão daquele pedido. Um cartão recusado antes não vale para um pedido posterior, e pedido que chega sem mostrar o arquivo não é gravado.
+
+### Versão 3.2
+12/10/2026
+
+O [Novo Controle de Processos](../pages/GRADECONTROLE.md) (*SEI Pro Lab*, Chrome e Edge), que estreou na 3.0 com o nome "Visão nova do Controle de Processos", agora **vem ligado por padrão**.
+
+- **Já vem ligado.** Ao atualizar, a grade nova aparece no Controle de Processos sem precisar mexer nas Configurações. Quem preferir a lista do SEI desmarca a opção, ou usa o botão ao lado do título para alternar na hora.
+- **Nome novo e opção mais à vista.** Passou a se chamar **Novo Controle de Processos** e, nas Configurações, aba Geral, ficou logo antes de *Controlar Prazos*.
+
+### Versão 3.1.1
+12/10/2026
+
+Correções de segurança no download de documentos pelo [Agente de IA](../pages/AGENTEIA.md), que entrou na 3.1 (*SEI Pro Lab*, Chrome e Edge).
+
+- **O cartão de aprovação mostra o arquivo que será gravado de verdade.** Nome, tipo e tamanho vêm do SEI, e não mais de uma estimativa. Se o arquivo mudar entre a aprovação e a gravação, nada é salvo.
+- **Só documentos e imagens vão para o computador** (PDF, Word, Excel, imagens, texto). Anexo de outro tipo, como programa executável, é recusado.
+- **A limpeza só apaga o que o agente baixou.** Antes de remover, o SEI Pro confere se o registro ainda corresponde ao mesmo arquivo.
+- **O caminho do arquivo só vai sem máscara a conector do seu próprio computador.** Conector de fora recebe o caminho mascarado, como qualquer outro dado pessoal.
+- **Mensagem de erro do conector não repete o que foi digitado** nos campos de autenticação.
+
+### Versão 3.1
+12/10/2026
+
+Melhorias no [Agente de IA](../pages/AGENTEIA.md) para quem usa **conectores (MCP)**, no *SEI Pro Lab* (Chrome e Edge).
+
+- **Corrigido — o teste de conexão dos conectores falhava** com a mensagem *Illegal invocation*, e o conector ficava "com erro" mesmo com o servidor no ar. Agora conecta e lista as ferramentas.
+- **Novo — conector no seu próprio computador.** Servidor em `localhost` ou `127.0.0.1` passa a mostrar o estado na lista (**conectado** ou **sem resposta**), com o botão **Testar de novo**, e o estado é conferido toda vez que o painel abre. Com o servidor desligado, o agente avisa que ele não está rodando, em vez de um erro de rede.
+- **Novo — baixar um documento do SEI para entregar a um conector.** Quando o conector só lê arquivos do disco, o agente salva o documento externo (PDF, planilha, imagem) em `Downloads/SEI Pro/<número do processo>/` e passa o caminho adiante. **Você aprova cada download**, o cartão mostra o documento e o destino, e a cópia sai com os dados reais, sem máscara. Em *Configuração → O que o agente pode → Arquivos baixados pelo agente* há um botão para apagar essas cópias. O navegador pede a permissão de downloads só na primeira vez que a função é usada.
+- **Erro da ferramenta não derruba o conector.** Quando o servidor responde que um login expirou ou que um dado foi recusado, o texto chega inteiro a você e ao agente, e o conector continua ligado.
+- **O agente acha a ferramenta certa.** Em conector com muitas ferramentas de nome parecido, a busca passa a trazer primeiro a que casa melhor com o pedido e informa o nome das que não couberam na resposta.
+- **Token colado errado é dito como tal.** Aspas curvas, acento ou quebra de linha no token agora geram um aviso para colar de novo, e não um erro de conexão.
+- **Novo — botão de copiar a resposta.** Cada resposta do agente ganhou um ícone de copiar, que leva o texto com a formatação (tabelas e listas continuam tabelas e listas ao colar).
+
+### Versão 3.0
+12/10/2026
+
+**Novo — [Visão nova do Controle de Processos](../pages/GRADECONTROLE.md)** (SEI Pro Lab, no Chrome e no Edge). Uma grade moderna no lugar da lista do SEI. Na 3.0 vinha desligada; **desde a 3.2 vem ligada** (nas Configurações, aba Geral, a opção *Novo Controle de Processos*). Um botão ao lado do título volta à lista do SEI quando você quiser.
+
+- **Abre sem piscar e carrega tudo.** A tela nativa fica escondida enquanto a grade monta, e todas as páginas do seu controle são lidas em segundo plano, não só os 100 primeiros.
+- **Busca com operadores e filtros rápidos.** `resp:eu prazo:<7d marcador:urgente -tipo:ofício`, mais botões para *Meus*, *Recebidos*, *Gerados*, *Atrasados*, *Vencem na semana*, *Sem responsável*, *Não visualizados*, *Novos desde a última visita* e *Parados há +30 dias*, e seletores pesquisáveis de responsável, tipo e marcador.
+- **Agrupar, ordenar e organizar.** Agrupe por responsável, tipo, marcador, prazo e mais; ordene por vários critérios; escolha as colunas e a densidade; guarde **visões salvas** (que acompanham você em outros computadores) e **exporte em CSV** o que está na tela.
+- **Quadro (Kanban).** Arraste o processo entre colunas de marcador ou de responsável: o SEI é atualizado e há **Desfazer**. Limite de cartões por coluna e raias por responsável.
+- **Edição na própria linha.** Especificação (lápis, Enter salva), responsável, marcadores e prazo (a mesma janela do [Controle de Prazos](../pages/PRAZOS.md)), com a opção de aplicar a todos os processos marcados. Se o SEI recusar, a tela volta ao que era e um aviso explica.
+- **Anotação em post-it com lista de tarefas.** O mesmo post-it da árvore do processo: caixas `[ ]`/`[X]` que se marcam com um clique, data de hoje, prioridade e contador de 500 caracteres. O balão da anotação mostra as tarefas com caixa e texto riscado.
+- **Ações do SEI em vários processos, de qualquer página.** A barra de ações usa os botões do próprio SEI (Enviar, Atribuir, Concluir...) e agora aceita processos que vieram da paginação, na visão resumida e na detalhada. O SEI só permite processos de uma página por grupo em cada ação, e a grade avisa quando a seleção passa disso.
+- **Tudo o que já estava na linha:** ícones de Monitorados, Projetos, Demandas e Acompanhamento especial; ícone de **recebido/gerado**; ícone para **abrir em nova guia**; não visualizados em vermelho; urgente e trancado; **dicas na hora** ao passar o mouse; atalhos de teclado (`/`, `j`, `k`, `x`, `Enter`, `g t`, `g q`).
+- **Convive com o resto.** O botão de recolher o painel, a ordem dos painéis e o legado seguem funcionando; com a opção desligada, nada muda.
+
+**Bom saber:** as edições, o quadro e as ações em lote **gravam de verdade no SEI**. A visão nova foi testada no SEI 4.1.5 e no 5.0.4. A versão da loja e o Firefox não recebem a visão nova nesta versão.
+
 ### Versão 2.9
 11/10/2026
 

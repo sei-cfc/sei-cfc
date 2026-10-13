@@ -78,6 +78,11 @@ A r10 (formulário das peças e roteiro da instrução no SEI Pro CFC) não crio
 (`gelic/src/peca/`) é página da própria extensão e usa a ponte (`PontePainel`) e o provedor do agente como
 bibliotecas, sem mudar uma linha deles.
 
+A r22 (SEI Pro 3.2.2) também não criou gancho. A barra da Gelic convive com a grade nova do Controle de Processos
+só pelo CSS do próprio módulo (`gelic/src/controle/controle.css`, atributo `data-spro-grade` do `<html>`). O workflow
+`.github/workflows/atualizar-upstream.yml` é arquivo novo numa pasta que o upstream também usa, sem linha alterada em
+arquivo dele; o `pages.yml` do upstream só roda no `master`, que este repositório não usa.
+
 A r11 (módulo do PCA) também não criou gancho. O fetch ao PCA sai do content script, com a origem do SEI, ou das
 páginas da extensão: `pca.html`, a janela das peças e o painel do agente pelos ganchos `dadosDoPca` e
 `GANCHOS_DVI.pca`, que ficam no código da Gelic.

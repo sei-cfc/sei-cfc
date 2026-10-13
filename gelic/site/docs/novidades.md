@@ -1,5 +1,23 @@
 # Novidades
 
+## 3.2.2.22 — 12/10/2026 {#v3-2-2-22}
+
+**Base nova: SEI Pro 3.2.2** (era a 2.9). O que chega do SEI Pro:
+
+- **Novo Controle de Processos:** uma grade no lugar da lista do SEI, com busca com operadores, filtros rápidos,
+  agrupamento, quadro (Kanban), edição na linha e ações em lote de qualquer página. A opção vem ligada, mas a grade
+  **só abre quando você clica no botão ao lado do título**. Clicar de novo volta à lista, e o navegador lembra a
+  escolha.
+- **Agente de IA:** conector MCP no próprio computador, download de documento para o conector (cada download com a
+  sua aprovação, só documentos e imagens) e botão de copiar a resposta.
+
+Nas extensões do CFC:
+
+- Com a grade nova aberta, o **Iniciar processo** continua no alto do Controle de Processos.
+- No **SEI CFC Gelic**, a etapa de cada processo, o **Calcular etapas**, os filtros por etapa e o **Atualizar PCA**
+  aparecem na lista do SEI. Com a grade aberta, a barra da Gelic avisa para voltar à lista.
+- A partir desta versão, o número da versão segue o do SEI Pro (3.2.2), mais a revisão das extensões do CFC (22).
+
 ## 2.9.0.21 — 12/10/2026 {#v2-9-0-21}
 
 - **Verificar antes de enviar, com ou sem IA.** A IA passa a ser opcional:

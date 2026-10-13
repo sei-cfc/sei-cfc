@@ -5,7 +5,8 @@ import type { Http, Pagina } from '../../sei-nucleo/src/sessao/http';
 import { ErroSei } from '../../sei-nucleo/src/sessao/erros';
 import { CHAVE_ETAPAS, desatualizada, guardarEtapas, LIMITE, lerEtapas, type Area, type MapaEtapas } from '../src/controle/cache';
 import { CONCORRENCIA, iniciarControle } from '../src/controle/controle';
-import { ID_BARRA, linhas } from '../src/controle/view';
+import { criarBarra, ID_BARRA, linhas } from '../src/controle/view';
+import { ATRIBUTO as ATRIBUTO_GRADE } from '../../grade-controle/src/ativacao/inicio';
 import { classeDaPesquisaRapida, teste } from './util';
 
 const ler = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8');
@@ -62,6 +63,18 @@ const chips = (d: Document) => [...barra(d).querySelectorAll('.gelic-ctl-chip')]
 const esperar = (ms = 120) => new Promise(r => setTimeout(r, ms));
 
 export async function verificarControle(): Promise<void> {
+  await teste('controle × grade nova do SEI Pro 3.x: com a grade aberta, a barra só mostra o aviso da visão nativa', () => {
+    const doc = parseHTML('<html><body><div id="x"><div id="divTabelaProcesso"><div id="divRecebidos"></div></div></div></body></html>').document as unknown as Document;
+    criarBarra(doc, { calcular() {}, cancelar() {}, filtrar() {} });
+    const aviso = doc.querySelector(`#${ID_BARRA} .gelic-ctl-grade`);
+    assert.ok(aviso, 'o aviso existe na barra');
+    assert.match(aviso!.textContent!, /visão nativa/);
+    const css = readFileSync(new URL('../src/controle/controle.css', import.meta.url), 'utf8');
+    // o nome do atributo vem do próprio módulo do upstream: se ele mudar, este teste quebra (e o workflow diário não publica)
+    assert.ok(css.includes(`html[${ATRIBUTO_GRADE}] #${ID_BARRA} > :not(.gelic-ctl-marca):not(.gelic-ctl-grade) { display: none; }`), 'esconde botões e filtros com a grade');
+    assert.ok(css.includes(`html[${ATRIBUTO_GRADE}] #${ID_BARRA} .gelic-ctl-grade { display: inline; }`), 'mostra o aviso com a grade');
+    assert.ok(css.includes(`#${ID_BARRA} .gelic-ctl-grade { display: none; }`), 'sem a grade, o aviso some');
+  });
   await teste('Controle: ao abrir, nada sai pela rede; barra com "Calcular etapas (n)" sem contar o sigiloso', async () => {
     const d = docCaixa();
     const { area } = areaFalsa();

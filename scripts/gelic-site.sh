@@ -26,7 +26,9 @@ if ! "$VENV/bin/mkdocs" build --strict -f "$SITE/mkdocs.yml" -d "$RAIZ/build/sit
   echo "O site não montou (avisos acima)."
   exit 1
 fi
-SAIDA="$(cd "$RAIZ/gelic" && systemd-run --user --scope -q -p MemoryMax=1500M -p MemorySwapMax=0 timeout 180 npx tsx tests/site-rodar.ts)"
+# Com limite de memória onde há systemd do usuário (a máquina de trabalho); no GitHub Actions, sem ele.
+limitar() { if systemd-run --user --scope -q true 2>/dev/null; then systemd-run --user --scope -q -p MemoryMax=1500M -p MemorySwapMax=0 "$@"; else "$@"; fi; }
+SAIDA="$(cd "$RAIZ/gelic" && limitar timeout 180 npx tsx tests/site-rodar.ts)"
 VERSAO="$(printf '%s\n' "$SAIDA" | sed -n 's/^versao=//p' | tail -1)"
 [[ -n "$VERSAO" ]] || { printf '%s\n' "$SAIDA"; echo "As verificações do site não terminaram."; exit 1; }
 echo "Site da versão $VERSAO montado em build/site-html/ e conferido."

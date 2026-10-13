@@ -32,6 +32,9 @@ No Controle de Processos, **Iniciar processo** cria o processo e a árvore inici
 
 Depois mostra a prévia da árvore. **Criar no SEI** cria o processo e as peças em branco.
 
+O botão fica no alto do Controle de Processos, tanto na lista do SEI quanto no **Novo Controle de Processos** (a grade
+do SEI Pro, que abre pelo botão ao lado do título).
+
 Pelo PCA: na ficha do item, o botão **Iniciar processo**, ao lado de **Editar**, abre o SEI numa aba nova, com o item já
 escolhido.
 

@@ -267,6 +267,16 @@ if (PERFIL === 'gelic' && controle) {
   for (let i = 0; i < 25 && (await avaliar("document.getElementById('txtPesquisaRapida')?.title?.startsWith('Digite para filtrar')")); i++) await espera(200);
   pesquisaRapida = { ligada, numero: !!numero, filtrada, limpa };
 }
+// Grade nova do SEI Pro 3.x: com ela aberta (atributo no <html>), a barra da Gelic fica só com o aviso da visão nativa,
+// e o "Iniciar processo" (cfc) continua à vista. O atributo é posto à mão: a grade abre só com o clique da pessoa.
+const comGrade = JSON.parse(await avaliar(`(() => {
+  const h = document.documentElement; h.setAttribute('data-spro-grade', ''); h.setAttribute('data-spro-grade-pronta', '');
+  const vis = s => { const e = document.querySelector(s); return e ? e.checkVisibility() : null; };
+  const r = { aviso: vis('#gelic-controle .gelic-ctl-grade'), calcular: vis('#gelic-controle .gelic-ctl-calcular'), chips: vis('#gelic-controle .gelic-ctl-chips'), iniciar: vis('#gelic-iniciar') };
+  h.removeAttribute('data-spro-grade'); h.removeAttribute('data-spro-grade-pronta');
+  r.avisoSemGrade = vis('#gelic-controle .gelic-ctl-grade');
+  return JSON.stringify(r);
+})()`));
 const botaoPca = await avaliar("!!document.querySelector('#gelic-controle .gelic-ctl-pca')");
 // No cfc a espera acima (12 s) é o tempo que a barra teria para aparecer.
 const controleCfc = PERFIL === 'cfc' ? await avaliar("!!document.getElementById('gelic-controle')") : null;
@@ -519,6 +529,7 @@ if (PERFIL === 'cfc') {
     assert.ok(agente.escritas.includes('cfc_documento_gravar'));
   });
   ok('cfc: sem a barra de etapas da Gelic no Controle de Processos', () => assert.equal(controleCfc, false));
+  ok('cfc: com a grade nova do SEI Pro 3.x aberta, o "Iniciar processo" continua à vista', () => assert.equal(comGrade.iniciar, true, JSON.stringify(comGrade)));
   ok('cfc: "Iniciar processo" no Controle de Processos abre o diálogo das perguntas', () => assert.deepEqual(iniciarCfc, { botao: true, dialogo: true }));
   ok('cfc: "Iniciar processo" busca o item no PCA (objeto e via pela modalidade) e a prévia anuncia o vínculo', () => {
     assert.equal(iniciarPca?.objeto, 'Objeto de teste', JSON.stringify(iniciarPca));
@@ -556,6 +567,9 @@ ok('Gerar documento → DVI abre o painel e o pedido chega ao agente (gancho G1)
 });
 ok('Controle de Processos: com a pesquisa rápida do SEI Pro (2.9), "Calcular etapas" conta só o que está à vista e volta ao limpar', () => {
   assert.deepEqual(pesquisaRapida, { ligada: true, numero: true, filtrada: 'Calcular etapas (1)', limpa: 'Calcular etapas (8)' });
+});
+if (PERFIL === 'gelic') ok('Controle de Processos × grade nova do SEI Pro 3.x: com a grade aberta, a barra só mostra o aviso; sem ela, o aviso some', () => {
+  assert.deepEqual({ ...comGrade, iniciar: undefined }, { aviso: true, calcular: false, chips: false, avisoSemGrade: false, iniciar: undefined }, JSON.stringify(comGrade));
 });
 ok('Controle de Processos: barra da Gelic sem requisição; "Calcular etapas" põe a etapa em cada processo (não no sigiloso)', () => {
   assert.equal(doSelo, 'Preparatória · aguardando a unidade', 'o processo visto pela árvore já chega com a etapa guardada pelo selo');

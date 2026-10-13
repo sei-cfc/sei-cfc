@@ -46,7 +46,11 @@ import {
 } from "./rotinas";
 import { guardarConectores, listarConectores, type Conector } from "../mcp/conectores";
 import { linhasDeConectores, toolsMcp } from "../mcp/tools";
+import { retestarLocais } from "../mcp/verificacao";
 import { cartaoExterno, secaoConectores } from "./mcp-ui";
+import { rodapeDaResposta } from "./resposta-ui";
+import { apagarBaixados, listarBaixados, pedirPermissaoDeDownloads, registrarBaixado, salvarNoDisco, secaoBaixados, temPermissaoDeDownloads, type Baixado } from "./baixados";
+import { toolsBaixar } from "../tools/baixar";
 import { textoDaIntegridade, varrer } from "../seguranca/injecao";
 import { montarDiagnostico, type Diagnostico } from "./diagnostico";
 import { cartaoDeErro } from "./erro-ui";
@@ -283,6 +287,8 @@ class App {
   private bolhaAtual: { el: HTMLElement; texto: string; pendente: boolean; fechada?: boolean } | null = null;
   /** Última resposta fechada da rodada: recebe o carimbo de tempo no fim. */
   private ultimaResposta: { el: HTMLElement; item: ItemAgente } | null = null;
+  /** Cópias de documentos do SEI que o agente gravou em Downloads (ver `baixados.ts`). */
+  private baixados: Baixado[] = [];
   private aoFimDoPlano: (() => void) | null = null;
   private toolsEl = new Map<string, { el: HTMLElement; item: Extract<Item, { tipo: "tool" }> }>();
 
@@ -296,11 +302,13 @@ class App {
     this.memoria = await listarMemoria();
     this.rotinas = await listarRotinas();
     this.conectores = await listarConectores();
+    this.baixados = await listarBaixados();
     this.fluxos = await listarFluxos();
     this.fluxosIgnorados = await listarIgnorados();
     await this.aplicarSincronizacao();
     void this.sincronizarSkills();
     void this.sincronizarColecoes();
+    void this.retestarConectoresLocais();
     this.ponte.aoMudar(() => this.atualizarAba());
     // O Estúdio de Fluxo é outra página: quando o usuário salva um fluxo lá, o
     // painel precisa passar a usá-lo sem esperar um recarregamento.
@@ -1509,6 +1517,18 @@ class App {
             h("label", { class: "linha-switch" }, cnpj, h("span", {}, "Mascarar tamb\u00E9m CNPJ", h("small", {}, "Empresas; CPF, e-mail e telefone s\u00E3o sempre mascarados."))),
             h("div", { class: "nota" }, icone("escudo", 15), h("span", {}, PRIVACIDADE)),
           ),
+          secaoBaixados({
+            listar: async () => (this.baixados = await listarBaixados()),
+            apagar: async () => {
+              // O clique no botão é o gesto que o navegador exige para pedir a permissão.
+              await pedirPermissaoDeDownloads();
+              const r = await apagarBaixados();
+              this.baixados = [];
+              return r;
+            },
+            permitido: temPermissaoDeDownloads,
+            pedirPermissao: pedirPermissaoDeDownloads,
+          }).elemento,
         ),
         grupo(
           "Gasto",
@@ -2394,6 +2414,24 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
 
   /** `mapa`: pseudônimos restaurados da sessão; sem ele, conversa nova. */
   /**
+   * Reteste de abertura: o servidor da própria máquina é ligado e desligado
+   * pelo usuário, e o estado guardado ontem não diz nada sobre hoje.
+   */
+  private async retestarConectoresLocais(): Promise<void> {
+    const antes = this.conectores;
+    const depois = await retestarLocais(antes).catch(() => antes);
+    // Só o que o teste mudou, sobre a lista de AGORA: o usuário pode ter
+    // editado um conector enquanto o servidor não respondia.
+    const mudou = depois.filter((c, i) => JSON.stringify({ ...c, verificadoEm: 0 }) !== JSON.stringify({ ...antes[i], verificadoEm: 0 }));
+    if (!mudou.length) return;
+    this.conectores = this.conectores.map((c) => {
+      const novo = mudou.find((x) => x.id === c.id);
+      return novo ? { ...c, tools: novo.tools, servidor: novo.servidor, verificadoEm: novo.verificadoEm, erro: novo.erro, semResposta: novo.semResposta } : c;
+    });
+    await guardarConectores(this.conectores);
+  }
+
+  /**
    * Ferramentas dos conectores MCP.
    *
    * Só a conversa principal as recebe. O agente auxiliar (`delegar`) fica de
@@ -2403,6 +2441,7 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
    */
   private toolsDeConectores(): ReturnType<typeof toolsMcp> {
     return toolsMcp({
+      arquivos: () => this.baixados.map((b) => b.caminho),
       conectores: () => this.conectores,
       guardar: async (c) => {
         this.conectores = this.conectores.map((x) => (x.id === c.id ? c : x));
@@ -2415,7 +2454,13 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
     this.privacidade = mapa ?? new Pseudonimos({ nomes: this.config.nomes, cnpj: this.config.cnpj });
     return new Motor({
       provedor: criarProvedor({ servico: this.config.servico, url: this.config.url, chave: this.config.chave, modelo: this.config.modelo, ajustes: this.config.ajustes, cache: this.config.cache }),
-      tools: new RegistroTools([...TOOLS_SEI, ...toolsMotor(this.skills), ...this.toolsDeConectores()]),
+      tools: new RegistroTools([
+        ...TOOLS_SEI,
+        ...toolsMotor(this.skills),
+        ...this.toolsDeConectores(),
+        // Fora do agente auxiliar e das rotinas: grava no disco do usuário.
+        ...toolsBaixar({ salvar: (a) => salvarNoDisco(a), registrar: async (b) => void (this.baixados = await registrarBaixado(b)) }),
+      ]),
       ui: this.interfaceMotor(),
       privacidade: this.privacidade,
       sei: (op, args, sinal) => (op === "editores" ? Promise.resolve(this.ponte.editores()) : this.ponte.executar(op, args, sinal)),
@@ -2497,7 +2542,7 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
     this.ultimaResposta = null;
     if (!resposta || resposta.item.ms) return;
     resposta.item.ms = ms;
-    resposta.el.append(carimboDeTempo(ms));
+    (resposta.el.querySelector(".resposta-rodape") ?? resposta.el).append(carimboDeTempo(ms));
     this.rolar();
   }
 
@@ -2581,8 +2626,9 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
     }
     if (item.tipo === "agente") {
       const el = h("div", { class: "msg agente" });
-      el.append(markdown(item.texto));
-      if (item.ms) el.append(carimboDeTempo(item.ms));
+      const rodape = rodapeDaResposta(item.texto);
+      el.append(markdown(item.texto), rodape);
+      if (item.ms) rodape.append(carimboDeTempo(item.ms));
       return el;
     }
     if (item.tipo === "aviso" || item.tipo === "decisao") return h("div", { class: "msg aviso" }, icone("alerta", 14), h("span", {}, item.texto));
@@ -2758,7 +2804,7 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
     if (b.texto.trim()) {
       const item: ItemAgente = { tipo: "agente", texto: b.texto };
       this.transcricao.push(item);
-      b.el.replaceChildren(markdown(b.texto));
+      b.el.replaceChildren(markdown(b.texto), rodapeDaResposta(b.texto));
       this.ultimaResposta = { el: b.el, item };
     } else b.el.remove();
   }

@@ -1,6 +1,6 @@
 # Ficha das extensões na Chrome Web Store (textos para colar)
 
-Versão 2.9.0.21. Zips em `build/sei-pro-cfc-2.9.0.21.zip` (SEI CFC) e `build/sei-pro-gelic-2.9.0.21.zip` (SEI CFC
+Versão 3.2.2.22. Zips em `build/sei-pro-cfc-3.2.2.22.zip` (SEI CFC) e `build/sei-pro-gelic-3.2.2.22.zip` (SEI CFC
 Gelic). As imagens ficam em `gelic/loja/imagens/`. O passo a passo da publicação está em `PUBLICAR.md`.
 
 O nome e a descrição curta vêm do manifest do zip, e a loja os mostra sozinha.
