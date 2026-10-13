@@ -1,5 +1,11 @@
 # Novidades
 
+## 3.2.2.29 — 13/10/2026 {#v3-2-2-29}
+
+- **Selo, PCA:** a linha do PCA ganha um check à vista. **✓** verde quando o número do processo está vinculado a um item
+  do PCA (com o item e a situação), **✗** âmbar quando não está. Antes era um texto pequeno e cinza.
+- O site explica melhor onde fica o **Ligar ao PCA…**: no fim do selo aberto, acima da árvore do processo.
+
 ## 3.2.2.28 — 13/10/2026 {#v3-2-2-28}
 
 - **SEI CFC, Iniciar processo:** a classificação por assunto agora funciona como a do próprio SEI. Enquanto você digita,

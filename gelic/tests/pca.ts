@@ -320,7 +320,7 @@ export async function verificarPca(): Promise<void> {
     await sincronizarProcesso(arvoreCom([]), 'cfc', vazio);
     assert.equal(a2.m.has(CHAVE_VINCULOS), false, '"sem vínculo" não fica guardado: a Gelic pode ligar o processo a qualquer momento');
   });
-  await teste('pca selo: linha antes do detalhe; sem config, só "Ligar ao PCA" no detalhe; erro com Configurar; redesenhar não duplica', () => {
+  await teste('pca selo: linha antes do detalhe, com o check do vínculo (✓/✗); sem config, só "Ligar ao PCA" no detalhe; erro com Configurar; redesenhar não duplica', () => {
     const { document } = parseHTML('<html><body><div id="container"></div></body></html>');
     const doc = document as unknown as Document;
     desenharSelo(doc, { tipo: 'resumo', resumo: resumir([{ titulo: 'DFD', numero: '1' }]), protocolo: 'P1' }, () => {}, 'gelic');
@@ -337,7 +337,17 @@ export async function verificarPca(): Promise<void> {
     assert.equal(linhas[0].nextElementSibling?.classList.contains('gelic-detalhe'), true);
     assert.match(linhas[0].textContent!, /item 37\/2026 · Em andamento · sem mudança · 1 pendência/);
     assert.equal(linhas[0].getAttribute('title'), 'Documento 1 não pôde ser lido');
+    // o check do vínculo à vista: ✓ com item, ✗ sem; consultando e erro sem check
+    assert.equal(linhas[0].getAttribute('data-gelic-vinculo'), 'sim');
+    assert.equal(linhas[0].querySelector('.gelic-pca-marca')?.textContent, '✓');
+    desenharPca(doc, { tipo: 'sem_vinculo' }, () => abriu++);
+    const sem = doc.querySelector('#gelic-selo .gelic-pca')!;
+    assert.equal(sem.getAttribute('data-gelic-vinculo'), 'nao');
+    assert.equal(sem.textContent, '✗ PCA: processo sem item vinculado');
+    desenharPca(doc, { tipo: 'consultando' }, () => abriu++);
+    assert.equal(doc.querySelector('#gelic-selo .gelic-pca .gelic-pca-marca'), null);
     desenharPca(doc, { tipo: 'erro', mensagem: 'token do PCA inválido' }, () => abriu++);
+    assert.equal(doc.querySelector('#gelic-selo .gelic-pca')!.hasAttribute('data-gelic-vinculo'), false);
     doc.querySelector<HTMLButtonElement>('#gelic-selo .gelic-pca [data-gelic-pca-config]')!.click();
     assert.equal(abriu, 2);
   });

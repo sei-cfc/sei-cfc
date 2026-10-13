@@ -493,7 +493,7 @@ ok(`PCA no selo: GET do vínculo pelo content script (origem do SEI, Bearer, sem
   const posts = pedidosPca.filter(p => p.metodo === 'POST');
   if (PERFIL === 'cfc') {
     assert.equal(posts.length, 0);
-    assert.equal(linhaPca, 'PCA: item 37/2026 · Em andamento');
+    assert.equal(linhaPca, '✓ PCA: item 37/2026 · Em andamento');
     return;
   }
   assert.equal(posts.length, 1, `${JSON.stringify(pedidosPca.map(p => p.caminho))} · selo: ${linhaPca}`);
@@ -503,7 +503,7 @@ ok(`PCA no selo: GET do vínculo pelo content script (origem do SEI, Bearer, sem
   assert.ok(c.andamentos.every(a => a.data_hora && 'unidade' in a && a.descricao));
   assert.ok(c.documentos.length >= 4, `todos os documentos da árvore (${c.documentos.length}; âncoras ${docsArvore})`);
   assert.ok(c.documentos.every(d => d.conteudo === 'nao_lido' && d.motivo === 'nao_contratual' && d.html === null), 'nenhum contratual nesta árvore: nada lido');
-  assert.equal(linhaPca, 'PCA: item 37/2026 · Em andamento · atualizado: situação');
+  assert.equal(linhaPca, '✓ PCA: item 37/2026 · Em andamento · atualizado: situação');
 });
 ok('selo abre com o próximo passo e os documentos reconhecidos (nº SEI)', () => {
   assert.equal(aberto.visivel, true);

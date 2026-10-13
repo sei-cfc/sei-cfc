@@ -18,8 +18,8 @@ Os textos estão em `FICHA.md`, e as imagens em `imagens/`. **Antes do passo 4, 
 ## Para cada extensão (SEI CFC e SEI CFC Gelic)
 
 3. **Novo item:** no painel, clique em **Novo item** e envie o zip:
-   - `build/sei-pro-cfc-3.2.2.28.zip` (SEI CFC);
-   - `build/sei-pro-gelic-3.2.2.28.zip` (SEI CFC Gelic).
+   - `build/sei-pro-cfc-3.2.2.29.zip` (SEI CFC);
+   - `build/sei-pro-gelic-3.2.2.29.zip` (SEI CFC Gelic).
 4. **Ficha da loja:**
    - cole a descrição detalhada;
    - escolha a categoria e o idioma;

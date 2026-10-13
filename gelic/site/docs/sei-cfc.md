@@ -9,8 +9,13 @@ Para as unidades demandantes: quem pede a contratação e monta a instrução do
 
 1. [Instale a extensão](instalar.md).
 2. Abra um processo no SEI do CFC. O selo aparece no alto da árvore, com a etapa da contratação e o roteiro das peças.
-3. Para ligar ao PCA: no PCA, gere o seu token em **Meu perfil**. No SEI, abra o detalhe do selo, clique em
-   **Ligar ao PCA…**, cole o token e use **Testar e guardar**.
+3. Para ligar ao PCA: no PCA, gere o seu token em **Meu perfil**. No SEI, abra um processo e clique no selo (a caixa
+   com o símbolo do CFC e a setinha ▾, acima da árvore). No fim da parte que abre, clique em **Ligar ao PCA…**, cole o
+   token em **Token pessoal** e use **Testar e guardar**. Outro caminho: no PCA, o **Iniciar processo** da ficha do item
+   abre essa mesma tela enquanto a extensão não tem o token.
+
+Ligado ao PCA, o selo mostra se o número do processo está vinculado a um item do PCA: **✓** verde com o item e a
+situação dele, ou **✗** âmbar quando não há item vinculado.
 
 ## O selo e o roteiro da instrução
 

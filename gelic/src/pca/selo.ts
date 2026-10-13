@@ -40,6 +40,17 @@ export function desenharPca(doc: Document, estado: EstadoPca, abrirConfig: () =>
   linha.className = 'gelic-pca';
   linha.setAttribute('role', 'status');
   linha.setAttribute('data-gelic-pca', estado.tipo);
+  // o check à vista: ✓ com item do PCA vinculado ao nº do processo, ✗ sem (pedido do usuário, 2026-10-13)
+  if (estado.tipo === 'item' || estado.tipo === 'sem_vinculo') {
+    const vinculado = estado.tipo === 'item';
+    linha.setAttribute('data-gelic-vinculo', vinculado ? 'sim' : 'nao');
+    const marca = doc.createElement('span');
+    marca.className = 'gelic-pca-marca';
+    marca.setAttribute('aria-hidden', 'true');
+    marca.textContent = vinculado ? '✓' : '✗';
+    linha.title = vinculado ? 'O número deste processo está vinculado a um item do PCA.' : 'O número deste processo não está vinculado a nenhum item do PCA.';
+    linha.append(marca, ' ');
+  }
   linha.append(doc.createTextNode(texto));
   if (estado.tipo === 'erro' || (estado.tipo === 'item' && typeof estado.envio === 'object' && 'erro' in estado.envio)) linha.append(' ', botao('Configurar'));
   if (estado.tipo === 'item' && typeof estado.envio === 'object' && 'pendencias' in estado.envio && estado.envio.pendencias.length) {

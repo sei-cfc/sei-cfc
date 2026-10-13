@@ -154,6 +154,11 @@
 /* Linha do PCA (src/pca/selo.ts): o item do Plano de Contratações Anual e o envio da coleta. */
 #gelic-selo .gelic-pca { margin: 0 8px 8px 36px; font-size: 11px; color: var(--g-suave); overflow-wrap: anywhere; }
 #gelic-selo .gelic-pca[data-gelic-pca="erro"] { color: #b42318; }
+/* o check do vínculo: ✓ verde com item do PCA, ✗ âmbar sem; a linha sai do cinza para ser vista */
+#gelic-selo .gelic-pca[data-gelic-vinculo] { color: var(--g-texto); font-weight: 600; }
+#gelic-selo .gelic-pca-marca { display: inline-block; min-width: 1.3em; padding: 0 3px; border-radius: 3px; text-align: center; font-weight: 700; color: #fff; }
+#gelic-selo .gelic-pca[data-gelic-vinculo="sim"] .gelic-pca-marca { background: #276749; }
+#gelic-selo .gelic-pca[data-gelic-vinculo="nao"] .gelic-pca-marca { background: #b7791f; }
 .dark-mode #gelic-selo .gelic-pca[data-gelic-pca="erro"] { color: #f97066; }
 #gelic-selo .gelic-pca-config {
   margin: 4px 0 0;

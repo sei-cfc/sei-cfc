@@ -40,7 +40,7 @@ aberta, a barra da Gelic mostra esse aviso.
 ## PCA
 
 Ligada ao PCA (detalhe do selo, **Ligar ao PCA…**), a extensão mostra no selo o item do PCA do processo e a situação
-dele, e mantém o PCA em dia com o andamento.
+dele (**✓** verde com item vinculado, **✗** âmbar sem item), e mantém o PCA em dia com o andamento.
 
 ## Funções do SEI Pro
 
