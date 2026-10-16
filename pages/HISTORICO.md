@@ -2,6 +2,35 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 3.3
+15/10/2026
+
+**Novo — [Estilo Avançado](../pages/ESTILOAVANCADO.md) refeito do zero** (*SEI Pro Lab*, Chrome e Edge). O visual novo do SEI, no mesmo estilo dos painéis do SEI Pro, com **cor da barra superior à sua escolha** e um **modo escuro feito do jeito certo**. **Vem desligado**: ligue pela chave do canto superior direito do SEI, ou pelo ícone de paleta ao lado dela, que abre a janela **Aparência do SEI**. Onde o novo existe, o estilo anterior fica desativado.
+
+- **Cor da barra superior:** 18 cores prontas (inclusive **Rosa**, Magenta, Índigo, Turquesa, Terracota, Oliva, Cobre e Azul-petróleo) e **cor livre**. A cor ajusta o texto para continuar legível. A janela tem prévia ao vivo e as mesmas opções ficam nas Configurações, na seção **Aparência**, sincronizadas.
+- **Claro, Escuro e Automático.** O modo escuro cobre o sistema inteiro (menu, tabelas, formulários, janelas, árvore do processo, painéis do SEI Pro) e, opcionalmente, o **texto dos documentos**, com um botão **Ver original** para conferir antes de assinar.
+- **Ligar o Estilo Avançado liga também o [Novo Controle de Processos](../pages/GRADECONTROLE.md)**, e a grade abre na hora se você estiver no Controle de Processos.
+- **Barra superior com duas alturas:** mais alta no topo, **compacta ao rolar**, com transição suave. Compacta, o nome do órgão passa para **junto da logo do SEI**, e a barra de ações fixa gruda logo abaixo.
+- **Barra de ações:** os ícones nativos do SEI ficam como sempre; os botões do SEI Pro (monitorar, PDF, ação e documentos em lote, comparar, histórico, certidão) ganharam desenho próprio, colorido como os nativos. O **Agente de IA**, o **Estúdio de Fluxo** e o **Monitorados** mantêm o ícone de sempre.
+- **Novo botão de [Histórico de Processos Visitados](../pages/HISTORICOPROC.md)** na barra de ações, ao lado do Estúdio de Fluxo (no Controle e dentro do processo).
+- **Documento numa caixa só**, em formato de página, com o botão **Largura total** (alterna entre a página estreita e a largura inteira; o navegador lembra), e os botões **Abrir em nova aba**, **Baixar HTML** e **Baixar DOCX** agora com **rótulo** e no mesmo estilo. Ao rolar o documento, ficam só os ícones, à direita.
+- **Árvore do processo:** divisor vertical com alça, selo da unidade em pílula alinhado aos ícones de copiar, respiro acima do número do processo, divisores de seção suaves e menu suspenso dos documentos sem quebra de texto.
+- **Mais respiro** no campo *Pesquisar no Menu* e entre rótulos e campos dos formulários internos; tooltips próprios nos botões; transições suaves nos botões e estados de hover.
+- **Tudo é só visual:** nada é gravado nos documentos e o editor não é adaptado.
+
+### Versão 3.2.4
+14/10/2026
+
+- **Corrigido — [Agente de IA](../pages/AGENTEIA.md):** ao enviar um documento a conector em outro computador, o caminho de outro arquivo baixado que aparecesse no mesmo pedido ia sem máscara. Agora só o próprio documento enviado deixa de ser mascarado; o resto do pedido segue mascarado como em qualquer conector.
+
+### Versão 3.2.3
+14/10/2026
+
+- **Novo — [Agente de IA](../pages/AGENTEIA.md) entrega documentos a conector em outro computador.** Antes, o agente baixava o documento e passava ao conector só o caminho do arquivo, que um servidor em outra máquina não consegue abrir. Agora, quando o conector aceita receber o arquivo, o SEI Pro confere se é o mesmo documento aprovado no download e envia o conteúdo, com o nome aprovado. **Você aprova cada envio**, mesmo com "Sempre permitir", e o cartão mostra o documento, o tamanho e o servidor. Ideia e primeira versão de Tavares (ANTAQ), para o conector do Sistema de Arrendamento.
+- **Nome legível no download.** O agente escolhe o nome do arquivo a partir do documento (por exemplo, *Contrato de Cessão de Uso - Porto de Itaqui*), sempre com a extensão original e o número SEI.
+- **Corrigido — [Demandas](../pages/DEMANDAS.md):** editar uma demanda que já tinha processo vinculado reabria o diálogo em vez de salvar.
+- **Ajuste — [Novo Controle de Processos](../pages/GRADECONTROLE.md):** os marcadores e o prazo ficam com a mesma altura e alinhados na linha.
+
 ### Versão 3.2.2
 12/10/2026
 
